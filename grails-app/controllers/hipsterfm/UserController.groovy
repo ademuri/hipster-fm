@@ -114,4 +114,16 @@ class UserController {
 
 		lastFmService.getArtistTracks(userInstance, artist)
 	}
+	
+	def getFriends(Long id) {
+		def userInstance = User.get(id)
+		if (!userInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'user.label', default: 'User'), id])
+			redirect(action: "list")
+			return
+		}
+		
+		lastFmService.getFriends(userInstance)
+		redirect(action: "list")
+	}
 }

@@ -111,23 +111,42 @@ class ArtistController {
 		}
 		log.info "Sync for artist ${artistInstance.name}"
 		
+		def cutoffDate = (new Date())-7
+		def cutoffTS = cutoffDate.toTimestamp()
+		def found
+		
 		def users = User.findAll()
 		users.each {
-			if (UserArtist.findByUserAndArtist(it, artistInstance)?.lastSynced < (new Date() - 2)) {
+			log.info "user: ${it}, not found last synced: ${it.notFoundLastSynced}, cutoff: ${cutoffDate}, ts: ${cutoffTS}"
+			if (it.notFoundLastSynced[artistInstance.name]) {
+				log.info "type: ${it.notFoundLastSynced[artistInstance.name].class}"
+				//def notFoundDate = new Date((long)it.notFoundLastSynced[artistInstance.name]  * 1000L)
+				//log.info "not found date: ${notFoundDate}"
+			}
+			
+			if (UserArtist.findByUserAndArtist(it, artistInstance)?.lastSynced < cutoffDate
+				|| (it.notFoundLastSynced[artistInstance.name] && it.notFoundLastSynced[artistInstance.name].before(cutoffT))) {
 				def success = false
-				while (success == false) {
-					try {
+				def count = 0
+				while (success == false && count < 2) {
+					//try {
 						log.info "Syncing ${artistInstance.name} for ${it.username}"
-						lastFmService.getArtistTracks(it, artistInstance.name)
+						found = lastFmService.getArtistTracks(it, artistInstance.name)
+						if (found == 0) {
+							it.notFoundLastSynced[artistInstance.name] = new Date() 
+						}
 						success = true
-					} catch(Exception e) {
+					/*} catch(Exception e) {
 						log.warn "Encountered ${e.message} while syncing ${artistInstance.name} for ${it.username}"
 						e.printStackTrace()
 						Thread.sleep(10000)
-					}
+					}*/
+					count++
 				}
 			}
 		}
+		
+		redirect(action: "show", id: id)
 	}
 	
 	def first(Long id) {
@@ -145,7 +164,6 @@ class ArtistController {
 			def user = [:]
 			user.id = it.id
 			user.name = it.username
-			log.info "it: ${it}"
 			def artist = it.artists.find{it.lastId == artistInstance.lastId}
 			def track = Track.withCriteria(uniqueResult: true) {
 				eq("artist", artist)
@@ -157,7 +175,6 @@ class ArtistController {
 			user.track_id = track.id
 			users.add(user)
 		}
-		log.info "Users: ${users}"
 		users.sort {
 			it.date
 		}
