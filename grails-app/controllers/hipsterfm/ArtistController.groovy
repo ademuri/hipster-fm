@@ -1,6 +1,8 @@
 package hipsterfm
 
+import com.eaio.util.text.HumanTime
 import org.springframework.dao.DataIntegrityViolationException
+
 
 class ArtistController {
 	
@@ -125,7 +127,7 @@ class ArtistController {
 			}
 			
 			if (UserArtist.findByUserAndArtist(it, artistInstance)?.lastSynced < cutoffDate
-				|| (it.notFoundLastSynced[artistInstance.name] && it.notFoundLastSynced[artistInstance.name].before(cutoffT))) {
+				|| (it.notFoundLastSynced[artistInstance.name] && it.notFoundLastSynced[artistInstance.name].before(cutoffTS))) {
 				def success = false
 				def count = 0
 				while (success == false && count < 2) {
@@ -165,6 +167,7 @@ class ArtistController {
 			user.id = it.id
 			user.name = it.username
 			def artist = it.artists.find{it.lastId == artistInstance.lastId}
+			user.artist_id = artist.id
 			def track = Track.withCriteria(uniqueResult: true) {
 				eq("artist", artist)
 				maxResults(1)
@@ -177,6 +180,12 @@ class ArtistController {
 		}
 		users.sort {
 			it.date
+		}
+		
+		// pretty dates
+		users[0].pretty_date = ""
+		for (int i=1; i<users.size(); i++) {
+			users[i].pretty_date = HumanTime.approximately((users[i].date.time - users[i-1].date.time))
 		}
 		
 		[artist: artistInstance, users: users]

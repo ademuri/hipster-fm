@@ -18,8 +18,41 @@
 			</ul>
 		</div>
 		
-		<div id="show-users" class="content scaffold-show" role="main">
-			<ol class="propery-list user">
+		<div id="list-users" class="content scaffold-list" role="main">
+			<h1>Users</h1>
+			<g:if test="${flash.message}">
+			<div class="message" role="status">${flash.message}</div>
+			</g:if>
+			<table>
+			<g:if test="${users?.size() > 0}">
+								<thead>
+					<tr>
+					
+						<g:sortableColumn property="user" title="Name" />
+					
+						<g:sortableColumn property="firstListen" title="First listen" />
+						
+						<g:sortableColumn property="date" title="Date" />
+					
+					</tr>
+				</thead>
+				<tbody>
+				<g:each in="${users}" status="i" var="u">
+					<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
+					
+						<td><g:link controller="userArtist" action="show" id="${u.artist_id}">${u.name}</g:link></td>
+						
+						<td>${u.pretty_date}</td>
+					
+						<td><g:link controller="track" action="show" id="${u.track_id}">${u.date}</g:link></td>
+					
+					</tr>
+				</g:each>
+				</tbody>
+			</table>
+			</g:if>
+			
+			<!-- <ol class="propery-list user">
 				<g:if test="${users?.size() > 0}">
 				<li class="fieldcontain">
 					<span id="users-label" class="property-label">Users</span>
@@ -28,7 +61,7 @@
 						<span class="property-value" aria-labelledby="users-label"><g:link controller="track" action="show" id="${u.track_id}">${u.name} - ${u.date.toString()}</g:link></span>
 					</g:each>
 				</li>
-				</g:if>
+				</g:if> -->
 			</ol>
 		</div>
 	</body>
