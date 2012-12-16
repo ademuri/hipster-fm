@@ -8,6 +8,7 @@ class User {
 	
 	
 	Map<String, Date> notFoundLastSynced = [:]		// artists that had no tracks -> when it was checked
+	Date friendsLastSynced
 	
 	static hasMany = [artists: UserArtist, friends: User]
 	
@@ -15,6 +16,7 @@ class User {
 		username(blank: false, nullable: false)
 		email(blank: true, nullable: true)
 		name(blank: true, nullable: true)
+		friendsLastSynced(nullable: true)
     }
 	
 	static mapping = {

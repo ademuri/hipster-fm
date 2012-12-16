@@ -41,7 +41,14 @@ class LastFmService {
 		
 	}
 	
-	def getFriends(origUser) {
+	def getFriends(User origUser) {
+		def today = new Date()
+		if (origUser.friendsLastSynced && origUser.friendsLastSynced > (today-2)) {
+			log.info "Not syncing friends for ${origUser}, synced recently"
+			return
+		}
+		
+		origUser.friendsLastSynced = new Date()
 		def username = origUser.username
 		
 		def query = [:]
@@ -76,6 +83,18 @@ class LastFmService {
 	}
 	
 	int getArtistTracks(user, rawArtistName) {
+		
+		def existingArtist = Artist.findByName(rawArtistName)
+		def cutoffDate = (new Date())-7
+		def cutoffTS = cutoffDate.toTimestamp()
+		
+		if ((existingArtist && UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced > cutoffDate)
+			|| (user.notFoundLastSynced[rawArtistName] && user.notFoundLastSynced[rawArtistName].after(cutoffTS))) {
+			log.info "Not syncing ${rawArtistName} for ${user}, synced recently"
+			return 0
+		}
+			
+		
 		def query = [
 			method: 'user.getartisttracks',
 			user: user.username,
