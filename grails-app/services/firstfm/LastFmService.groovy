@@ -124,23 +124,30 @@ class LastFmService {
 		def paging = data.artisttracks."@attr"
 		log.info "Got ${paging.totalPages} pages for search ${rawArtistName}"
 		log.info "total pages is integer: ${paging.totalPages.isInteger()}"
-		if (paging.totalPages.toInteger() > 1) {
-			query["page"] = paging.totalPages
+		for(int i=2; i<=paging.totalPages.toInteger(); i++) {
+			query["page"] = i
 			data = queryApi(query)
-			
-			if (paging.totalPages == 2)
-			{
-				data.artisttracks.track.each {
-					tracks.add(it)
-				}
-			} else {
-				query["page"] = query["page"].toInteger() - 1
-				data = queryApi(query)
-				data.artisttracks.track.each {
-					tracks.add(it)
-				}
+			data.artisttracks.track.each {
+				tracks.add(it)
 			}
 		}
+//		if (paging.totalPages.toInteger() > 1) {
+//			query["page"] = paging.totalPages
+//			data = queryApi(query)
+//			
+//			if (paging.totalPages == 2)
+//			{
+//				data.artisttracks.track.each {
+//					tracks.add(it)
+//				}
+//			} else {
+//				query["page"] = query["page"].toInteger() - 1
+//				data = queryApi(query)
+//				data.artisttracks.track.each {
+//					tracks.add(it)
+//				}
+//			}
+//		}
 		
 		log.info "Found ${tracks.size()} tracks."
 		

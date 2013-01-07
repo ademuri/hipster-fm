@@ -7,6 +7,8 @@ modules = {
 		dependsOn "jquery"
 		resource url:"${jqplot_dir}/jquery.jqplot.js"
 		resource url:"${jqplot_dir}/plugins/jqplot.dateAxisRenderer.js"
+		resource url:"${jqplot_dir}/plugins/jqplot.enhancedLegendRenderer.js"
 		resource url:"${jqplot_dir}/jquery.jqplot.css"
+		resource url:"css/jqplot_custom.css"
 	}
 }

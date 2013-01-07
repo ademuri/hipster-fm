@@ -6,15 +6,22 @@ class GraphController {
 
     def index() { }
 	
-	def show() {
-		def artist = Artist.findByName("Emancipator")
-//		def user = User.findByUsername("Adamsmasher")
+	def show(Long id) {
+		log.info "params: ${params}"
+		def artist = Artist.get(params['id'] as Integer)
+		if (!artist) {
+			log.warn "Artist id ${id} not found"
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'artist.label', default: 'Artist'), id])
+			redirect(controller: "artist", action: "list")
+			return
+		}
 //		def userArtist = UserArtist.findByUserAndArtist(user, artist)
 		
 		def data = []
 		def users = []
 		
-		def intervalSize = 14 	// about a month
+		def intervalSize = 100 	// about a month
+		def tickSize = 100
 		
 		artist.userArtists.each { userArtist ->
 			users.add(userArtist.user.toString())
@@ -40,7 +47,7 @@ class GraphController {
 			end.seconds = 0
 			
 			
-			for (int i=0; i<(end-start); i+=1) {
+			for (int i=0; i<(end-start); i+=tickSize) {
 				def c = Track.createCriteria()
 				def count = c.count{
 					eq("artist.id", userArtist.id)
@@ -63,7 +70,7 @@ class GraphController {
 		}
 		
 		//def json = data as JSON
-		[chartdata:chartdata as JSON]
+		[chartdata:chartdata as JSON, artistName: artist.name]
 		//data as JSON
 	}
 }

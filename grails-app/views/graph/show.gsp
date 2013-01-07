@@ -6,7 +6,22 @@
 		<r:require modules="jquery, jqplot" />
 	</head>
 	<body>
-		<div id="chartdiv" style="height:800px;width:900px;"></div>
+		<div class="nav" role="navigation">
+			<ul>
+				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
+				<li><g:link class="list" controller="artist" action="list">Artists</g:link></li>
+			</ul>
+		</div>
+		
+		<div id="show-graph" class="content" role="main">
+			<h1>${artistName}</h1>
+			<g:if test="${flash.message}">
+			<div class="message" role="status">${flash.message}</div>
+			</g:if>
+		
+			<div id="chartdiv" style="height:800px;width:95%;"></div>
+			
+		</div>
 		
 		<script>
 			
@@ -18,7 +33,11 @@
 				
 				var jqplotOptions = {
 					seriesDefaults: {
-						markerOptions: {show: false}
+						markerOptions: {
+							show: true, 
+							onlyFirst: true
+						},
+						shadow: false
 					},
 					axes: {
 						xaxis: {
@@ -31,9 +50,11 @@
 						}
 					},
 					legend: {
+						renderer: $.jqplot.EnhancedLegendRenderer,
 						show: true,
 						location: 's',
-						placement: 'outsideGrid'
+						placement: 'outsideGrid',
+						seriesToggle: true
 					},
 					series: series
 				};

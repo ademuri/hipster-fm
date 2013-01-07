@@ -1,0 +1,8 @@
+div.jqplot-table-legend-swatch-outline {
+    border: none;
+    padding: 0px;
+}
+
+td.jqplot-table-legend-swatch {
+	width: 5px;
+}

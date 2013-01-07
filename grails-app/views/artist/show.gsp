@@ -60,6 +60,7 @@
 					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
 					<g:actionSubmit class="sync" action="sync" value="${message(code: 'default.button.sync.label', default: 'Sync')}"/>
 					<g:actionSubmit class="first" action="first" value="${message(code: 'default.button.first.label', default: 'First')}"/>
+					<g:link class="graph" controller="graph" action="show" id="${artistInstance?.id}" value="${message(code: 'default.button.graph.label', default: 'Graph')}">Graph</g:link>
 				</fieldset>
 			</g:form>
 		</div>
