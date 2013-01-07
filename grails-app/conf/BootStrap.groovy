@@ -17,10 +17,15 @@ class BootStrap {
 		User ian = new User(username: "unknownmosquito", email: "").save(failOnError: true)
 		
 		def em = new Artist(name: "Emancipator", lastId: "aa1d4315-5246-42b2-b62b-f997d046d8b2").save(flush: true, failOnError: true)
+		def rand = new Random()
 		
 		def emAdam = new UserArtist(artist: em, user: adam).save(flush: true, failOnError: true)
 		adam.addToArtists(emAdam)
-		emAdam.addToTracks(new Track(date: new Date()-5, name: "First Snow", artist: emAdam, lastId: "herp derp").save(flush: true, failOnError: true))
+		(0..10).each {
+			(0..rand.nextInt(10)).each {
+				emAdam.addToTracks(new Track(date: new Date()-(15+it), name: "First Snow", artist: emAdam, lastId: "herp derp").save(flush: true, failOnError: true))
+			}
+		}
 		
 		def emDoug = new UserArtist(artist: em, user: doug).save(flush: true, failOnError: true)
 		doug.addToArtists(emDoug)
