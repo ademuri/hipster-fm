@@ -4,26 +4,99 @@ import grails.converters.JSON
 
 class GraphController {
 
-    def index() { }
+	def lastFmService
 	
-	def show(Long id) {
-		log.info "params: ${params}"
-		def artist = Artist.get(params['id'] as Integer)
-		if (!artist) {
-			log.warn "Artist id ${id} not found"
-			flash.message = message(code: 'default.not.found.message', args: [message(code: 'artist.label', default: 'Artist'), id])
-			redirect(controller: "artist", action: "list")
+	def index() {
+		redirect(action: 'setup')
+	}
+	
+    def setup() {
+		
+	}
+	
+	def search(String user, String artist) {
+		def usernameList = user.tokenize()
+		def userList = []
+		
+		for(String username : usernameList) {
+//		usernameList.each {
+			def userInstance = User.findByUsername(username)
+			if (!userInstance) {
+				log.warn "Didn't find user with username ${user}"
+				flash.message = "Didn't find user with username ${user}"
+				redirect(action: "setup")
+				return
+			}
+			userList.add(userInstance)
+		}
+		
+		def artistInstance = Artist.findByName(artist)
+		if (!artistInstance) {
+			log.warn "Didn't find artist ${artist}"
+			flash.message = "Didn't find artist ${artist}"
+			redirect(action: "setup")
 			return
 		}
-//		def userArtist = UserArtist.findByUserAndArtist(user, artist)
 		
+		def userArtistList = []
+		userList.each { userInstance ->
+			def userArtistInstance = UserArtist.findByUserAndArtist(userInstance, artistInstance)
+			if (!userArtistInstance) {
+				log.warn "User ${user} has no scrobbles for artist ${artist}!"
+				flash.message = "User ${user} has no scrobbles for artist ${artist}!"
+				redirect(action: "setup")
+				return
+			}
+			userArtistList.add(userArtistInstance)
+		}
+		
+		// sync necessary data
+		log.info "Syncing friends for user ${user}"
+//		lastFmService.getFriends(userInstance)
+//		def users = [userInstance]
+//		users.addAll(userInstance.friends)
+//		log.info "friends: "
+//		log.info userInstance.friends
+	 
+		def userArtistIds = []
+		
+		userList.each {
+			log.info "Syncing for user ${it}"
+			lastFmService.getArtistTracks(it, artistInstance.name)
+//			userArtistIds.add(it.userArtist.id)
+		}
+		
+		chain(action: "show", model: [artistId: artistInstance.id, userArtistIdList: userArtistList.id])
+	}
+	
+	def show() {
+		if (!chainModel || !chainModel?.artistId || !chainModel?.userArtistIdList) {
+			log.warn "Graph-Show called without previous model"
+			flash.message = "Please setup a graph first"
+			redirect(action: "setup")
+			return
+		}
+		def artist = Artist.get(chainModel.artistId)
+		if (!artist) {
+			log.warn "Couldn't find artist with id ${id}"
+			flash.message = "Couldn't find artist with id ${id}"
+			redirect(action: "setup")
+			return
+		}
+
+		
+				
 		def data = []
 		def users = []
 		
 		def intervalSize = 100 	// about a month
 		def tickSize = 100
 		
-		artist.userArtists.each { userArtist ->
+		//artist.userArtists.each { userArtist ->
+//		def userArtistList = chainModel.userArtistList
+		def userArtistIdList = chainModel.userArtistIdList
+		userArtistIdList.each { id ->
+			def userArtist = UserArtist.get(id)
 			users.add(userArtist.user.toString())
 			def dates = userArtist.tracks.collect { 
 				it.date

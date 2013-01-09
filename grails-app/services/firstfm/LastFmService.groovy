@@ -43,7 +43,7 @@ class LastFmService {
 	
 	def getFriends(User origUser) {
 		def today = new Date()
-		if (origUser.friendsLastSynced && origUser.friendsLastSynced > (today-2)) {
+		if (origUser.friendsLastSynced && origUser.friendsLastSynced > (today-7)) {
 			log.info "Not syncing friends for ${origUser}, synced recently"
 			return
 		}
