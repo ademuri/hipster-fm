@@ -88,8 +88,8 @@ log4j = {
            'org.springframework',
            'org.hibernate',
            'net.sf.ehcache.hibernate'
+		   
+	warn 'groovyx.net.http'
 
 	info   'grails.app'
-
-	trace 'groovyx.net.http'
 }

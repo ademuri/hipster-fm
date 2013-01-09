@@ -123,7 +123,6 @@ class LastFmService {
 		// grab the earliest scrobbles
 		def paging = data.artisttracks."@attr"
 		log.info "Got ${paging.totalPages} pages for search ${rawArtistName}"
-		log.info "total pages is integer: ${paging.totalPages.isInteger()}"
 		for(int i=2; i<=paging.totalPages.toInteger(); i++) {
 			query["page"] = i
 			data = queryApi(query)

@@ -30,6 +30,12 @@ class GraphController {
 			userList.add(userInstance)
 		}
 		
+		userList.each {
+			log.info "Syncing for user ${it}"
+			lastFmService.getArtistTracks(it, artist)
+//			userArtistIds.add(it.userArtist.id)
+		}
+		
 		def artistInstance = Artist.findByName(artist)
 		if (!artistInstance) {
 			log.warn "Didn't find artist ${artist}"
@@ -37,6 +43,7 @@ class GraphController {
 			redirect(action: "setup")
 			return
 		}
+
 		
 		def userArtistList = []
 		userList.each { userInstance ->
@@ -60,11 +67,7 @@ class GraphController {
 	 
 		def userArtistIds = []
 		
-		userList.each {
-			log.info "Syncing for user ${it}"
-			lastFmService.getArtistTracks(it, artistInstance.name)
-//			userArtistIds.add(it.userArtist.id)
-		}
+		
 		
 		chain(action: "show", model: [artistId: artistInstance.id, userArtistIdList: userArtistList.id])
 	}
@@ -89,8 +92,8 @@ class GraphController {
 		def data = []
 		def users = []
 		
-		def intervalSize = 100 	// about a month
-		def tickSize = 100
+		def intervalSize = 60 	// about a month
+		def tickSize = 60
 		
 		//artist.userArtists.each { userArtist ->
 //		def userArtistList = chainModel.userArtistList
