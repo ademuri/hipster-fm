@@ -92,14 +92,20 @@ class GraphController {
 		def data = []
 		def users = []
 		
-		def intervalSize = 60 	// about a month
-		def tickSize = 60
+		def intervalSize = 30 	// about a month
+		def tickSize = 30
+		
+		def globalFirst, globalLast
 		
 		//artist.userArtists.each { userArtist ->
 //		def userArtistList = chainModel.userArtistList
 		def userArtistIdList = chainModel.userArtistIdList
+		def userArtistList = []
+		
 		userArtistIdList.each { id ->
 			def userArtist = UserArtist.get(id)
+			userArtistList.add(userArtist)
+			
 			users.add(userArtist.user.toString())
 			def dates = userArtist.tracks.collect { 
 				it.date
@@ -110,7 +116,7 @@ class GraphController {
 			
 			log.info "Found dates from ${dates.first()} to ${dates.last()} for artist ${artist}, user ${userArtist.user}; ${dates.size()} total scrobbles"
 			log.info dates
-			def counts = []
+			
 			
 			def start = dates.first()
 			start.hours = 0
@@ -122,19 +128,39 @@ class GraphController {
 			end.minutes = 0
 			end.seconds = 0
 			
+			if (!globalFirst) {
+				globalFirst = start
+			} else {
+				if (globalFirst > start) {
+					globalFirst = start
+				}
+			}
 			
-			for (int i=0; i<(end-start); i+=tickSize) {
+			if (!globalLast) {
+				globalLast = end
+			} else {
+				if (globalLast < end) {
+					globalLast = end
+				}
+			}
+		}
+		
+		
+		userArtistList.each { userArtist ->
+			def counts = []
+			def found = false	// only start adding when we've found some tracks
+			
+			for (int i=0; i<(globalLast-globalFirst); i+=tickSize) {
 				def c = Track.createCriteria()
 				def count = c.count{
 					eq("artist.id", userArtist.id)
-					between('date', start+i, start+i+intervalSize)
+					between('date', globalFirst+i, globalFirst+i+intervalSize)
 				}
-				//def count = Track.countByArtistAndDate(userArtist, it)
-//				log.info "Found ${count} for ${start+i}"
-				counts.add([String.format('%tY-%<tm-%<td', start+i), count])
-				//data.add([it, count])
+				if (found || count > 0) {
+					found = true
+					counts.add([String.format('%tY-%<tm-%<td', globalFirst+i), count])
+				}
 			}
-			
 			data.add(counts)
 		}
 		
