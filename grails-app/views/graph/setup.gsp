@@ -18,14 +18,38 @@
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>
+			
+			<div id="user-form">
+				<g:form method="post" >
+				<fieldset class="form">
+					<span class="fieldcontain ${hasErrors(field: 'user', 'error')} ">
+						<label for="user">
+							Search for user
+						</label>
+						<g:textField name="user" value="${user}"/>
+					</span>
+					<g:actionSubmit class="submit" action="setup" value="Search" />
+				</fieldset>
+				</g:form>
+			</div>
+			
 			<div id="setup-graph-form">
 				<g:form method="post" >
 					<fieldset class="form">
 						<div class="fieldcontain ${hasErrors(field: 'user', 'error')} ">
 							<label for="user">
-								User
+								Users
 							</label>
-							<g:textField name="user"/>
+							<g:textField name="user" value="${user}"/>
+							<label>(space-seperated list)</label>
+						</div>
+						<div class="checkbox">
+							<g:each var="user" in="${friends}" status="i">
+								<span class="friend-select">
+									<g:checkBox name="user_${user.id}"/>
+									<label for="user_${user.id}">${user.toString()}</label>
+								</span>
+							</g:each>
 						</div>
 						<div class="fieldcontain ${hasErrors(field: 'artist', 'error')} ">
 							<label for="artist">

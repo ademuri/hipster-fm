@@ -10,13 +10,28 @@ class GraphController {
 		redirect(action: 'setup')
 	}
 	
-    def setup() {
+    def setup(String user) {
+//		log.info "params: ${params}"
+		def friends
+		def topArtists
 		
+		if (user && user != "") {
+			def userInstance = User.findByUsername(user)
+			
+			if (userInstance) {
+				log.info "Found user ${user}"
+				lastFmService.getFriends(userInstance)
+				friends = userInstance.friends
+			}
+		}
+		
+		[friends: friends, user: user]
 	}
 	
 	def search(String user, String artist) {
+//		log.info "search params: ${params}"
 		def usernameList = user.tokenize()
-		def userList = []
+		Set userList = []
 		
 		for(String username : usernameList) {
 //		usernameList.each {
@@ -28,6 +43,16 @@ class GraphController {
 				return
 			}
 			userList.add(userInstance)
+		}
+		
+		// grab users from the checkboxes
+		params.each {
+			if (it.key.contains("user_")) {
+				if (it.value.contains("on")) {
+					def userInstance = User.get((it.key - "user_") as Long)
+					userList.add(userInstance)
+				}
+			}
 		}
 		
 		userList.each {
@@ -58,7 +83,7 @@ class GraphController {
 		}
 		
 		// sync necessary data
-		log.info "Syncing friends for user ${user}"
+//		log.info "Syncing friends for user ${user}"
 //		lastFmService.getFriends(userInstance)
 //		def users = [userInstance]
 //		users.addAll(userInstance.friends)
@@ -87,8 +112,6 @@ class GraphController {
 			return
 		}
 
-		
-				
 		def data = []
 		def users = []
 		
@@ -97,8 +120,6 @@ class GraphController {
 		
 		def globalFirst, globalLast
 		
-		//artist.userArtists.each { userArtist ->
-//		def userArtistList = chainModel.userArtistList
 		def userArtistIdList = chainModel.userArtistIdList
 		def userArtistList = []
 		
@@ -115,7 +136,7 @@ class GraphController {
 			dates.sort()
 			
 			log.info "Found dates from ${dates.first()} to ${dates.last()} for artist ${artist}, user ${userArtist.user}; ${dates.size()} total scrobbles"
-			log.info dates
+//			log.info dates
 			
 			
 			def start = dates.first()

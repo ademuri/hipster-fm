@@ -102,7 +102,7 @@ class LastFmService {
 			]
 		
 		def data = queryApi(query)
-		log.info "user ${user}, artist ${rawArtistName}, data: ${data}"
+//		log.info "user ${user}, artist ${rawArtistName}, data: ${data}"
 		
 		if (data?.error) {
 			log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
@@ -172,11 +172,12 @@ class LastFmService {
 		tracks.each {
 			def trackId = it.mbid
 			def date = dateFormat.parse(it.date."#text")
-			def track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(flush: true, failOnError: true)
+			def track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)
 			userArtist.addToTracks(track)
 		}
 		
 		userArtist.lastSynced = new Date()
+		log.info "Done creating tracks"
 		
 		return tracks.size()
 	}

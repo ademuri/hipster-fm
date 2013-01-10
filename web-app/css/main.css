@@ -594,3 +594,19 @@ a.skip {
 	position: absolute;
 	left: -9999px;
 }
+
+.friend-select {
+	margin: 0.5em 0em;
+	display: block-inline;
+	width: 25%;
+	float: left;
+}
+
+.friend-select label {
+	text-align: right;
+	padding: .2em;
+}
+
+div.checkbox {
+	padding-bottom: 1em;
+}
