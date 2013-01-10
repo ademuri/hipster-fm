@@ -5,6 +5,8 @@ import hipsterfm.UserArtist
 import hipsterfm.Track
 import hipsterfm.User
 import java.text.SimpleDateFormat
+import groovyx.gpars.GParsPool
+//import static groovyx.gpars.actor.Actors.actor
 
 class LastFmService {
 	
@@ -152,11 +154,15 @@ class LastFmService {
 		// grab the earliest scrobbles
 		def paging = data.artisttracks."@attr"
 		log.info "Got ${paging.totalPages} pages for search ${rawArtistName}"
-		for(int i=2; i<=paging.totalPages.toInteger(); i++) {
-			query["page"] = i
-			data = queryApi(query)
-			data.artisttracks.track.each {
-				tracks.add(it)
+		
+		GParsPool.withPool {
+			//for(int i=2; i<=paging.totalPages.toInteger(); i++) {
+			(2..paging.totalPages.toInteger()).eachParallel { i ->
+				query["page"] = i
+				data = queryApi(query)
+				data.artisttracks.track.each {
+					tracks.add(it)
+				}
 			}
 		}
 //		if (paging.totalPages.toInteger() > 1) {
