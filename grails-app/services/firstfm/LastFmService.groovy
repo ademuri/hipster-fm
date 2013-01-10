@@ -13,6 +13,10 @@ class LastFmService {
 
 	//http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=rj&api_key=b25b959554ed76058ac220b7b2e0a026&format=json
 	
+	static int queriesRunning = 0
+	static Object queryLock = new Object()
+	static final int maxQueries = 5
+	
     def checkForUser(user) {
 		withRest(uri:"http://ws.audioscrobbler.com/") {
 //			def resp = get(path: '/?method=user.getrecenttracks?user=${user.username}&api_key=${api}&format=json') {
@@ -31,14 +35,39 @@ class LastFmService {
     }
 	
 	def queryApi(query) {
+		log.info "Enter query ${query}"
+		synchronized(queryLock) {
+			log.info "Increment queries ${query}"
+			queriesRunning++
+		
+			while (queriesRunning > maxQueries) {
+				log.info "Queries already running, waiting ${query}"
+				queryLock.wait()
+			}
+		}
+		
 		query.api_key = api
 		query.format = 'json'
 		
-		withRest(uri:"http://ws.audioscrobbler.com/") {
-			def resp = get(path: '/2.0/', query: query)
-			return resp.getData()
+		def data
+		
+		try {
+			withRest(uri:"http://ws.audioscrobbler.com/") {
+				def resp = get(path: '/2.0/', query: query)
+				
+				
+				
+				data = resp.getData()
+			}
+		} finally {
+			synchronized(queryLock) {
+				log.info "Decrement queries ${query}"
+				queriesRunning--
+				queryLock.notifyAll()
+			}
 		}
 		
+		return data
 	}
 	
 	def getFriends(User origUser) {
