@@ -57,6 +57,10 @@
 							</label>
 							<g:textField name="artist"/>
 						</div>
+						<div class="fieldcontain" >
+							<label for="removeOutliers">Remove Outliers</label>
+							<g:checkBox name="removeOutliers" />
+						</div>
 					</fieldset>
 					<fieldset class="buttons">
 						<g:actionSubmit class="submit" action="search" value="Submit" />

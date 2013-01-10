@@ -72,14 +72,13 @@ class GraphController {
 		
 		def userArtistList = []
 		userList.each { userInstance ->
+			log.info "generating user list, ${userInstance}"
 			def userArtistInstance = UserArtist.findByUserAndArtist(userInstance, artistInstance)
 			if (!userArtistInstance) {
-				log.warn "User ${user} has no scrobbles for artist ${artist}!"
-				flash.message = "User ${user} has no scrobbles for artist ${artist}!"
-				redirect(action: "setup")
-				return
+				log.info "User ${userInstance} has no scrobbles for artist ${artist}"
+			} else {
+				userArtistList.add(userArtistInstance)
 			}
-			userArtistList.add(userArtistInstance)
 		}
 		
 		// sync necessary data
@@ -94,7 +93,7 @@ class GraphController {
 		
 		
 		
-		chain(action: "show", model: [artistId: artistInstance.id, userArtistIdList: userArtistList.id])
+		chain(action: "show", model: [artistId: artistInstance.id, userArtistIdList: userArtistList.id, removeOutliers: params.removeOutliers?.contains("on")])
 	}
 	
 	def show() {
@@ -111,12 +110,21 @@ class GraphController {
 			redirect(action: "setup")
 			return
 		}
+		
+		def removeOutliers = chainModel?.removeOutliers as Boolean
 
 		def data = []
 		def users = []
 		
 		def intervalSize = 30 	// about a month
 		def tickSize = 30
+		
+		// parameters for setting ymax based removing outliers
+		def kOutlierMin = 30	
+		def kNumOutliers = 10
+		def kOutlierRatioUpper = 1.5	// threshold for max being an outlier
+		def kOutlierRatioLower			// threshold for selecting max
+		def kOutlierMax = 150
 		
 		def globalFirst, globalLast
 		
@@ -166,6 +174,8 @@ class GraphController {
 			}
 		}
 		
+		def outliers = new PriorityQueue<Integer>()
+		
 		
 		userArtistList.each { userArtist ->
 			def counts = []
@@ -177,12 +187,54 @@ class GraphController {
 					eq("artist.id", userArtist.id)
 					between('date', globalFirst+i, globalFirst+i+intervalSize)
 				}
+				
+				if (removeOutliers) {
+					if (outliers.size() < kNumOutliers || count >= outliers.min()) {
+						outliers.add(count)
+						if (outliers.size() > kNumOutliers) {
+							outliers.remove()	//remove smallest element
+						}
+					}
+				}
+				
 				if (found || count > 0) {
 					found = true
 					counts.add([String.format('%tY-%<tm-%<td', globalFirst+i), count])
 				}
 			}
 			data.add(counts)
+		}
+		
+		
+		def maxY
+		
+		if (removeOutliers) {
+			def outlierList = outliers as List
+			outlierList.sort()
+			log.info "Outliers: ${outlierList}"
+			def outlierMin = outlierList.first()
+			def outlierMax = outlierList.last()
+			
+			if (outlierMin > kOutlierMax) {	// chop off at a maximum value
+				maxY = kOutlierMax
+			} 
+			else if (outlierMax < kOutlierMin) {
+				maxY = null 	// don't set a max, let jqplot autoscale
+			} 
+			else if (outlierMax > (outlierMin * kOutlierRatioUpper)) {
+				int i;
+				for (i=4; i<outlierList.size(); i++) {
+					if (outlierList[i] > outlierList[i-1] * kOutlierRatioUpper) {
+						break
+					}
+				}
+				
+				maxY = outlierList[i-1]
+			}
+			
+			if (maxY) {
+				log.info "Selected maxY as ${maxY}"
+			}
 		}
 		
 		def chartdata = [:]
@@ -193,7 +245,7 @@ class GraphController {
 		}
 		
 		//def json = data as JSON
-		[chartdata:chartdata as JSON, artistName: artist.name]
+		[chartdata:chartdata as JSON, artistName: artist.name, maxY: maxY]
 		//data as JSON
 	}
 }

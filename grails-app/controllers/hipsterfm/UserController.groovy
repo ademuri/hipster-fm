@@ -40,8 +40,6 @@ class UserController {
             return
         }
 		
-		log.info "here"
-
         [userInstance: userInstance]
     }
 

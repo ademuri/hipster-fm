@@ -45,8 +45,15 @@
 							pad: 0
 						},
 						yaxis: {
+							<g:if test="${maxY}">
+							max: ${maxY},
+							</g:if>
+							min: 0,
 							padMin: 0,
-							padMax: .5
+							padMax: .5,
+							tickOptions: {
+								formatString: '%.0f'
+							}
 						}
 					},
 					legend: {
@@ -58,6 +65,7 @@
 					},
 					series: series
 				};
+				
 				$.jqplot('chartdiv', data,
 						jqplotOptions);
 			});
