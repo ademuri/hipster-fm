@@ -167,10 +167,11 @@ class LastFmService {
 		def tracks = data.artisttracks.track
 		log.info "tracks: ${tracks}"
 		// if there's only 1 track, make it into a list
-		if (tracks?.artist) {
+		if (!tracks[0]?.artist) {
+			log.info "Making a list"
 			tracks = [tracks]
 		}
-		
+//		
 		
 		// grab the earliest scrobbles
 		def paging = data.artisttracks."@attr"

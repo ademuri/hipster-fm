@@ -52,6 +52,11 @@ class GraphController {
 			if (it.key.contains("user_")) {
 				if (it.value.contains("on")) {
 					def userInstance = User.get((it.key - "user_") as Long)
+					
+					// note: this shouldn't happen unless people are monkeying around with the page
+					if (!userInstance) {
+						return	//only skips this checkbox
+					}
 					userList.add(userInstance)
 				}
 			}
