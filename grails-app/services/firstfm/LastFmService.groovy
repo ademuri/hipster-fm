@@ -63,13 +63,17 @@ class LastFmService {
 						log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
 						if (data.error.toInteger() == 8) {
 							Thread.sleep(5000)
-							log.info "Trying again"
+							log.warn "Trying again"
 						} else {
 							break
 						}
 					} else {
 						break
 					}
+				}
+				
+				if (data?.error) {
+					log.error "Unable to get data"
 				}
 			}
 		} finally {
@@ -161,23 +165,30 @@ class LastFmService {
 		}
 		
 		def tracks = data.artisttracks.track
+		log.info "tracks: ${tracks}"
+		// if there's only 1 track, make it into a list
+		if (tracks?.artist) {
+			tracks = [tracks]
+		}
 		
 		
 		// grab the earliest scrobbles
 		def paging = data.artisttracks."@attr"
 		log.info "Got ${paging.totalPages} pages for search ${rawArtistName}"
-		
-		GParsPool.withPool {
-			//for(int i=2; i<=paging.totalPages.toInteger(); i++) {
-			(2..paging.totalPages.toInteger()).eachParallel { i ->
-//				log.info "Getting page ${i}"
-				query["page"] = i
-				data = queryApi(query)
-				if (!data?.artisttracks) {
-					log.error "Didn't get track data for page ${i}"
-				}
-				data.artisttracks.track.each {
-					tracks.add(it)
+
+		if (paging.totalPages.toInteger() > 1) {		
+			GParsPool.withPool {
+				//for(int i=2; i<=paging.totalPages.toInteger(); i++) {
+				(2..paging.totalPages.toInteger()).eachParallel { i ->
+	//				log.info "Getting page ${i}"
+					query["page"] = i
+					data = queryApi(query)
+					if (!data?.artisttracks) {
+						log.error "Didn't get track data for page ${i}"
+					}
+					data.artisttracks.track.each {
+						tracks.push(it)
+					}
 				}
 			}
 		}
@@ -209,8 +220,8 @@ class LastFmService {
 		
 		def artistId = tracks[0]?.artist?.mbid
 		if (!artistId) {
-			log.warn "Search for ${rawArtistName} returned no tracks"
-			return
+			log.warn "Search for ${rawArtistName} returned no artist id"
+			return 0
 		}
 		//println "artist name: ${artistName}"
 		def artist = Artist.findByLastId(artistId) ?: new Artist(name: artistName, lastId: artistId).save(flush: true, failOnError: true)

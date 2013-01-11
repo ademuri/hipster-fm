@@ -51,6 +51,7 @@
 								</span>
 							</g:each>
 						</div>
+						<br>
 						<div class="fieldcontain ${hasErrors(field: 'artist', 'error')} ">
 							<label for="artist">
 								Artist
