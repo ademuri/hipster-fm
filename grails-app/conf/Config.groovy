@@ -11,6 +11,12 @@
 //    grails.config.locations << "file:" + System.properties["${appName}.config.location"]
 // }
 
+// local configuration of DB stuff
+//def extConfig = System.properties.getProperty('EXTCONFIG')
+def extConfig = System.getenv().get('EXTCONFIG').toString()
+log.error "EXTCONFIG: ${extConfig}, ${System.getenv().get('PATH').toString()}"
+grails.config.locations = [ "file:${extConfig}/config.groovy" ]
+
 grails.project.groupId = appName // change this to alter the default package name and Maven publishing destination
 grails.mime.file.extensions = true // enables the parsing of file extensions from URLs into the request format
 grails.mime.use.accept.header = false

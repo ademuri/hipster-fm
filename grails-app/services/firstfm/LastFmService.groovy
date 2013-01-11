@@ -38,16 +38,16 @@ class LastFmService {
     }
 	
 	def queryApi(query) {
-		log.info "Enter query ${query}"
+//		log.info "Enter query ${query}"
 		synchronized(queryLock) {
-			log.info "Increment queries ${query}"
+//			log.info "Increment queries ${query}"
 			while (queriesRunning >= maxQueries) {
-				log.info "Queries already running, waiting ${query}"
+//				log.info "Queries already running, waiting ${query}"
 				queryLock.wait()
 			}
 			queriesRunning++
 		}
-		log.info "Running ${query}"
+//		log.info "Running ${query}"
 		
 		query.api_key = api
 		query.format = 'json'
@@ -56,15 +56,25 @@ class LastFmService {
 		
 		try {
 			withRest(uri:"http://ws.audioscrobbler.com/") {
-				def resp = get(path: '/2.0/', query: query)
-				
-				
-				
-				data = resp.getData()
+				for (int i=0; i<5; i++) {
+					def resp = get(path: '/2.0/', query: query)
+					data = resp.getData()
+					if (data?.error) {
+						log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
+						if (data.error.toInteger() == 8) {
+							Thread.sleep(5000)
+							log.info "Trying again"
+						} else {
+							break
+						}
+					} else {
+						break
+					}
+				}
 			}
 		} finally {
 			synchronized(queryLock) {
-				log.info "Decrement queries ${query}"
+//				log.info "Decrement queries ${query}"
 				queriesRunning--
 				queryLock.notifyAll()
 			}
@@ -160,8 +170,12 @@ class LastFmService {
 		GParsPool.withPool {
 			//for(int i=2; i<=paging.totalPages.toInteger(); i++) {
 			(2..paging.totalPages.toInteger()).eachParallel { i ->
+//				log.info "Getting page ${i}"
 				query["page"] = i
 				data = queryApi(query)
+				if (!data?.artisttracks) {
+					log.error "Didn't get track data for page ${i}"
+				}
 				data.artisttracks.track.each {
 					tracks.add(it)
 				}
@@ -206,21 +220,22 @@ class LastFmService {
 		// example: 19 Jun 2012, 21:16
 		def dateFormat = new SimpleDateFormat("dd MMM yyyy, kk:mm")
 		
+		def existingTracks = Track.countByArtist(userArtist) > 0	// don't check for duplicate tracks if none exist
+		
 		tracks.each {
 			def trackId = it.mbid
 			def date = dateFormat.parse(it.date."#text")
-			def track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)
+			def track
+			
+			if (existingTracks) {
+				track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)
+			} else {
+				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)	
+			}
 			userArtist.addToTracks(track)
 		}
 		
 		log.info "Done creating tracks"
-		
-		// flush the tracks
-//		def hibSession = sessionFactory.getCurrentSession()
-//		assert hibSession != null
-//		hibSession.flush()
-//		
-//		log.info "Tracks flushed"
 		
 		userArtist.lastSynced = new Date()
 		

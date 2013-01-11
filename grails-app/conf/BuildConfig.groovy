@@ -48,8 +48,8 @@ grails.project.dependency.resolution = {
 		//runtime "com.mysql.jdbc.Driver"
 
         // Uncomment these (or add new ones) to enable additional resources capabilities
-        //runtime ":zipped-resources:1.0"
-        //runtime ":cached-resources:1.0"
+//        runtime ":zipped-resources:1.0"
+//        runtime ":cached-resources:1.0"
         //runtime ":yui-minify-resources:0.1.4"
 
         build ":tomcat:$grailsVersion"

@@ -26,8 +26,10 @@ environments {
     }
     production {
         dataSource {
+			username = ""
+			password = ""
             dbCreate = "update"
-            url = "jdbc:mysql://localhost/hipster_prod"
+            url = "jdbc:mysql://localhost/adam_hipster"
             /*properties {
                maxActive = -1
                minEvictableIdleTimeMillis=1800000
