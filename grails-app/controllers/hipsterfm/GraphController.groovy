@@ -99,21 +99,18 @@ class GraphController {
 //		log.info "friends: "
 //		log.info userInstance.friends
 	 
-		def userArtistIds = []
 		
+		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false]
+		userArtistList.eachWithIndex { it, i ->
+			newParams["user${i}"] = it.id
+		}
 		
-		
-		chain(action: "show", model: [artistId: artistInstance.id, userArtistIdList: userArtistList.id, removeOutliers: params.removeOutliers?.contains("on")])
+		redirect(action: "show", params: newParams)
+//		chain(action: "show", model: [artistId: artistInstance.id, userArtistIdList: userArtistList.id, removeOutliers: params.removeOutliers?.contains("on")])
 	}
 	
-	def show() {
-		if (!chainModel || !chainModel?.artistId || !chainModel?.userArtistIdList) {
-			log.warn "Graph-Show called without previous model"
-			flash.message = "Please setup a graph first"
-			redirect(action: "setup")
-			return
-		}
-		def artist = Artist.get(chainModel.artistId)
+	def show(Long artistId, Boolean removeOutliers) {
+		def artist = Artist.get(artistId)
 		if (!artist) {
 			log.warn "Couldn't find artist with id ${id}"
 			flash.message = "Couldn't find artist with id ${id}"
@@ -121,7 +118,12 @@ class GraphController {
 			return
 		}
 		
-		def removeOutliers = chainModel?.removeOutliers as Boolean
+		def userArtistIdList = []
+		params.each {
+			if (it.key.startsWith("user")) {
+				userArtistIdList.push(it.value)
+			}
+		}
 
 		def data = []
 		def users = []
@@ -138,7 +140,7 @@ class GraphController {
 		
 		def globalFirst, globalLast
 		
-		def userArtistIdList = chainModel.userArtistIdList
+//		def userArtistIdList = chainModel.userArtistIdList
 		def userArtistList = []
 		
 		userArtistIdList.each { id ->
