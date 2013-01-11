@@ -6,7 +6,6 @@ import hipsterfm.Track
 import hipsterfm.User
 import java.text.SimpleDateFormat
 import groovyx.gpars.GParsPool
-//import static groovyx.gpars.actor.Actors.actor
 
 class LastFmService {
 	
@@ -18,6 +17,8 @@ class LastFmService {
 	static int queriesRunning = 0
 	static Object queryLock = new Object()
 	static final int maxQueries = 5
+	
+	def sessionFactory
 	
     def checkForUser(user) {
 		withRest(uri:"http://ws.audioscrobbler.com/") {
@@ -40,13 +41,13 @@ class LastFmService {
 		log.info "Enter query ${query}"
 		synchronized(queryLock) {
 			log.info "Increment queries ${query}"
-			queriesRunning++
-		
-			while (queriesRunning > maxQueries) {
+			while (queriesRunning >= maxQueries) {
 				log.info "Queries already running, waiting ${query}"
 				queryLock.wait()
 			}
+			queriesRunning++
 		}
+		log.info "Running ${query}"
 		
 		query.api_key = api
 		query.format = 'json'
@@ -145,6 +146,7 @@ class LastFmService {
 			user.notFoundLastSynced[rawArtistName] = new Date()
 			log.info "in artist tracks, not found: ${user.notFoundLastSynced}"
 			user.save(failOnError: true, flush: true)
+//			user.merge(failOnError: true, flush: true)
 			return 0
 		}
 		
@@ -211,8 +213,17 @@ class LastFmService {
 			userArtist.addToTracks(track)
 		}
 		
-		userArtist.lastSynced = new Date()
 		log.info "Done creating tracks"
+		
+		// flush the tracks
+//		def hibSession = sessionFactory.getCurrentSession()
+//		assert hibSession != null
+//		hibSession.flush()
+//		
+//		log.info "Tracks flushed"
+		
+		userArtist.lastSynced = new Date()
+		
 		
 		return tracks.size()
 	}

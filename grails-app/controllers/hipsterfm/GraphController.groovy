@@ -1,6 +1,7 @@
 package hipsterfm
 
 import grails.converters.JSON
+import groovyx.gpars.GParsPool
 
 class GraphController {
 
@@ -37,10 +38,11 @@ class GraphController {
 //		usernameList.each {
 			def userInstance = User.findByUsername(username)
 			if (!userInstance) {
-				log.warn "Didn't find user with username ${user}"
-				flash.message = "Didn't find user with username ${user}"
-				redirect(action: "setup")
-				return
+				log.info "Didn't find user with username ${user}"
+				userInstance = new User(username: username).save(flush: true, failOnError: true)
+//				flash.message = "Didn't find user with username ${user}"
+//				redirect(action: "setup")
+//				return
 			}
 			userList.add(userInstance)
 		}
@@ -55,11 +57,13 @@ class GraphController {
 			}
 		}
 		
-		userList.each {
-			log.info "Syncing for user ${it}"
-			lastFmService.getArtistTracks(it, artist)
-//			userArtistIds.add(it.userArtist.id)
-		}
+//		GParsPool.withPool {
+			userList.each {
+				log.info "Syncing for user ${it}"
+				lastFmService.getArtistTracks(it, artist)
+	//			userArtistIds.add(it.userArtist.id)
+			}
+//		}
 		
 		def artistInstance = Artist.findByName(artist)
 		if (!artistInstance) {
@@ -71,6 +75,7 @@ class GraphController {
 
 		
 		def userArtistList = []
+		
 		userList.each { userInstance ->
 			log.info "generating user list, ${userInstance}"
 			def userArtistInstance = UserArtist.findByUserAndArtist(userInstance, artistInstance)
@@ -175,7 +180,6 @@ class GraphController {
 		}
 		
 		def outliers = new PriorityQueue<Integer>()
-		
 		
 		userArtistList.each { userArtist ->
 			def counts = []
