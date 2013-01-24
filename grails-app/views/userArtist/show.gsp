@@ -28,6 +28,26 @@
 						<span id="artist-label" class="property-label"><g:message code="artist.artist.label" default="Artist" /></span>
 						<span class="property-value" aria-labelledby="artist-label"><g:link controller="artist" action="show" id="${artistInstance.artist.id}">${artistInstance.artist?.toString()}</g:link></span>
 				</g:if>
+				
+				<g:if test="${artistInstance?.albums}">
+				<li class="fieldcontain">
+					<span id="albums-label" class="property-label"><g:message code="artist.albums.label" default="Albums" /></span>
+					
+						<g:each in="${artistInstance.albums}" var="t">
+						<span class="property-value" aria-labelledby="albums-label"><g:link controller="album" action="show" id="${t.id}">${t?.toString()}</g:link></span>
+						</g:each>
+					
+				</li>
+				</g:if>
+				
+				<g:if test="${artistInstance?.user}">
+				<li class="fieldcontain">
+					<span id="user-label" class="property-label"><g:message code="artist.user.label" default="User" /></span>
+					
+						<span class="property-value" aria-labelledby="user-label"><g:link controller="user" action="show" id="${artistInstance?.user?.id}">${artistInstance?.user?.encodeAsHTML()}</g:link></span>
+					
+				</li>
+				</g:if>
 			
 				<g:if test="${artistInstance?.tracks}">
 				<li class="fieldcontain">
@@ -36,15 +56,6 @@
 						<g:each in="${artistInstance.tracks.sort {it.date}}" var="t">
 						<span class="property-value" aria-labelledby="tracks-label"><g:link controller="track" action="show" id="${t.id}">${t?.toString()}</g:link></span>
 						</g:each>
-					
-				</li>
-				</g:if>
-			
-				<g:if test="${artistInstance?.user}">
-				<li class="fieldcontain">
-					<span id="user-label" class="property-label"><g:message code="artist.user.label" default="User" /></span>
-					
-						<span class="property-value" aria-labelledby="user-label"><g:link controller="user" action="show" id="${artistInstance?.user?.id}">${artistInstance?.user?.encodeAsHTML()}</g:link></span>
 					
 				</li>
 				</g:if>

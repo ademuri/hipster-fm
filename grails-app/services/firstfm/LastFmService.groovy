@@ -1,5 +1,6 @@
 package firstfm
 
+import hipsterfm.Album
 import hipsterfm.Artist
 import hipsterfm.UserArtist
 import hipsterfm.Track
@@ -243,15 +244,34 @@ class LastFmService {
 		
 		def existingTracks = Track.countByArtist(userArtist) > 0	// don't check for duplicate tracks if none exist
 		
+		// do albums stuff efficiently - create them all here, then add tracks to them as needed
+		def albums = userArtist.albums ?: []
+		def rawAlbums = tracks.collect { it.album } as Set
+//		log.info "Got ${rawAlbums.size()} album ids: ${rawAlbums}"
+		
+		rawAlbums.each { rawAlbum ->
+			if (albums.find { it.lastId == rawAlbum.mbid } == null) {
+				// create the album
+//				log.info "Id ${rawAlbum.mbid}, name: ${rawAlbum.'#text'}"
+				def album = new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist).save(failOnError: true, flush: true)
+				albums.add(album)
+			}
+		}
+		
+		Map albumMap = [:]
+		albums.each {
+			albumMap[it.lastId] = it
+		}
+		
 		tracks.each {
 			def trackId = it.mbid
 			def date = dateFormat.parse(it.date."#text")
 			def track
 			
 			if (existingTracks) {
-				track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)
+				track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 			} else {
-				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)	
+				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)	
 			}
 			userArtist.addToTracks(track)
 		}

@@ -6,11 +6,10 @@ class Track {
 		return "${artist.name} - ${name} (${date})"
 	}
 	
-	static belongsTo = [artist: UserArtist]
+	static belongsTo = [artist: UserArtist, album: Album]
 	
 	String name
 	String lastId
-	def albumId
 	Date date
 	
 	static mapping = {
@@ -18,9 +17,9 @@ class Track {
 	}
 	
     static constraints = {
-		albumId nullable: true
 		date nullable: false
 		artist nullable: false
 		name nullable: false
+		album nullable: true
     }
 }
