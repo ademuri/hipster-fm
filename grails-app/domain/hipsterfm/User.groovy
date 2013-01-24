@@ -1,6 +1,6 @@
 package hipsterfm
 
-class User {
+class User implements Comparable {
 	
 	String username
 	String email
@@ -12,8 +12,10 @@ class User {
 	
 	static hasMany = [artists: UserArtist, friends: User]
 	
+//	Set friends
+	
     static constraints = {
-		username(blank: false, nullable: false)
+		username(blank: false, nullable: false, unique: true)
 		email(blank: true, nullable: true)
 		name(blank: true, nullable: true)
 		friendsLastSynced(nullable: true)
@@ -26,4 +28,26 @@ class User {
 	public String toString() {
 		return username
 	}
+
+	@Override
+	public int compareTo(Object o) {
+		if (o instanceof User) {
+			log.warn "compare ${this.username}, ${o.username}"
+			return this.username <=> o.username
+		}
+		
+		return this.hashCode() <=> o.hashCode()
+	}
+	
+	@Override
+	public boolean equals(User u) {
+		log.warn "equals ${this.username}, ${u.username}"
+		return u.username == username
+	}
+	
+	@Override public int hashCode() {
+		return username.hashCode()
+	}
+	
+	
 }

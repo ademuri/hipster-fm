@@ -91,7 +91,7 @@ class LastFmService {
 		def today = new Date()
 		if (origUser.friendsLastSynced && origUser.friendsLastSynced > (today-7)) {
 			log.info "Not syncing friends for ${origUser}, synced recently"
-			return
+//			return
 		}
 		
 		origUser.friendsLastSynced = new Date()
@@ -123,8 +123,18 @@ class LastFmService {
 				log.info "Creating user ${it.name} (${it.realname})"
 				user = new User(username: it.name, name: it.realname).save(failOnError: true)
 			}
-			user.addToFriends(origUser)
-			origUser.addToFriends(user)
+			
+			// note: grails docs suggest this should be a set (ie no duplicates), but I'm still seeing duplicates in the DB
+			// this is a hack & may cause performance issues if there are many friends
+			if (user.friends.find { it == origUser } == null) {
+				user.addToFriends(origUser)
+				user.save(flush: true)
+			}
+			
+			if (origUser.friends.find { it == user } == null) {
+				origUser.addToFriends(user)
+				origUser.save(flush: true)
+			}
 		}
 	}
 	

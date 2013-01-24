@@ -30,7 +30,7 @@ environments {
 			password = ""
             dbCreate = "update"
             url = "jdbc:mysql://localhost/adam_hipster"
-            /*properties {
+            properties {
                maxActive = -1
                minEvictableIdleTimeMillis=1800000
                timeBetweenEvictionRunsMillis=1800000
@@ -39,7 +39,7 @@ environments {
                testWhileIdle=true
                testOnReturn=true
                validationQuery="SELECT 1"
-            }*/
+            }
         }
     }
 }
