@@ -17,6 +17,8 @@ class Album {
 	static hasMany = [tracks: Track]
 
     static constraints = {
-		lastId(nullable: false, blank: false, unique: true)
+		lastId(nullable: false, blank: false)
+		name(blank: true)
+		artist(nullable: false)
     }
 }

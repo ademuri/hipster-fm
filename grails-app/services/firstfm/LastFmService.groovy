@@ -92,7 +92,7 @@ class LastFmService {
 		def today = new Date()
 		if (origUser.friendsLastSynced && origUser.friendsLastSynced > (today-7)) {
 			log.info "Not syncing friends for ${origUser}, synced recently"
-//			return
+			return
 		}
 		
 		origUser.friendsLastSynced = new Date()
@@ -175,7 +175,7 @@ class LastFmService {
 		}
 		
 		def tracks = data.artisttracks.track
-		log.info "tracks: ${tracks}"
+//		log.info "tracks: ${tracks}"
 		// if there's only 1 track, make it into a list
 		if (!tracks[0]?.artist) {
 			log.info "Making a list"
@@ -247,10 +247,15 @@ class LastFmService {
 		// do albums stuff efficiently - create them all here, then add tracks to them as needed
 		def albums = userArtist.albums ?: []
 		def rawAlbums = tracks.collect { it.album } as Set
-//		log.info "Got ${rawAlbums.size()} album ids: ${rawAlbums}"
+		Map albumMap = [:]
+		log.info "Got ${rawAlbums.size()} albums"
 		
 		rawAlbums.each { rawAlbum ->
-			if (albums.find { it.lastId == rawAlbum.mbid } == null) {
+			if (rawAlbum.mbid == "") {
+				albumMap[""] = null
+			}
+			else if (albums.find { it.lastId == rawAlbum.mbid } == null) {
+//				log.info "album ${rawAlbum}"
 				// create the album
 //				log.info "Id ${rawAlbum.mbid}, name: ${rawAlbum.'#text'}"
 				def album = new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist).save(failOnError: true, flush: true)
@@ -258,7 +263,7 @@ class LastFmService {
 			}
 		}
 		
-		Map albumMap = [:]
+		
 		albums.each {
 			albumMap[it.lastId] = it
 		}

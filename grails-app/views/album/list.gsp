@@ -29,6 +29,8 @@
 						<th><g:message code="album.artist.label" default="Artist" /></th>
 					
 						<g:sortableColumn property="name" title="${message(code: 'album.name.label', default: 'Name')}" />
+						
+						<g:sortableColumn property="artist.user" title="User" />
 					
 					</tr>
 				</thead>
@@ -41,6 +43,8 @@
 						<td>${fieldValue(bean: albumInstance, field: "artist")}</td>
 					
 						<td>${fieldValue(bean: albumInstance, field: "name")}</td>
+						
+						<td>${fieldValue(bean: albumInstance, field: "artist.user")}</td>
 					
 					</tr>
 				</g:each>
