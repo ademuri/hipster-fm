@@ -123,17 +123,16 @@ class LastFmService {
 				log.info "Creating user ${it.name} (${it.realname})"
 				user = new User(username: it.name, name: it.realname).save(failOnError: true)
 			}
-			
 			// note: grails docs suggest this should be a set (ie no duplicates), but I'm still seeing duplicates in the DB
 			// this is a hack & may cause performance issues if there are many friends
 			if (user.friends.find { it == origUser } == null) {
 				user.addToFriends(origUser)
-				user.save(flush: true)
+//				user.save(flush: true)
 			}
 			
 			if (origUser.friends.find { it == user } == null) {
 				origUser.addToFriends(user)
-				origUser.save(flush: true)
+//				origUser.save(flush: true)
 			}
 		}
 	}

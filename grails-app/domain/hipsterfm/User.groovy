@@ -32,7 +32,7 @@ class User implements Comparable {
 	@Override
 	public int compareTo(Object o) {
 		if (o instanceof User) {
-			log.warn "compare ${this.username}, ${o.username}"
+//			log.warn "compare ${this.username}, ${o.username}"
 			return this.username <=> o.username
 		}
 		
@@ -41,7 +41,7 @@ class User implements Comparable {
 	
 	@Override
 	public boolean equals(User u) {
-		log.warn "equals ${this.username}, ${u.username}"
+//		log.warn "equals ${this.username}, ${u.username}"
 		return u.username == username
 	}
 	
