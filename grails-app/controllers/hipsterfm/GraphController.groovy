@@ -90,17 +90,10 @@ class GraphController {
 				userArtistList.add(userArtistInstance)
 			}
 		}
-		
-		// sync necessary data
-//		log.info "Syncing friends for user ${user}"
-//		lastFmService.getFriends(userInstance)
-//		def users = [userInstance]
-//		users.addAll(userInstance.friends)
-//		log.info "friends: "
-//		log.info userInstance.friends
-	 
-		
-		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false]
+
+		def album = params.album ? Album.findWhere(artist: artistInstance, name: params.album).id : ""
+		log.info "search album: ${album}"	
+		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false, albumId: album]
 		userArtistList.eachWithIndex { it, i ->
 			newParams["user${i}"] = it.id
 		}
@@ -124,6 +117,12 @@ class GraphController {
 				userArtistIdList.push(it.value)
 			}
 		}
+		
+		def albumId
+		if (params["albumId"]) {
+			albumId = params["albumId"] as Long
+		}
+		def albumName = albumId ? Album.get(albumId).name : ""
 
 		def data = []
 		def users = []
@@ -148,10 +147,21 @@ class GraphController {
 			userArtistList.add(userArtist)
 			
 			users.add(userArtist.user.toString())
-			def dates = userArtist.tracks.collect { 
-				it.date
-			} as Set
+			def dates
+			
+			if (albumId) {
+				log.info "album id: ${albumId}"
+				log.info "user artist albums: ${userArtist.albums}"
+				dates = userArtist.albums.find { it.album.id == albumId }?.tracks.collect { it.date } as Set
+			} else { 
+				dates = userArtist.tracks.collect { it.date } as Set
+			}
+			
 			dates = dates as List	// only grab unique elements, but should be sorted
+			
+			if (dates.size() == 0) {
+				return 	// closure, so only skip this user artist id
+			}
 			
 			dates.sort()
 			
@@ -191,12 +201,18 @@ class GraphController {
 		userArtistList.each { userArtist ->
 			def counts = []
 			def found = false	// only start adding when we've found some tracks
+			if (albumId) {
+				def userAlbumId = userArtist.albums.find { it.album.id == albumId }.id
+			}
 			
 			for (int i=0; i<(globalLast-globalFirst); i+=tickSize) {
 				def c = Track.createCriteria()
 				def count = c.count{
 					eq("artist.id", userArtist.id)
 					between('date', globalFirst+i, globalFirst+i+intervalSize)
+					if (albumId) {
+						eq("album.id", userAlbumId)
+					}
 				}
 				
 				if (removeOutliers) {
@@ -256,7 +272,7 @@ class GraphController {
 		}
 		
 		//def json = data as JSON
-		[chartdata:chartdata as JSON, artistName: artist.name, maxY: maxY]
+		[chartdata:chartdata as JSON, artistName: artist.name, maxY: maxY, albumName: albumName]
 		//data as JSON
 	}
 }

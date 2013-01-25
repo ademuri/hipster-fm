@@ -1,5 +1,5 @@
 
-<%@ page import="hipsterfm.Album" %>
+<%@ page import="hipsterfm.UserAlbum" %>
 <!DOCTYPE html>
 <html>
 	<head>
@@ -36,7 +36,16 @@
 				<li class="fieldcontain">
 					<span id="artist-label" class="property-label"><g:message code="album.artist.label" default="Artist" /></span>
 					
-						<span class="property-value" aria-labelledby="artist-label"><g:link controller="artist" action="show" id="${albumInstance?.artist?.id}">${albumInstance?.artist?.encodeAsHTML()}</g:link></span>
+						<span class="property-value" aria-labelledby="artist-label"><g:link controller="userArtist" action="show" id="${albumInstance?.artist?.id}">${albumInstance?.artist?.encodeAsHTML()}</g:link></span>
+					
+				</li>
+				</g:if>
+				
+				<g:if test="${albumInstance?.album}">
+				<li class="fieldcontain">
+					<span id="album-label" class="property-label"><g:message code="album.album.label" default="Album" /></span>
+					
+						<span class="property-value" aria-labelledby="album-label"><g:link controller="album" action="show" id="${albumInstance?.album?.id}">${albumInstance?.album?.encodeAsHTML()}</g:link></span>
 					
 				</li>
 				</g:if>
@@ -50,12 +59,12 @@
 				</li>
 				</g:if>
 			
-				<g:if test="${albumInstance?.userAlbums}">
+				<g:if test="${albumInstance?.tracks}">
 				<li class="fieldcontain">
-					<span id="userAlbums-label" class="property-label"><g:message code="album.userAlbums.label" default="User Albums" /></span>
+					<span id="tracks-label" class="property-label"><g:message code="album.tracks.label" default="Tracks" /></span>
 					
-						<g:each in="${albumInstance.userAlbums}" var="u">
-						<span class="property-value" aria-labelledby="userAlbums-label"><g:link controller="userAlbum" action="show" id="${u.id}">${u?.encodeAsHTML()}</g:link></span>
+						<g:each in="${albumInstance.tracks}" var="t">
+						<span class="property-value" aria-labelledby="tracks-label"><g:link controller="track" action="show" id="${t.id}">${t?.encodeAsHTML()}</g:link></span>
 						</g:each>
 					
 				</li>

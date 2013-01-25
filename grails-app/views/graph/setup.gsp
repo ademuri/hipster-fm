@@ -58,6 +58,14 @@
 							</label>
 							<g:textField name="artist"/>
 						</div>
+						
+						<div class="fieldcontain ${hasErrors(field: 'album', 'error')} ">
+							<label for="album">
+								Album
+							</label>
+							<g:textField name="album"/>
+						</div>
+						
 						<div class="fieldcontain" >
 							<label for="removeOutliers">Remove Outliers</label>
 							<g:checkBox name="removeOutliers" />

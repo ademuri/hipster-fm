@@ -2,12 +2,12 @@
 
 
 
-<div class="fieldcontain ${hasErrors(bean: albumInstance, field: 'lastId', 'error')} required">
+<div class="fieldcontain ${hasErrors(bean: albumInstance, field: 'lastId', 'error')} ">
 	<label for="lastId">
 		<g:message code="album.lastId.label" default="Last Id" />
-		<span class="required-indicator">*</span>
+		
 	</label>
-	<g:textField name="lastId" required="" value="${albumInstance?.lastId}"/>
+	<g:textField name="lastId" value="${albumInstance?.lastId}"/>
 </div>
 
 <div class="fieldcontain ${hasErrors(bean: albumInstance, field: 'artist', 'error')} required">
@@ -15,7 +15,7 @@
 		<g:message code="album.artist.label" default="Artist" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:select id="artist" name="artist.id" from="${hipsterfm.UserArtist.list()}" optionKey="id" required="" value="${albumInstance?.artist?.id}" class="many-to-one"/>
+	<g:select id="artist" name="artist.id" from="${hipsterfm.Artist.list()}" optionKey="id" required="" value="${albumInstance?.artist?.id}" class="many-to-one"/>
 </div>
 
 <div class="fieldcontain ${hasErrors(bean: albumInstance, field: 'name', 'error')} ">
@@ -26,18 +26,18 @@
 	<g:textField name="name" value="${albumInstance?.name}"/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: albumInstance, field: 'tracks', 'error')} ">
-	<label for="tracks">
-		<g:message code="album.tracks.label" default="Tracks" />
+<div class="fieldcontain ${hasErrors(bean: albumInstance, field: 'userAlbums', 'error')} ">
+	<label for="userAlbums">
+		<g:message code="album.userAlbums.label" default="User Albums" />
 		
 	</label>
 	
 <ul class="one-to-many">
-<g:each in="${albumInstance?.tracks?}" var="t">
-    <li><g:link controller="track" action="show" id="${t.id}">${t?.encodeAsHTML()}</g:link></li>
+<g:each in="${albumInstance?.userAlbums?}" var="u">
+    <li><g:link controller="userAlbum" action="show" id="${u.id}">${u?.encodeAsHTML()}</g:link></li>
 </g:each>
 <li class="add">
-<g:link controller="track" action="create" params="['album.id': albumInstance?.id]">${message(code: 'default.add.label', args: [message(code: 'track.label', default: 'Track')])}</g:link>
+<g:link controller="userAlbum" action="create" params="['album.id': albumInstance?.id]">${message(code: 'default.add.label', args: [message(code: 'userAlbum.label', default: 'UserAlbum')])}</g:link>
 </li>
 </ul>
 

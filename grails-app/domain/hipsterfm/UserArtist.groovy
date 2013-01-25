@@ -25,7 +25,7 @@ class UserArtist {
 	static transients = ["name", "lastId"]
 	
 	static belongsTo = [user: User, artist: Artist]
-	static hasMany = [tracks: Track, albums: Album]
+	static hasMany = [tracks: Track, albums: UserAlbum]
 
     static constraints = {
 		lastSynced nullable: true

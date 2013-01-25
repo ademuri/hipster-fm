@@ -6,7 +6,7 @@ class Track {
 		return "${artist.name} - ${name} (${date})"
 	}
 	
-	static belongsTo = [artist: UserArtist, album: Album]
+	static belongsTo = [artist: UserArtist, album: UserAlbum]
 	
 	String name
 	String lastId

@@ -1,6 +1,7 @@
 package firstfm
 
 import hipsterfm.Album
+import hipsterfm.UserAlbum
 import hipsterfm.Artist
 import hipsterfm.UserArtist
 import hipsterfm.Track
@@ -258,8 +259,11 @@ class LastFmService {
 //				log.info "album ${rawAlbum}"
 				// create the album
 //				log.info "Id ${rawAlbum.mbid}, name: ${rawAlbum.'#text'}"
-				def album = new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist).save(failOnError: true, flush: true)
-				albums.add(album)
+				def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: artist).save(failOnError: true, flush: true)
+				def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true, flush: true)
+				album.addToUserAlbums(userAlbum).save(failOnError: true, flush: true)
+				log.info "album: ${album}, userAlbums: ${album.userAlbums}"
+				albums.add(userAlbum)
 			}
 		}
 		
@@ -267,6 +271,7 @@ class LastFmService {
 		albums.each {
 			albumMap[it.lastId] = it
 		}
+		log.info "Done with albums"
 		
 		tracks.each {
 			def trackId = it.mbid

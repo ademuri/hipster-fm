@@ -13,12 +13,10 @@ class Album {
 	String name
 	String lastId
 	
-	static belongsTo = [artist: UserArtist]
-	static hasMany = [tracks: Track]
+	static belongsTo = [artist: Artist]
+	static hasMany = [userAlbums: UserAlbum]
 
     static constraints = {
-		lastId(nullable: false, blank: false)
-		name(blank: true)
-		artist(nullable: false)
+		lastId(nullable: false)
     }
 }

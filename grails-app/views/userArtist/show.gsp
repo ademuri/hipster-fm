@@ -34,7 +34,7 @@
 					<span id="albums-label" class="property-label"><g:message code="artist.albums.label" default="Albums" /></span>
 					
 						<g:each in="${artistInstance.albums}" var="t">
-						<span class="property-value" aria-labelledby="albums-label"><g:link controller="album" action="show" id="${t.id}">${t?.toString()}</g:link></span>
+						<span class="property-value" aria-labelledby="albums-label"><g:link controller="userAlbum" action="show" id="${t.id}">${t?.toString()}</g:link></span>
 						</g:each>
 					
 				</li>

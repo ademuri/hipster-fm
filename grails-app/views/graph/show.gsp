@@ -14,7 +14,7 @@
 		</div>
 		
 		<div id="show-graph" class="content" role="main">
-			<h1>${artistName}</h1>
+			<h1>${artistName}<g:if test="albumName"> - ${albumName}</g:if></h1>
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>
