@@ -201,8 +201,10 @@ class GraphController {
 		userArtistList.each { userArtist ->
 			def counts = []
 			def found = false	// only start adding when we've found some tracks
+			def userAlbumId
+			
 			if (albumId) {
-				def userAlbumId = userArtist.albums.find { it.album.id == albumId }.id
+				userAlbumId = userArtist.albums.find { it.album.id == albumId }.id
 			}
 			
 			for (int i=0; i<(globalLast-globalFirst); i+=tickSize) {
