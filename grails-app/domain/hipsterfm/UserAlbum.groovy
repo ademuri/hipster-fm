@@ -22,7 +22,6 @@ class UserAlbum {
 	
 	static belongsTo = [artist: UserArtist, album: Album]
 	static hasMany = [tracks: Track]
-	Z
 	static transients = ["name", "lastId"]
 
     static constraints = {
