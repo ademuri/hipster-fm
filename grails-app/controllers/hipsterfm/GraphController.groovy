@@ -2,6 +2,7 @@ package hipsterfm
 
 import grails.converters.JSON
 import groovyx.gpars.GParsPool
+import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
 
 class GraphController {
 
@@ -93,8 +94,10 @@ class GraphController {
 
 		def album = params.album ? Album.findWhere(artist: artistInstance, name: params.album).id : ""
 		log.info "search album: ${album}"	
-		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false, albumId: album]
+		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false, 
+			albumId: album, tickSize: params.tickSize, intervalSize: params.intervalSize]
 		userArtistList.eachWithIndex { it, i ->
+//			newParams.put("user", it.id)
 			newParams["user${i}"] = it.id
 		}
 		
@@ -127,8 +130,16 @@ class GraphController {
 		def data = []
 		def users = []
 		
-		def intervalSize = 30 	// about a month
-		def tickSize = 30
+		def intervalSize = 25 	// about a month
+		def tickSize = 25
+		if (params.tickSize) {
+			tickSize = params.tickSize as Long
+		}
+		if (params.intervalSize) {
+			intervalSize = params.intervalSize as Long
+		}
+		
+		log.info "tickSize: ${tickSize}, intervalSize: ${intervalSize}"
 		
 		// parameters for setting ymax based removing outliers
 		def kOutlierMin = 30	
@@ -195,6 +206,9 @@ class GraphController {
 				}
 			}
 		}
+		
+		tickSize = (globalLast - globalFirst) / tickSize as Integer
+		intervalSize = (globalLast - globalFirst) / intervalSize as Integer
 		
 		def outliers = new PriorityQueue<Integer>()
 		

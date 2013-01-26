@@ -37,7 +37,10 @@
 							show: true, 
 							onlyFirst: true
 						},
-						shadow: false
+						shadow: false,
+						rendererOptions: {
+							smooth: true,
+						},
 					},
 					axes: {
 						xaxis: {
@@ -71,6 +74,19 @@
 			});
 			console.log(${chartdata});
 		</script>
+		
+		<g:form method="get" >
+			<g:render template="window"/>
+			<g:each var="p" in="${params}">
+				<g:if test="${p.key != 'tickSize' && p.key != 'intervalSize' && p.key != '_action_show'
+					&& p.key != 'action' && p.key != 'controller'}">
+					<g:hiddenField name="${p.key}" value="${p.value}" />
+				</g:if> 				
+			</g:each>
+			<fieldset class="buttons">
+				<g:actionSubmit class="submit" action="show" value="Submit"  />
+			</fieldset>
+		</g:form>
 		
 	</body>
 </html>

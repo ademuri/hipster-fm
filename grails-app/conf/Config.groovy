@@ -14,6 +14,7 @@
 // local configuration of DB stuff
 //def extConfig = System.properties.getProperty('EXTCONFIG')
 def extConfig = System.getenv().get('EXTCONFIG').toString()
+log.error "extConfig: ${extConfig}"
 grails.config.locations = [ "file:${extConfig}/config.groovy" ]
 
 grails.project.groupId = appName // change this to alter the default package name and Maven publishing destination

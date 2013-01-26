@@ -71,6 +71,7 @@
 							<g:checkBox name="removeOutliers" />
 						</div>
 					</fieldset>
+					<g:render template="window"/>
 					<fieldset class="buttons">
 						<g:actionSubmit class="submit" action="search" value="Submit" />
 					</fieldset>
