@@ -59,6 +59,5 @@ grails.project.dependency.resolution = {
 
 //		compile "org.codehaus.gpars:gpars:0.12"
         compile ':cache:1.0.0'
-		compile ":webflow:2.0.0"
     }
 }

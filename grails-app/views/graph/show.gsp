@@ -14,7 +14,7 @@
 		</div>
 		
 		<div id="show-graph" class="content" role="main">
-			<h1>${artistName}<g:if test="albumName"> - ${albumName}</g:if></h1>
+			<h1>${artistName}<g:if test="${albumName}"> - ${albumName}</g:if></h1>
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>
@@ -32,6 +32,9 @@
 
 				
 				var jqplotOptions = {
+					seriesColors: ["#FF0000", "#FFBA10", "#970CE8", "#0D4EFF", "#E87C15", 
+									"#1ECC21", "#00E8C2", "#E232EA", "#4F826A",
+									],
 					seriesDefaults: {
 						markerOptions: {
 							show: true, 
