@@ -252,7 +252,7 @@ class LastFmService {
 		log.info "Got ${rawAlbums.size()} albums"
 		
 		rawAlbums.each { rawAlbum ->
-			if (rawAlbum.mbid == "") {
+			if (!rawAlbum || rawAlbum.mbid == "") {
 				albumMap[""] = null
 			}
 			else if (albums.find { it.lastId == rawAlbum.mbid } == null) {
@@ -274,6 +274,9 @@ class LastFmService {
 		log.info "Done with albums"
 		
 		tracks.each {
+			if (!it?.date) {
+				return	//skip this track
+			}
 			def trackId = it.mbid
 			def date = dateFormat.parse(it.date."#text")
 			def track
