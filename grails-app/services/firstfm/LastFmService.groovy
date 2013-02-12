@@ -276,4 +276,30 @@ class LastFmService {
 		
 		return tracks.size()
 	}
+	
+	def getUserTopArtists(user) {
+		if (!user) {
+			log.warn "getUserTopArtists called with null user"
+			return
+		}
+		
+		def query = [
+			method: 'user.getTopArtists',
+			user: user.username,
+			period: "3month",
+			]
+		
+		def data = queryApi(query)
+		
+		def artists = data.topartists.artist
+		artists.each {
+			def artist = UserArtist.findByUserAndLastId(user, it.mbid)
+			if (!artist) {
+				log.info "Top artist not present: ${artist.name}"
+			} else {
+				log.info "Found top artist: ${artist.name}"
+				user.addToTopArtists(artist)
+			}
+		}
+	}
 }

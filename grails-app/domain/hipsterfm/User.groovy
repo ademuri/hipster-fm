@@ -10,7 +10,7 @@ class User implements Comparable {
 	Map<String, Date> notFoundLastSynced = [:]		// artists that had no tracks -> when it was checked
 	Date friendsLastSynced
 	
-	static hasMany = [artists: UserArtist, friends: User]
+	static hasMany = [artists: UserArtist, friends: User, topArtists: UserArtist]
 	
 //	Set friends
 	
