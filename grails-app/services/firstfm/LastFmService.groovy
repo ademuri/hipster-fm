@@ -286,6 +286,12 @@ class LastFmService {
 			return
 		}
 		
+		// if we've synced this recently, don't do it again
+		if (user?.topArtistsLastSynced && user?.topArtistsLastSynced > (new Date()-7)) {
+			log.info "Synced top artists for ${user.username} recently, not syncing"
+			return
+		}
+		
 		def query = [
 			method: 'user.getTopArtists',
 			user: user.username,

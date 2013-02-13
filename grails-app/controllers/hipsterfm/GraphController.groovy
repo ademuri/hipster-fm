@@ -26,7 +26,9 @@ class GraphController {
 				friends = userInstance.friends
 				
 				lastFmService.getUserTopArtists(userInstance)
-				topArtists = userInstance.artists.sort { it.numScrobbles }.reverse().getAt(0..15)
+				if (userInstance.artists.size() > 0) {
+					topArtists = userInstance.artists.sort { it.numScrobbles }.reverse().getAt(0..(Math.min(userInstance.artists.size()-1, 15)))
+				}
 			}
 		}
 		
@@ -148,8 +150,7 @@ class GraphController {
 		def kOutlierMin = 30	
 		def kNumOutliers = 10
 		def kOutlierRatioUpper = 1.5	// threshold for max being an outlier
-		def kOutlierRatioLower			// threshold for selecting max
-		def kOutlierMax = 150
+		def kOutlierMax = 200
 		
 		def globalFirst, globalLast
 		
@@ -275,7 +276,7 @@ class GraphController {
 					}
 				}
 				
-				maxY = outlierList[i-1]
+				maxY = Math.max((int)(outlierList[i-1]*1.1), kOutlierMin)	// give us a little of breathing room above the curve
 			}
 			
 			if (maxY) {
@@ -289,6 +290,8 @@ class GraphController {
 		users.each {
 			chartdata.series.add(["label": it])
 		}
+		
+		log.info "rendering page"
 		
 		//def json = data as JSON
 		[chartdata:chartdata as JSON, artistName: artist.name, maxY: maxY, albumName: albumName]
