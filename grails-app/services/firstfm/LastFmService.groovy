@@ -298,22 +298,22 @@ class LastFmService {
 		artists.each {
 			def artist = Artist.findByLastId(it.mbid)
 			if (!artist) {
-				log.info "Top artist not present: ${it.name}"
+//				log.info "Top artist not present: ${it.name}"
 				artist = new Artist(name: it.name, lastId: it.mbid).save()
 			}
 			
 			def userArtist = artist.userArtists.find { it.user == user}
 			
 			if (!userArtist) {
-				log.info "Top user artist not present: ${artist.name}"
+//				log.info "Top user artist not present: ${artist.name}"
 				userArtist = new UserArtist(artist: artist, user: user).save()
 				artist.addToUserArtists(userArtist)
 			} else {
-				log.info "Found top user artist: ${artist.name}"
+//				log.info "Found top user artist: ${artist.name}"
 			}
 			userArtist.numScrobbles = it.playcount as long
 		}
 		
-		return user.artists.getAt(0, 30)
+		return user.artists
 	}
 }

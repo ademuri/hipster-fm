@@ -610,3 +610,7 @@ a.skip {
 div.checkbox {
 	padding-bottom: 1em;
 }
+select#artist-select {
+	width: 30%;
+	height: 10em;
+}

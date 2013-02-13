@@ -59,6 +59,13 @@
 							<g:textField name="artist"/>
 						</div>
 						
+						<g:if test="${topArtists?.size() > 0}">
+							<div class="fieldcontain" >
+								<label for="artist-select"></label>
+								<g:select name="artist-select" from="${topArtists}" optionKey="id" optionValue="name" multiple="true" />
+							</div>
+						</g:if>
+						
 						<div class="fieldcontain ${hasErrors(field: 'album', 'error')} ">
 							<label for="album">
 								Album

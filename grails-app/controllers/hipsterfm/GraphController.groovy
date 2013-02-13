@@ -24,10 +24,13 @@ class GraphController {
 				log.info "Found user ${user}"
 				lastFmService.getFriends(userInstance)
 				friends = userInstance.friends
+				
+				lastFmService.getUserTopArtists(userInstance)
+				topArtists = userInstance.artists.sort { it.numScrobbles }.reverse().getAt(0..15)
 			}
 		}
 		
-		[friends: friends, user: user]
+		[friends: friends, user: user, topArtists: topArtists]
 	}
 	
 	def search(String user, String artist) {
