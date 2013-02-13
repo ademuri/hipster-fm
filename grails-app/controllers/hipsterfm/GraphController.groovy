@@ -27,7 +27,7 @@ class GraphController {
 				
 				lastFmService.getUserTopArtists(userInstance)
 				if (userInstance.artists.size() > 0) {
-					topArtists = userInstance.artists.sort { it.numScrobbles }.reverse().getAt(0..(Math.min(userInstance.artists.size()-1, 15)))
+					topArtists = userInstance.artists.sort { it.numScrobbles }.reverse().getAt(0..(Math.min(userInstance.artists.size()-1, 30)))
 				}
 			}
 		}
@@ -113,8 +113,8 @@ class GraphController {
 	def show(Long artistId, Boolean removeOutliers) {
 		def artist = Artist.get(artistId)
 		if (!artist) {
-			log.warn "Couldn't find artist with id ${id}"
-			flash.message = "Couldn't find artist with id ${id}"
+			log.warn "Couldn't find artist with id ${artistId}"
+			flash.message = "Couldn't find artist with id ${artistId}"
 			redirect(action: "setup")
 			return
 		}

@@ -28,7 +28,11 @@ class User implements Comparable {
 	}
 	
 	public String toString() {
-		return username
+		if (name) {
+			return "${name} (${username})"
+		} else {
+			return username
+		}
 	}
 
 	@Override
