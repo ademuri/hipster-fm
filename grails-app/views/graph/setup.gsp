@@ -62,7 +62,7 @@
 						<g:if test="${topArtists?.size() > 0}">
 							<div class="fieldcontain" >
 								<label for="artist-select"></label>
-								<g:select name="artist-select" from="${topArtists}" optionKey="id" optionValue="name" multiple="true" />
+								<g:select name="artist-select" from="${topArtists}" optionKey="name" optionValue="name" multiple="true" />
 							</div>
 						</g:if>
 						
@@ -87,5 +87,10 @@
 			</div>
 		
 		</div>
+		<script>
+		$("#artist-select").change(function() {
+			$("#artist").val($("#artist-select").val());
+		});
+		</script>
 	</body>
 </html>
