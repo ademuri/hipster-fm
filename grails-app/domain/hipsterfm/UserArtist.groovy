@@ -19,6 +19,7 @@ class UserArtist {
 	
 	String name
 	String lastId
+	long numScrobbles = 0
 	
 	Date lastSynced
 	

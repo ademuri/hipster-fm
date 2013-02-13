@@ -10,7 +10,7 @@ class User implements Comparable {
 	Map<String, Date> notFoundLastSynced = [:]		// artists that had no tracks -> when it was checked
 	Date friendsLastSynced
 	
-	static hasMany = [artists: UserArtist, friends: User, topArtists: UserArtist]
+	static hasMany = [artists: UserArtist, friends: User]
 	
 //	Set friends
 	
@@ -48,6 +48,7 @@ class User implements Comparable {
 	@Override public int hashCode() {
 		return username.hashCode()
 	}
+	
 	
 	
 }
