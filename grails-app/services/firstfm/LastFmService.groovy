@@ -145,12 +145,16 @@ class LastFmService {
 		def cutoffDate = (new Date())-7
 		def cutoffTS = cutoffDate.toTimestamp()
 		
+		def lastSynced = existingArtist ?: UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced
+		
 		if ((existingArtist && UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced > cutoffDate)
 			|| (user.notFoundLastSynced[rawArtistName] && user.notFoundLastSynced[rawArtistName].after(cutoffTS))) {
 			log.info "Not syncing ${rawArtistName} for ${user}, synced recently"
 			return 0
 		}
 			
+		def syncFromDate = lastSynced ? lastSynced - 16 : null		// if we've synced before, sync for 15 days from the last day
+		// last.fm lets you sync back up to 2 weeks, so this should give us 2 days of margin	
 		
 		def query = [
 			method: 'user.getartisttracks',
@@ -169,20 +173,17 @@ class LastFmService {
 		if (data.artisttracks?.items && data.artisttracks?.items.toInteger() == 0) {
 			log.warn "Found no results for user ${user}, artist ${rawArtistName}"
 			user.notFoundLastSynced[rawArtistName] = new Date()
-			log.info "in artist tracks, not found: ${user.notFoundLastSynced}"
 			user.save(failOnError: true, flush: true)
 //			user.merge(failOnError: true, flush: true)
 			return 0
 		}
 		
 		def tracks = data.artisttracks.track
-//		log.info "tracks: ${tracks}"
 		// if there's only 1 track, make it into a list
 		if (!tracks[0]?.artist) {
 			log.info "Making a list"
 			tracks = [tracks]
 		}
-//		
 		
 		// grab the earliest scrobbles
 		def paging = data.artisttracks."@attr"
@@ -190,9 +191,7 @@ class LastFmService {
 
 		if (paging.totalPages.toInteger() > 1) {		
 			GParsPool.withPool {
-				//for(int i=2; i<=paging.totalPages.toInteger(); i++) {
 				(2..paging.totalPages.toInteger()).eachParallel { i ->
-	//				log.info "Getting page ${i}"
 					query["page"] = i
 					data = queryApi(query)
 					if (!data?.artisttracks) {
@@ -204,28 +203,8 @@ class LastFmService {
 				}
 			}
 		}
-//		if (paging.totalPages.toInteger() > 1) {
-//			query["page"] = paging.totalPages
-//			data = queryApi(query)
-//			
-//			if (paging.totalPages == 2)
-//			{
-//				data.artisttracks.track.each {
-//					tracks.add(it)
-//				}
-//			} else {
-//				query["page"] = query["page"].toInteger() - 1
-//				data = queryApi(query)
-//				data.artisttracks.track.each {
-//					tracks.add(it)
-//				}
-//			}
-//		}
 		
 		log.info "Found ${tracks.size()} tracks."
-		
-		//println "print"
-		//println data.artisttracks.track[0]
 		
 		def artistName = tracks[0]?.artist?."#text"
 		
@@ -279,6 +258,10 @@ class LastFmService {
 			}
 			def trackId = it.mbid
 			def date = dateFormat.parse(it.date."#text")
+			if (syncFromDate && date < syncFromDate) {
+				log.info "Ignoring track with date ${date}, before cutoff ${syncFromDate}"
+				return
+			}
 			def track
 			
 			if (existingTracks) {
@@ -295,5 +278,31 @@ class LastFmService {
 		
 		
 		return tracks.size()
+	}
+	
+	def getUserTopArtists(user) {
+		if (!user) {
+			log.warn "getUserTopArtists called with null user"
+			return
+		}
+		
+		def query = [
+			method: 'user.getTopArtists',
+			user: user.username,
+			period: "3month",
+			]
+		
+		def data = queryApi(query)
+		
+		def artists = data.topartists.artist
+		artists.each {
+			def artist = UserArtist.findByUserAndLastId(user, it.mbid)
+			if (!artist) {
+				log.info "Top artist not present: ${artist.name}"
+			} else {
+				log.info "Found top artist: ${artist.name}"
+				user.addToTopArtists(artist)
+			}
+		}
 	}
 }
