@@ -110,7 +110,7 @@ class UserController {
 			return
 		}
 
-		lastFmService.getArtistTracks(userInstance, artist)
+		lastFmService.getArtistTracks(userInstance, artist, true)	// true: force sync
 	}
 	
 	def getFriends(Long id) {

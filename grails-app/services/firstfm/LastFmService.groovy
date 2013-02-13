@@ -139,15 +139,15 @@ class LastFmService {
 		}
 	}
 	
-	int getArtistTracks(user, rawArtistName) {
+	int getArtistTracks(user, rawArtistName, force = false) {
 		
 		def existingArtist = Artist.findByName(rawArtistName)
 		def cutoffDate = (new Date())-7
 		def cutoffTS = cutoffDate.toTimestamp()
 		
-		def lastSynced = existingArtist ?: UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced
+		def lastSynced = existingArtist ? UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced : null
 		
-		if ((existingArtist && UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced > cutoffDate)
+		if (!force && (existingArtist && UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced > cutoffDate)
 			|| (user.notFoundLastSynced[rawArtistName] && user.notFoundLastSynced[rawArtistName].after(cutoffTS))) {
 			log.info "Not syncing ${rawArtistName} for ${user}, synced recently"
 			return 0
@@ -259,7 +259,7 @@ class LastFmService {
 			def trackId = it.mbid
 			def date = dateFormat.parse(it.date."#text")
 			if (syncFromDate && date < syncFromDate) {
-				log.info "Ignoring track with date ${date}, before cutoff ${syncFromDate}"
+//				log.info "Ignoring track with date ${date}, before cutoff ${syncFromDate}"
 				return
 			}
 			def track
