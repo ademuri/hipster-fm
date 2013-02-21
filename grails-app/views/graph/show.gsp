@@ -23,8 +23,8 @@
 		<g:form method="get" >
 			<g:render template="window"/>
 			<g:each var="p" in="${params}">
-				<g:if test="${p.key != 'tickSize' && p.key != 'intervalSize' && p.key != '_action_show'
-					&& p.key != 'action' && p.key != 'controller'}">
+				<g:if test="${!(['tickSize', 'intervalSize', 'startDate', 'endDate', 
+					'_action_show', 'action', 'controller'].contains(p.key ))}">
 					<g:hiddenField name="${p.key}" value="${p.value}" />
 				</g:if> 				
 			</g:each>

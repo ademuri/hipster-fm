@@ -9,5 +9,18 @@
 			<label for="intervalSize">Interval size</label>
 			<g:textField name="intervalSize" value="${params?.intervalSize ?: 20 }"/>
 		</div>
+		
+		<div class="fieldcontain" >
+			<label for="startDate">Dates</label>
+			<g:textField name="startDate" value="${params?.startDate}" />
+			<g:textField name="endDate" value="${params?.endDate}" />
+		</div>
 	</fieldset>
 </div>
+
+<script>
+$(document).ready(function() {
+	$("#startDate").datepicker();
+	$("#endDate").datepicker();
+});
+</script>

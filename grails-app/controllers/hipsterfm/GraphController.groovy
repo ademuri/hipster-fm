@@ -1,5 +1,7 @@
 package hipsterfm
 
+import java.text.DateFormat;
+
 import grails.converters.JSON
 import groovyx.gpars.GParsPool
 import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
@@ -96,18 +98,32 @@ class GraphController {
 				userArtistList.add(userArtistInstance)
 			}
 		}
+		
+//		def startDate = params.startDate ? params.date('startDate', "MM/dd/yyyy") : null
+//		def endDate = params.endDate ? params.date('endDate', "MM/dd/yyyy") : null
+		
+//		log.info "start date: ${startDate}, end date: ${endDate}"
 
 		def album = params.album ? Album.findWhere(artist: artistInstance, name: params.album).id : ""
 		log.info "search album: ${album}"	
 		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false, 
-			albumId: album, tickSize: params.tickSize, intervalSize: params.intervalSize]
+			tickSize: params.tickSize, intervalSize: params.intervalSize]
+		
+		if (album) {
+			newParams.albumId = album
+		}
+		if (params.startDate) {
+			newParams.startDate = params.startDate
+		}
+		if (params.endDate) {
+			newParams.endDate = params.endDate
+		}
+		
 		userArtistList.eachWithIndex { it, i ->
-//			newParams.put("user", it.id)
 			newParams["user${i}"] = it.id
 		}
 		
 		redirect(action: "show", params: newParams)
-//		chain(action: "show", model: [artistId: artistInstance.id, userArtistIdList: userArtistList.id, removeOutliers: params.removeOutliers?.contains("on")])
 	}
 	
 	def show(Long artistId, Boolean removeOutliers) {
@@ -135,16 +151,17 @@ class GraphController {
 		def data = []
 		def users = []
 		
-		def intervalSize = 25 	// about a month
-		def tickSize = 25
+		def intervalSize = 25.0 	// about a month
+		def tickSize = 25.0
 		if (params.tickSize) {
-			tickSize = params.tickSize as Long
+			tickSize = params.tickSize as long
 		}
 		if (params.intervalSize) {
-			intervalSize = params.intervalSize as Long
+			intervalSize = params.intervalSize as long
 		}
 		
-		log.info "tickSize: ${tickSize}, intervalSize: ${intervalSize}"
+//		log.info "tickSize: ${tickSize}, intervalSize: ${intervalSize}"
+		log.info "params: ${params}"
 		
 		// parameters for setting ymax based removing outliers
 		def kOutlierMin = 30	
@@ -154,69 +171,100 @@ class GraphController {
 		
 		def globalFirst, globalLast
 		
+		def startDate = params.startDate ? params.date('startDate', "MM/dd/yyyy") : null
+		def endDate = params.endDate ? params.date('endDate', "MM/dd/yyyy") : null
+		
+		if (startDate && endDate) {
+			globalFirst = startDate
+			globalLast = endDate
+		}
+		
 //		def userArtistIdList = chainModel.userArtistIdList
 		def userArtistList = []
+		
+		log.info "Getting date stuff"
 		
 		userArtistIdList.each { id ->
 			def userArtist = UserArtist.get(id)
 			userArtistList.add(userArtist)
 			
 			users.add(userArtist.user.toString())
-			def dates
 			
-			if (albumId) {
-				log.info "album id: ${albumId}"
-				log.info "user artist albums: ${userArtist.albums}"
-				dates = userArtist.albums.find { it.album.id == albumId }?.tracks.collect { it.date } as Set
-			} else { 
-				dates = userArtist.tracks.collect { it.date } as Set
-			}
-			
-			dates = dates as List	// only grab unique elements, but should be sorted
-			
-			if (dates.size() == 0) {
-				return 	// closure, so only skip this user artist id
-			}
-			
-			dates.sort()
-			
-			log.info "Found dates from ${dates.first()} to ${dates.last()} for artist ${artist}, user ${userArtist.user}; ${dates.size()} total scrobbles"
-//			log.info dates
-			
-			
-			def start = dates.first()
-			start.hours = 0
-			start.minutes = 0
-			start.seconds = 0
-			
-			def end = dates.last()
-			end.hours = 0
-			end.minutes = 0
-			end.seconds = 0
-			
-			if (!globalFirst) {
-				globalFirst = start
-			} else {
-				if (globalFirst > start) {
-					globalFirst = start
+			if (!(globalFirst && globalLast)) {
+				def dates
+				if (albumId) {
+					log.info "album id: ${albumId}"
+					log.info "user artist albums: ${userArtist.albums}"
+					dates = userArtist.albums.find { it.album.id == albumId }?.tracks.collect { it.date } as Set
+				} else { 
+					dates = userArtist.tracks.collect { it.date } as Set
 				}
-			}
 			
-			if (!globalLast) {
-				globalLast = end
-			} else {
-				if (globalLast < end) {
+				dates = dates as List	// only grab unique elements, but should be sorted
+				
+				if (dates.size() == 0) {
+					return 	// closure, so only skip this user artist id
+				}
+				
+				dates.sort()
+				
+				log.info "Found dates from ${dates.first()} to ${dates.last()} for artist ${artist}, user ${userArtist.user}; ${dates.size()} total days"
+		//			log.info dates
+				
+				
+				def start = dates.first()
+				start.hours = 0
+				start.minutes = 0
+				start.seconds = 0
+				
+				def end = dates.last()
+				end.hours = 0
+				end.minutes = 0
+				end.seconds = 0
+				
+				if (!globalFirst) {
+					globalFirst = start
+				} else {
+					if (globalFirst > start) {
+						globalFirst = start
+					}
+				}
+				
+				if (!globalLast) {
 					globalLast = end
+				} else {
+					if (globalLast < end) {
+						globalLast = end
+					}
 				}
 			}
 		}
 		
-		tickSize = (globalLast - globalFirst) / tickSize as Integer
-		intervalSize = (globalLast - globalFirst) / intervalSize as Integer
+		if (startDate) {
+			globalFirst = startDate
+		}
+		
+		if (endDate) {
+			globalLast = endDate
+		}
+		
+		log.info "Done getting date stuff"
+		
+		tickSize = (globalLast - globalFirst) / tickSize as int
+		intervalSize = (globalLast - globalFirst) / intervalSize as int
+		
+		if (tickSize < 1) {
+			tickSize = 1
+		}
+		if (intervalSize < 1) {
+			intervalSize = 1
+		}
+		
 		
 		def outliers = new PriorityQueue<Integer>()
 		
 		userArtistList.each { userArtist ->
+			log.info "getting for user artist: ${userArtist.user}"
 			def counts = []
 			def found = false	// only start adding when we've found some tracks
 			def userAlbumId
@@ -252,6 +300,7 @@ class GraphController {
 			data.add(counts)
 		}
 		
+		log.info "Done getting counts"
 		
 		def maxY
 		

@@ -614,3 +614,7 @@ select#artist-select {
 	width: 30%;
 	height: 10em;
 }
+div#ui-datepicker-div {
+	z-index: 5 !important;
+}
+

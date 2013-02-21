@@ -6,3 +6,7 @@ div.jqplot-table-legend-swatch-outline {
 td.jqplot-table-legend-swatch {
 	width: 5px;
 }
+table.jqplot-table-legend {
+	float: left;
+	width: 25em;
+}
