@@ -24,10 +24,19 @@
 		</div>
 		
 		<script>
-			$(document).ready(function() {
-				var chartdata = ${chartdata};
+			var response;
+			var maxY;
+			function graph() {
+				//console.log("graphing");
+				//console.log(response);
+				var responseObject = JSON.parse(response.responseText); 
+				var chartdata = responseObject.chartdata;
+				maxY = responseObject.maxY;
+				console.log(maxY);
+				//console.log(chartdata);
 				var series = chartdata.series;
 				var data = chartdata.data;
+				//console.log(data);
 
 				<g:if test="${params?.type == 'breakout'}">
 					<g:render template="breakout" />
@@ -36,8 +45,21 @@
 					<g:render template="compare" />
 				</g:else>
 
-				$.jqplot('chartdiv', data,
-						jqplotOptions);
+				if (${removeOutliers}) {
+					console.log("Setting maxY");
+					jqplotOptions.axes.yaxis.max = maxY;
+				}
+
+				$.jqplot('chartdiv', data, jqplotOptions);
+			}
+
+			function here() {
+				//alert("here");
+			}
+		
+			$(window).load(function() {
+				//console.log("loading");
+				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};
 			});
 		</script>
 		

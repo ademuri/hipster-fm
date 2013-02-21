@@ -631,3 +631,14 @@ div#ui-datepicker-div {
 }
 
 
+.spinner {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	margin-left: -8px;
+	margin-top: -8px;
+	z-index: 1000;
+	width: 16px;
+	height: 16px;
+}
+}

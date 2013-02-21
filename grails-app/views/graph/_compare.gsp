@@ -19,9 +19,6 @@ var jqplotOptions = {
 			pad: 0
 		},
 		yaxis: {
-			<g:if test="${maxY}">
-			max: ${maxY},
-			</g:if>
 			min: 0,
 			padMin: 0,
 			padMax: .5,

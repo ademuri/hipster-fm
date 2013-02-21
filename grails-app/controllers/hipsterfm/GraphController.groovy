@@ -78,14 +78,6 @@ class GraphController {
 			}
 		}
 		
-//		GParsPool.withPool {
-			userList.each {
-				log.info "Syncing for user ${it}"
-				lastFmService.getArtistTracks(it, artist)
-	//			userArtistIds.add(it.userArtist.id)
-			}
-//		}
-		
 		def artistInstance = Artist.findByName(artist)
 		if (!artistInstance) {
 			log.warn "Didn't find artist ${artist}"
@@ -93,33 +85,24 @@ class GraphController {
 			redirect(action: "setup")
 			return
 		}
-
 		
-		def userArtistList = []
 		
-		userList.each { userInstance ->
-			log.info "generating user list, ${userInstance}"
-			def userArtistInstance = UserArtist.findByUserAndArtist(userInstance, artistInstance)
-			if (!userArtistInstance) {
-				log.info "User ${userInstance} has no scrobbles for artist ${artist}"
-			} else {
-				userArtistList.add(userArtistInstance)
-			}
-		}
 		
 //		def startDate = params.startDate ? params.date('startDate', "MM/dd/yyyy") : null
 //		def endDate = params.endDate ? params.date('endDate', "MM/dd/yyyy") : null
 		
 //		log.info "start date: ${startDate}, end date: ${endDate}"
-
-		def album = params.album ? Album.findWhere(artist: artistInstance, name: params.album).id : ""
-		log.info "search album: ${album}"	
-		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false, 
+		
+		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false,
 			tickSize: params.tickSize, intervalSize: params.intervalSize]
+
+		/*def album = params.album ? Album.findWhere(artist: artistInstance, name: params.album).id : ""
+		log.info "search album: ${album}"	
+		
 		
 		if (album) {
 			newParams.albumId = album
-		}
+		}*/
 		if (params.startDate) {
 			newParams.startDate = params.startDate
 		}
@@ -127,26 +110,65 @@ class GraphController {
 			newParams.endDate = params.endDate
 		}
 		
-		userArtistList.eachWithIndex { it, i ->
+		userList.eachWithIndex { it, i ->
 			newParams["user${i}"] = it.id
 		}
 		
 		redirect(action: "show", params: newParams)
 	}
 	
-	def show(Long artistId, Boolean removeOutliers) {
-		def artist = Artist.get(artistId)
-		if (!artist) {
+	def show() {
+		if (params["_action_show"]) {
+			log.info "Removing action show"
+			params.remove("_action_show")
+		}
+		
+		def newParams = params
+		newParams.artistName = Artist.get(params.artistId) ?: null 
+		
+		params
+	}
+	
+	def ajaxGraphData = {
+		Long artistId = params.artistId as Long
+		Boolean removeOutliers = params.removeOutliers as Boolean
+		def userIdList = []
+		def userList = []
+		def userArtistList = []
+		
+		def artistInstance = Artist.get(artistId)
+		if (!artistInstance) {
 			log.warn "Couldn't find artist with id ${artistId}"
 			flash.message = "Couldn't find artist with id ${artistId}"
 			redirect(action: "setup")
 			return
 		}
 		
-		def userArtistIdList = []
 		params.each {
 			if (it.key.startsWith("user")) {
-				userArtistIdList.push(it.value)
+				log.info "Got user ${it.value}"
+				userIdList.push(it.value)
+			}
+		}
+		
+		userIdList.each {
+			def userInstance = User.get(it)
+			log.info "userInstance: ${userInstance}"
+			userList.push(userInstance)
+		}
+		
+		userList.each {
+			log.info "Syncing for user ${it}"
+			lastFmService.getArtistTracks(it, artistInstance.name) // TODO: probably shouldn't pass name
+		}
+		
+		userList.each { userInstance ->
+			log.info "generating user list, ${userInstance}"
+			def userArtistInstance = UserArtist.findByUserAndArtist(userInstance, artistInstance)
+			if (!userArtistInstance) {
+				log.info "User ${userInstance} has no scrobbles for artist ${artistInstance}"
+			} else {
+				userArtistList.add(userArtistInstance)
 			}
 		}
 		
@@ -187,15 +209,9 @@ class GraphController {
 			globalLast = endDate
 		}
 		
-//		def userArtistIdList = chainModel.userArtistIdList
-		def userArtistList = []
-		
 		log.info "Getting date stuff"
 		
-		userArtistIdList.each { id ->
-			def userArtist = UserArtist.get(id)
-			userArtistList.add(userArtist)
-			
+		userArtistList.each { userArtist ->
 			users.add(userArtist.user.toString())
 			
 			if (!(globalFirst && globalLast)) {
@@ -216,7 +232,7 @@ class GraphController {
 				
 				dates.sort()
 				
-				log.info "Found dates from ${dates.first()} to ${dates.last()} for artist ${artist}, user ${userArtist.user}; ${dates.size()} total days"
+				log.info "Found dates from ${dates.first()} to ${dates.last()} for artist ${artistInstance}, user ${userArtist.user}; ${dates.size()} total days"
 		//			log.info dates
 				
 				
@@ -350,8 +366,7 @@ class GraphController {
 		
 		log.info "rendering page"
 		
-		//def json = data as JSON
-		[chartdata:chartdata as JSON, artistName: artist.name, maxY: maxY, albumName: albumName]
-		//data as JSON
+		def theData = [chartdata:chartdata, maxY: maxY]
+		render theData as JSON
 	}
 }

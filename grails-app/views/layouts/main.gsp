@@ -17,12 +17,30 @@
 		<r:require modules="jquery-ui" />
 		<g:layoutHead/>
 		<r:layoutResources />
+		
+		<!-- show spinner automatically when Ajax is running -->
+		<script>
+			$(document).ready(function() {
+				$("#spinner").bind("ajaxSend", function() {
+					$(this).show();
+				}).bind("ajaxStop", function() {
+					$(this).hide();
+				}).bind("ajaxError", function() {
+					$(this).hide();
+				});
+			});
+		</script>
 	</head>
 	<body>
+		
+			
+		
 		<div id="grailsLogo" role="banner"><img src="${resource(dir: 'images', file: 'grails_logo.png')}" alt="Grails"/></a></div>
 		<g:layoutBody/>
 		<div class="footer" role="contentinfo"></div>
-		<div id="spinner" class="spinner" style="display:none;"><g:message code="spinner.alt" default="Loading&hellip;"/></div>
+		<div id="spinner" class="spinner" style="display:none;">
+			<g:img dir="images" file="ajax-loader.gif" width="16" height="16" />
+		</div>
 		<g:javascript library="application"/>
 		<r:layoutResources />
 	</body>
