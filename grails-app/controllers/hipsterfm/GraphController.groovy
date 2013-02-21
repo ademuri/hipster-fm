@@ -78,6 +78,12 @@ class GraphController {
 			}
 		}
 		
+		if (userList.size() == 0) {
+			flash.message = "Please choose at least one user"
+			redirect(action: "setup")
+			return 
+		}
+		
 		def artistInstance = Artist.findByName(artist)
 		if (!artistInstance) {
 			log.warn "Didn't find artist ${artist}"
@@ -190,8 +196,8 @@ class GraphController {
 			intervalSize = params.intervalSize as long
 		}
 		
+//		log.info "params: ${params}"
 //		log.info "tickSize: ${tickSize}, intervalSize: ${intervalSize}"
-		log.info "params: ${params}"
 		
 		// parameters for setting ymax based removing outliers
 		def kOutlierMin = 30	

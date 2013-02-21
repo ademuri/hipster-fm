@@ -96,6 +96,8 @@ class LastFmService {
 			return
 		}
 		
+		log.info "Getting friends for ${origUser}"
+		
 		origUser.friendsLastSynced = new Date()
 		def username = origUser.username
 		
@@ -104,7 +106,9 @@ class LastFmService {
 		query.method = "user.getfriends"
 		def data = queryApi(query)
 		
-		log.info "data: ${data}"
+//		log.info "Last fm returned ${data}"
+		
+//		log.info "data: ${data}"
 		def users = data.friends.user
 		
 		def paging = data.friends."@attr"
@@ -301,7 +305,7 @@ class LastFmService {
 			]
 		
 		def data = queryApi(query)
-		log.info "data: ${data}"
+//		log.info "data: ${data}"
 		
 		if ((data?.topartists?."@attr"?.total) && (data.topartists."@attr".total as int) > 0) {
 			def artists = data.topartists.artist

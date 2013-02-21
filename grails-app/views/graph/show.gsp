@@ -13,6 +13,9 @@
 			</ul>
 		</div>
 		
+		<div id="progress">
+		</div>
+		
 		<div id="show-graph" class="content" role="main">
 			<h1>${artistName}<g:if test="${userName}"> - ${userName}</g:if></h1>
 			<g:if test="${flash.message}">
@@ -53,10 +56,6 @@
 				$.jqplot('chartdiv', data, jqplotOptions);
 			}
 
-			function here() {
-				//alert("here");
-			}
-		
 			$(window).load(function() {
 				//console.log("loading");
 				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};
