@@ -64,6 +64,15 @@
 					
 				</li>
 				</g:if>
+				
+				<li class="fieldcontain">
+					<g:each in="${UserArtist.rankNames}">
+						<g:if test='${artistInstance."isTop${it}" }'>
+							<span id="top${it}Rank-label" class="property-label">${it} rank</span>
+							<span class="property-value" aria-labelledby="top${it}Rank-label">${artistInstance."top${it}Rank"}</span>
+						</g:if>
+					</g:each>
+				</li>
 			
 			</ol>
 			<g:form>

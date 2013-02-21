@@ -1,3 +1,5 @@
+<%@ page import="hipsterfm.UserArtist" %>
+
 <!doctype html>
 <html>
 	<head>
@@ -29,6 +31,10 @@
 						<g:textField name="user" value="${user}"/>
 					</span>
 					<g:actionSubmit class="submit" action="setup" value="Search" />
+					<div class="fieldcontain">
+						<label for="interval">Interval</label>
+						<g:select id="interval" name="interval" from="${UserArtist.rankNames}" value="${interval ?: '3month'}" />
+					</div>
 				</fieldset>
 				</g:form>
 			</div>

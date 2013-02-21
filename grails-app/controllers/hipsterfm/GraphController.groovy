@@ -15,9 +15,11 @@ class GraphController {
 	}
 	
     def setup(String user) {
-//		log.info "params: ${params}"
+		log.info "params: ${params}"
 		def friends
 		def topArtists
+		
+		def interval = params.interval ?: "3month"
 		
 		if (user && user != "") {
 			def userInstance = User.findByUsername(user)
@@ -27,14 +29,20 @@ class GraphController {
 				lastFmService.getFriends(userInstance)
 				friends = userInstance.friends
 				
-				lastFmService.getUserTopArtists(userInstance)
+				lastFmService.getUserTopArtists(userInstance, interval)
 				if (userInstance.artists.size() > 0) {
-					topArtists = userInstance.artists.sort { it.numScrobbles }.reverse().getAt(0..(Math.min(userInstance.artists.size()-1, 30)))
+//					topArtists = userInstance.artists.sort { it.numScrobbles }.reverse().getAt(0..(Math.min(userInstance.artists.size()-1, 30)))
+					topArtists = UserArtist.withCriteria {
+						eq("user", userInstance)
+						eq("isTop${interval}", true)
+						between("top${interval}Rank", 1, 30)
+						order("top${interval}Rank", "asc")
+					}
 				}
 			}
 		}
 		
-		[friends: friends, user: user, topArtists: topArtists]
+		[friends: friends, user: user, topArtists: topArtists, interval: interval]
 	}
 	
 	def search(String user, String artist) {

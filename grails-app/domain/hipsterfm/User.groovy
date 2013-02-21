@@ -9,7 +9,7 @@ class User implements Comparable {
 	
 	Map<String, Date> notFoundLastSynced = [:]		// artists that had no tracks -> when it was checked
 	Date friendsLastSynced
-	Date topArtistsLastSynced
+	Map<String, Date> topArtistsLastSynced = [:]	// top artists interval -> date synced
 	
 	static hasMany = [artists: UserArtist, friends: User]
 	
@@ -25,6 +25,7 @@ class User implements Comparable {
 	
 	static mapping = {
 		notFoundLastSynced type: Date
+		topArtistsLastSynced type: Date
 	}
 	
 	public String toString() {

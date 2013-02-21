@@ -280,45 +280,57 @@ class LastFmService {
 		return tracks.size()
 	}
 	
-	def getUserTopArtists(user) {
+	def getUserTopArtists(user, interval) {
+		log.info "Getting top artists for user ${user}, interval ${interval}"
+		
 		if (!user) {
 			log.warn "getUserTopArtists called with null user"
 			return
 		}
 		
 		// if we've synced this recently, don't do it again
-		if (user?.topArtistsLastSynced && user?.topArtistsLastSynced > (new Date()-7)) {
-			log.info "Synced top artists for ${user.username} recently, not syncing"
+		if (user?.topArtistsLastSynced[interval] && user?.topArtistsLastSynced[interval] > (new Date()-7)) {
+			log.info "Synced top artists for ${user.username}, interval ${interval} recently, not syncing"
 			return
 		}
 		
 		def query = [
 			method: 'user.getTopArtists',
 			user: user.username,
-			period: "3month",
+			period: interval,
 			]
 		
 		def data = queryApi(query)
+		log.info "data: ${data}"
 		
-		def artists = data.topartists.artist
-		artists.each {
-			def artist = Artist.findByLastId(it.mbid)
-			if (!artist) {
-//				log.info "Top artist not present: ${it.name}"
-				artist = new Artist(name: it.name, lastId: it.mbid).save()
+		if ((data?.topartists?."@attr"?.total) && (data.topartists."@attr".total as int) > 0) {
+			def artists = data.topartists.artist
+			artists.each {
+				if (!it?.mbid) {
+					return
+				}
+				
+				def artist = Artist.findByLastId(it.mbid)
+				if (!artist) {
+	//				log.info "Top artist not present: ${it.name}"
+					artist = new Artist(name: it.name, lastId: it.mbid).save()
+				}
+				
+				def userArtist = artist.userArtists.find { it.user == user}
+				
+				if (!userArtist) {
+	//				log.info "Top user artist not present: ${artist.name}"
+					userArtist = new UserArtist(artist: artist, user: user).save()
+					artist.addToUserArtists(userArtist)
+				} else {
+	//				log.info "Found top user artist: ${artist.name}"
+				}
+				userArtist."top${interval}Rank" = it."@attr".rank as int
+				userArtist."isTop${interval}" = true
 			}
-			
-			def userArtist = artist.userArtists.find { it.user == user}
-			
-			if (!userArtist) {
-//				log.info "Top user artist not present: ${artist.name}"
-				userArtist = new UserArtist(artist: artist, user: user).save()
-				artist.addToUserArtists(userArtist)
-			} else {
-//				log.info "Found top user artist: ${artist.name}"
-			}
-			userArtist.numScrobbles = it.playcount as long
 		}
+		
+		user.topArtistsLastSynced[interval] = new Date()
 		
 		return user.artists
 	}
