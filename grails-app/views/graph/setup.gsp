@@ -42,6 +42,7 @@
 			<div id="setup-graph-form">
 				<g:form method="post" >
 					<fieldset class="form">
+					<div class="setup-group">
 						<div class="fieldcontain ${hasErrors(field: 'user', 'error')} ">
 							<label for="user">
 								Users
@@ -52,31 +53,34 @@
 						<div class="checkbox">
 							<g:each var="user" in="${friends}" status="i">
 								<span class="friend-select">
-									<g:checkBox name="user_${user.id}"/>
-									<label for="user_${user.id}">${user.toString()}</label>
+									<div class="single-friend">
+										<g:checkBox name="user_${user.id}"/>
+										<label for="user_${user.id}">${user.toString()}</label>
+									</div>
 								</span>
 							</g:each>
 						</div>
-						<br>
-						<div class="fieldcontain ${hasErrors(field: 'artist', 'error')} ">
-							<label for="artist">
-								Artist
-							</label>
-							<g:textField name="artist"/>
-						</div>
-						
-						<g:if test="${topArtists?.size() > 0}">
-							<div class="fieldcontain" >
-								<label for="artist-select"></label>
-								<g:select name="artist-select" from="${topArtists}" optionKey="name" optionValue="name" multiple="true" />
+					</div>
+						<div class="setup-group">
+							<div class="fieldcontain ${hasErrors(field: 'artist', 'error')} ">
+								<label for="artist">
+									Artist
+								</label>
+								<g:textField name="artist"/>
 							</div>
-						</g:if>
 						
-						<div class="fieldcontain ${hasErrors(field: 'album', 'error')} ">
-							<label for="album">
-								Album
-							</label>
-							<g:textField name="album"/>
+							<g:if test="${topArtists?.size() > 0}">
+								<div class="fieldcontain" >
+									<label for="artist-select"></label>
+									<g:select name="artist-select" from="${topArtists}" optionKey="name" optionValue="name" multiple="true" />
+								</div>
+							</g:if>
+							<div class="fieldcontain ${hasErrors(field: 'album', 'error')} ">
+								<label for="album">
+									Album
+								</label>
+								<g:textField name="album"/>
+							</div>
 						</div>
 						
 						<div class="fieldcontain" >
@@ -84,7 +88,9 @@
 							<g:checkBox name="removeOutliers" />
 						</div>
 					</fieldset>
-					<g:render template="window"/>
+					<div class="setup-group">
+						<g:render template="window"/>
+					</div>
 					<fieldset class="buttons">
 						<g:actionSubmit class="submit" action="search" value="Submit" />
 					</fieldset>

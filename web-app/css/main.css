@@ -597,14 +597,26 @@ a.skip {
 
 .friend-select {
 	margin: 0.5em 0em;
-	display: block-inline;
-	width: 25%;
-	float: left;
+	display: inline-block;
+	width: 30%;
+}
+
+.single-friend {
+	border: 1px solid #DDDDDD;
+	width: 90%;
+	padding: .1em;
 }
 
 .friend-select label {
-	text-align: right;
+	text-align: left;
 	padding: .2em;
+	display: inline;
+}
+.setup-group {
+	border: 1px solid #CCCCCC;
+	height: 100%;
+	padding: 1em;
+	margin: 1em;
 }
 
 div.checkbox {
@@ -617,4 +629,5 @@ select#artist-select {
 div#ui-datepicker-div {
 	z-index: 5 !important;
 }
+
 
