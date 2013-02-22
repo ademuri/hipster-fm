@@ -35,7 +35,6 @@
 				var responseObject = JSON.parse(response.responseText); 
 				var chartdata = responseObject.chartdata;
 				maxY = responseObject.maxY;
-				console.log(maxY);
 				//console.log(chartdata);
 				var series = chartdata.series;
 				var data = chartdata.data;
@@ -48,8 +47,7 @@
 					<g:render template="compare" />
 				</g:else>
 
-				if (${removeOutliers}) {
-					console.log("Setting maxY");
+				if (maxY > 0) {
 					jqplotOptions.axes.yaxis.max = maxY;
 				}
 
@@ -69,7 +67,7 @@
 			<g:render template="window"/>
 			<g:each var="p" in="${params}">
 				<g:if test="${!(['tickSize', 'intervalSize', 'startDate', 'endDate', 
-					'_action_show', 'action', 'controller'].contains(p.key ))}">
+					'_action_show', 'action', 'controller', 'userMaxY'].contains(p.key ))}">
 					<g:hiddenField name="${p.key}" value="${p.value}" />
 				</g:if> 				
 			</g:each>

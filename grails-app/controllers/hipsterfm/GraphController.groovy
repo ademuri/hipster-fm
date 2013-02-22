@@ -123,9 +123,12 @@ class GraphController {
 		if (params.endDate) {
 			newParams.endDate = params.endDate
 		}
+		if(params.userMaxY) {
+			newParams.userMaxY = params.userMaxY
+		}
 		
 		userList.eachWithIndex { it, i ->
-			newParams["user${i}"] = it.id
+			newParams["user_${i}"] = it.id
 		}
 		
 		redirect(action: "show", params: newParams)
@@ -133,7 +136,6 @@ class GraphController {
 	
 	def show() {
 		if (params["_action_show"]) {
-			log.info "Removing action show"
 			params.remove("_action_show")
 		}
 		
@@ -145,7 +147,8 @@ class GraphController {
 	
 	def ajaxGraphData = {
 		Long artistId = params.artistId as Long
-		Boolean removeOutliers = params.removeOutliers as Boolean
+		Boolean removeOutliers = params.removeOutliers == "true"
+		log.info "params.removeOutliers: ${params.removeOutliers}, removeOutliers: ${removeOutliers}"
 		def userIdList = []
 		def userList = []
 		def userArtistList = []
@@ -159,7 +162,7 @@ class GraphController {
 		}
 		
 		params.each {
-			if (it.key.startsWith("user")) {
+			if (it.key.startsWith("user_")) {
 //				log.info "Got user ${it.value}"
 				userIdList.push(it.value)
 			}
@@ -215,6 +218,11 @@ class GraphController {
 		def kNumOutliers = 10
 		def kOutlierRatioUpper = 1.5	// threshold for max being an outlier
 		def kOutlierMax = 200
+		
+		def userMaxY
+		if (params.userMaxY) {
+			userMaxY = params.userMaxY as Integer
+		}		
 		
 		def globalFirst, globalLast
 		
@@ -324,7 +332,7 @@ class GraphController {
 					}
 				}
 				
-				if (removeOutliers) {
+				if (removeOutliers && !userMaxY) {
 					if (outliers.size() < kNumOutliers || count >= outliers.min()) {
 						outliers.add(count)
 						if (outliers.size() > kNumOutliers) {
@@ -345,7 +353,7 @@ class GraphController {
 		
 		def maxY
 		
-		if (removeOutliers) {
+		if (removeOutliers && !userMaxY) {
 			def outlierList = outliers as List
 			outlierList.sort()
 			log.info "Outliers: ${outlierList}"
@@ -373,6 +381,15 @@ class GraphController {
 				log.info "Selected maxY as ${maxY}"
 			}
 		}
+		
+		if(userMaxY) {
+			log.info "Setting userMaxY to ${userMaxY}"
+			maxY = userMaxY
+		} else if (!removeOutliers) {
+			maxY = 0
+		}
+		
+		log.info "maxY: ${maxY}"
 		
 		def chartdata = [:]
 		chartdata.data = data

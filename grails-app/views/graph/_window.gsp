@@ -9,6 +9,10 @@
 			<label for="intervalSize">Interval size</label>
 			<g:textField name="intervalSize" value="${params?.intervalSize ?: 20 }"/>
 		</div>
+		<div class="fieldcontain ${hasErrors(field: 'userMaxY', 'error')} ">
+			<label for="userMaxY">Max Y</label>
+			<g:textField name="userMaxY" value="${params?.userMaxY}"/>
+		</div>
 		
 		<div class="fieldcontain" >
 			<label for="startDate">Dates</label>
