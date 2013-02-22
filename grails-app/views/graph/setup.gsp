@@ -50,6 +50,12 @@
 							<g:textField name="user" value="${user}"/>
 							<label>(space-seperated list)</label>
 						</div>
+						<div class="fieldcontain">
+							<label for="user-all-friends">Add all friends with artist</label>
+							<g:checkBox name="addAllFriends" />
+						</div>
+						
+						
 						<div class="checkbox">
 							<g:each var="user" in="${friends}" status="i">
 								<span class="friend-select">

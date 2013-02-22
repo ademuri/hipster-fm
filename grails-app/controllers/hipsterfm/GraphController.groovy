@@ -78,13 +78,22 @@ class GraphController {
 			}
 		}
 		
+		// if 'Add all friends with artist' is checked, and there is only one user from ^^^,
+		// 		fetch the friends from last.fm and add them all
+		if (userList.size() == 1 && params.addAllFriends) {
+			def userInstance = userList.toList()[0]
+			log.info "Adding all friends of user ${userInstance}"
+			lastFmService.getFriends(userInstance)
+			userList.addAll(userInstance.friends)
+		}
+		
 		if (userList.size() == 0) {
 			flash.message = "Please choose at least one user"
 			redirect(action: "setup")
 			return 
 		}
 		
-		def artistInstance = Artist.findByName(artist)
+		def artistInstance = lastFmService.getArtist(artist)
 		if (!artistInstance) {
 			log.warn "Didn't find artist ${artist}"
 			flash.message = "Didn't find artist ${artist}"
@@ -100,15 +109,14 @@ class GraphController {
 //		log.info "start date: ${startDate}, end date: ${endDate}"
 		
 		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false,
-			tickSize: params.tickSize, intervalSize: params.intervalSize]
+			tickSize: params.tickSize, intervalSize: params.intervalSize, addAllFriends: params.addAllFriends]
 
-		/*def album = params.album ? Album.findWhere(artist: artistInstance, name: params.album).id : ""
-		log.info "search album: ${album}"	
-		
+		def album = params.album ? Album.findWhere(artist: artistInstance, name: params.album).id : ""
+//		log.info "search album: ${album}"	
 		
 		if (album) {
 			newParams.albumId = album
-		}*/
+		}
 		if (params.startDate) {
 			newParams.startDate = params.startDate
 		}
@@ -152,24 +160,27 @@ class GraphController {
 		
 		params.each {
 			if (it.key.startsWith("user")) {
-				log.info "Got user ${it.value}"
+//				log.info "Got user ${it.value}"
 				userIdList.push(it.value)
 			}
 		}
 		
+		userIdList = userIdList.sort()
+		log.info "user list: ${userIdList}"
+		
 		userIdList.each {
 			def userInstance = User.get(it)
-			log.info "userInstance: ${userInstance}"
+//			log.info "userInstance: ${userInstance}"
 			userList.push(userInstance)
 		}
 		
 		userList.each {
-			log.info "Syncing for user ${it}"
+//			log.info "Syncing for user ${it}"
 			lastFmService.getArtistTracks(it, artistInstance.name) // TODO: probably shouldn't pass name
 		}
 		
 		userList.each { userInstance ->
-			log.info "generating user list, ${userInstance}"
+//			log.info "generating user list, ${userInstance}"
 			def userArtistInstance = UserArtist.findByUserAndArtist(userInstance, artistInstance)
 			if (!userArtistInstance) {
 				log.info "User ${userInstance} has no scrobbles for artist ${artistInstance}"
@@ -349,7 +360,7 @@ class GraphController {
 			} 
 			else if (outlierMax > (outlierMin * kOutlierRatioUpper)) {
 				int i;
-				for (i=4; i<outlierList.size(); i++) {
+				for (i=0; i<outlierList.size(); i++) {
 					if (outlierList[i] > outlierList[i-1] * kOutlierRatioUpper) {
 						break
 					}

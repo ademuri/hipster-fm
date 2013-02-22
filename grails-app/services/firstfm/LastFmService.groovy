@@ -89,6 +89,25 @@ class LastFmService {
 		return data
 	}
 	
+	def Artist getArtist(name) {
+		log.info "Querying last.fm API for ${name}"
+		def query = [
+			method: "artist.getinfo",
+			artist: name,
+			]
+		
+		def data = queryApi(query)
+		
+		if (!data || !data?.artist) {
+			log.info "Didn't find artist ${name}"
+			return
+		}
+		
+		def artist = Artist.findByName(name) ?: new Artist(name: data.artist.name, lastId: data.artist.mbid).save(failOnError: true)
+		
+		return artist
+	}
+	
 	def getFriends(User origUser) {
 		def today = new Date()
 		if (origUser.friendsLastSynced && origUser.friendsLastSynced > (today-7)) {
