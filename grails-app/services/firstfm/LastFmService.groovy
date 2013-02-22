@@ -39,17 +39,18 @@ class LastFmService {
 		}
     }
 	
+	def timeSinceLastQuery
+	
 	def queryApi(query) {
 //		log.info "Enter query ${query}"
 		synchronized(queryLock) {
-//			log.info "Increment queries ${query}"
-			while (queriesRunning >= maxQueries) {
-//				log.info "Queries already running, waiting ${query}"
-				queryLock.wait()
+			while (timeSinceLastQuery && (System.currentTimeMillis() - timeSinceLastQuery) < 190) {
+				Thread.sleep(25)
+//				log.info "sleeping"
 			}
-			queriesRunning++
+			timeSinceLastQuery = System.currentTimeMillis()
 		}
-//		log.info "Running ${query}"
+		log.info "Running ${query}"
 		
 		query.api_key = api
 		query.format = 'json'
@@ -79,11 +80,6 @@ class LastFmService {
 				}
 			}
 		} finally {
-			synchronized(queryLock) {
-//				log.info "Decrement queries ${query}"
-				queriesRunning--
-				queryLock.notifyAll()
-			}
 		}
 		
 		return data

@@ -61,7 +61,8 @@ body {
 }
 
 a:link, a:visited, a:hover {
-	color: #48802c;
+	color: #045594;
+	text-decoration: none;
 }
 
 a:hover, a:active {
@@ -110,6 +111,7 @@ img {
 }
 
 .footer {
+	width: 100%;
 	background: #666;
 	color: #FFF;
 	clear: both;
@@ -117,10 +119,27 @@ img {
 	margin-top: 1.5em;
 	padding: 1em;
 	min-height: 1em;
+	text-align: center;
+}
+
+.footer-links {
+	float: center;
+	text-align: center;
+}
+
+.last-fm-logo {
+	text-align: right;
+	float: right;
+	vertical-align: bottom;
+	padding-bottom: .1em;
+}
+
+.last-fm-logo-img {
+	
 }
 
 .footer a {
-	color: #255b17;
+	color: #6C97CC;
 }
 
 .spinner {
@@ -614,7 +633,6 @@ div#ui-datepicker-div {
 	z-index: 5 !important;
 }
 
-
 .spinner {
 	position: fixed;
 	top: 50%;
@@ -626,4 +644,16 @@ div#ui-datepicker-div {
 	height: 16px;
 }
 
-
+.licenses {
+	padding-left: 5em;
+	padding-top: 3em;
+}
+.license-list {
+	padding-top: .5em;
+	padding-left: 2em;
+}
+.show-license {
+	max-width: 600px;
+	word-wrap: break-word;
+	font-family: monospace;
+}

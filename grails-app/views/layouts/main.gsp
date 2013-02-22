@@ -37,7 +37,15 @@
 		
 		<div id="header" role="banner">Hipster</div>
 		<g:layoutBody/>
-		<div class="footer" role="contentinfo"></div>
+		<div class="footer" role="contentinfo">
+			<span class="footer-links">
+				<span><g:link controller="about" action="licenses">license</g:link></span> | 
+				<span><g:link controller="about" action="source">source</g:link></span>
+			</span>
+			<span class="last-fm-logo">
+				Powered by <a href="last.fm"><g:img class="last-fm-logo-img" dir="images/last-fm" file="badge_black_small.gif" /></a>
+			</span>
+		</div>
 		<div id="spinner" class="spinner" style="display:none;">
 			<g:img dir="images" file="ajax-loader.gif" width="16" height="16" />
 		</div>
