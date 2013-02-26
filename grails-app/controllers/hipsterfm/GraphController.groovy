@@ -239,7 +239,7 @@ class GraphController {
 		userArtistList.each { userArtist ->
 			users.add(userArtist.user.toString())
 			
-			if (!(globalFirst && globalLast)) {
+			if (!(startDate && endDate)) {
 				def dates
 				if (albumId) {
 					log.info "album id: ${albumId}"
