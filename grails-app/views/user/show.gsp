@@ -65,11 +65,13 @@
 			
 				<li class="fieldcontain">
 					<span id="artists-label" class="property-label"><g:message code="user.artists.label" default="Artists" /></span>
-					<span id="artists" class="property-value" aria-labelledby="artists-label">
-						<ul>
-							<g:render template="updateArtists" model="[artistList: artistList]" />
-						</ul>
-					</span>
+					<g:each in="${0..5}" var="i"> 
+						<span id="artists${i}" class="property-value" aria-labelledby="artists-label">
+							<ul>
+								<g:render template="updateArtists" model="[artistList: artistList]" />
+							</ul>
+						</span>
+					</g:each>
 				</li>
 			
 			</ol>
@@ -79,7 +81,6 @@
 					<g:link class="edit" action="edit" id="${userInstance?.id}"><g:message code="default.button.edit.label" default="Edit" /></g:link>
 					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
 					<g:link class="getFriends" action="getFriends" id="${userInstance.id}">Get Friends</g:link>
-					<g:remoteLink action="ajaxGetTopArtists" update="artists" id="${userInstance.id}">Get top artists</g:remoteLink>
 				</fieldset>
 			</g:form>
 		</div>
@@ -94,12 +95,33 @@
 		
 		<script>
 		var rankNames = ${UserArtist.humanRankNames as JSON}
+		var synced = new Array();	// whether we've synced each interval
+
+		function showHide(interval) {
+			console.log("hiding");
+			for (var i=0; i<=5; i++) {
+				if (i != interval) {
+					$("#artists" + i).hide(0.1);
+				} else {
+					$("#artists" + i).show(0.1);
+				}
+			}
+		}
+		
 		function updateArtists(interval) {
-			$("#interval").text(rankNames[interval]);
-			jQuery.ajax({type:'POST',data:{'interval': interval, 'id': ${userInstance.id}}, url:'${createLink(action:'ajaxGetTopArtists')}',success:function(data,textStatus){jQuery('#artists').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+			if (!synced[interval]) {
+				$("#interval").text(rankNames[interval]);
+				$.ajax({type:'POST',data:{'interval': interval, 'id': ${userInstance.id}}, url:'${createLink(action:'ajaxGetTopArtists')}',success:function(data,textStatus){jQuery('#artists' + interval).html(data); showHide(interval); synced[interval] = true;},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+			} else {
+				showHide(interval);
+			}
 		}
 		
 		$(function() {
+			for (var i=0; i<=5; i++) {
+				synced[i] = false;
+			}
+			
 			$("#interval-slider").slider({
 				value:2,
 				min:0,
@@ -113,7 +135,6 @@
 		});
 
 		$(document).ready( function() {
-			console.log("here");
 			updateArtists(2);
 		});
 		</script>
