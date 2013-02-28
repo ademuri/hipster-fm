@@ -11,7 +11,7 @@
 		<div class="nav" role="navigation">
 			<ul>
 				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
-				<li><g:link class="list" controller="artist" action="list">Artists</g:link></li>
+				<li><g:link class="find" action="find">Find user</g:link></li>
 			</ul>
 		</div>
 		
@@ -72,7 +72,7 @@
 								<label for="artist">
 									Artist
 								</label>
-								<g:textField name="artist"/>
+								<g:textField name="artist" value="${artist}" />
 							</div>
 						
 							<g:if test="${topArtists?.size() > 0}">

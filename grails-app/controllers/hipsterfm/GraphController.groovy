@@ -42,7 +42,13 @@ class GraphController {
 			}
 		}
 		
-		[friends: friends, user: user, topArtists: topArtists, interval: interval]
+		def newParams = [friends: friends, user: user, topArtists: topArtists, interval: interval]
+		if (params.artist) {
+			newParams.artist = params.artist
+		}
+		
+		
+		return newParams
 	}
 	
 	def search(String user, String artist) {

@@ -13,10 +13,10 @@ class UserController {
         redirect(action: "list", params: params)
     }
 
-    def list(Integer max) {
-        params.max = Math.min(max ?: 10, 100)
-        [userInstanceList: User.list(params), userInstanceTotal: User.count()]
-    }
+//    def list(Integer max) {
+//        params.max = Math.min(max ?: 10, 100)
+//        [userInstanceList: User.list(params), userInstanceTotal: User.count()]
+//    }
 
     def create() {
         [userInstance: new User(params)]
@@ -126,6 +126,25 @@ class UserController {
 		redirect(action: "list")
 	}
 	
+	def find() {
+		
+		if (params.username) {
+			def user = User.findByUsername(params.username)
+			if (!user) {
+				if (!lastFmService.checkIfUserExists(params.username)) {
+					flash.message = "User ${params.username} doesn't exist"
+					return
+				}
+				
+				// user exists in last.fm, create user
+				user = new User(username: params.username).save(failOnError: true)
+			}
+			
+			redirect(action: "show", id: user.id)
+			return
+		}
+	}
+	
 	def ajaxGetTopArtists(Long id) {
 		log.info "get top artists, params: ${params}"
 		def userInstance = User.get(id)
@@ -142,6 +161,6 @@ class UserController {
 		
 		def topArtists = lastFmService.getUserTopArtists(userInstance, interval)
 		
-		render (template: 'updateArtists', model: ["artistList": topArtists])
+		render (template: 'updateArtists', model: ["artistList": topArtists, "user": userInstance.username])
 	}
 }

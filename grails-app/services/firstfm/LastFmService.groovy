@@ -22,26 +22,10 @@ class LastFmService {
 	
 	def sessionFactory
 	
-    def checkForUser(user) {
-		withRest(uri:"http://ws.audioscrobbler.com/") {
-//			def resp = get(path: '/?method=user.getrecenttracks?user=${user.username}&api_key=${api}&format=json') {
-			
-			def query = [
-				method: 'user.getrecenttracks',
-				user: user.username,
-				api_key: api,
-				format: 'json'
-				] 
-			def resp = get(path: '/2.0/', query: query)
-			
-			def tracks = resp.getData()
-			println tracks
-		}
-    }
-	
 	def timeSinceLastQuery
 	
-	def queryApi(query) {
+	// allowError: if we're expecting an error, don't keep trying if we get that one
+	def queryApi(query, allowError = -1) {
 //		log.info "Enter query ${query}"
 		synchronized(queryLock) {
 			while (timeSinceLastQuery && (System.currentTimeMillis() - timeSinceLastQuery) < 190) {
@@ -62,7 +46,7 @@ class LastFmService {
 				for (int i=0; i<5; i++) {
 					def resp = get(path: '/2.0/', query: query)
 					data = resp.getData()
-					if (data?.error) {
+					if (data?.error && data.error != allowError) {
 						log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
 						if (data.error.toInteger() == 8) {
 							Thread.sleep(5000)
@@ -83,6 +67,21 @@ class LastFmService {
 		}
 		
 		return data
+	}
+	
+	def checkIfUserExists(username) {
+		def query = [
+			method: 'user.getinfo',
+			user: username,
+			]
+		def data = queryApi(query, 6)
+		
+		if (data?.error == 6) {
+			log.warn "User ${username} doesn't exist!"
+			return false
+		} else {
+			return true
+		}
 	}
 	
 	def Artist getArtist(name) {
