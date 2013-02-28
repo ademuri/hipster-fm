@@ -93,9 +93,13 @@
 		</div>
 		
 		<script>
+		var rankNames = ${UserArtist.humanRankNames as JSON}
+		function updateArtists(interval) {
+			$("#interval").text(rankNames[interval]);
+			jQuery.ajax({type:'POST',data:{'interval': interval, 'id': ${userInstance.id}}, url:'${createLink(action:'ajaxGetTopArtists')}',success:function(data,textStatus){jQuery('#artists').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+		}
+		
 		$(function() {
-			var rankNames = ${UserArtist.humanRankNames as JSON}
-			console.log(rankNames);
 			$("#interval-slider").slider({
 				value:2,
 				min:0,
@@ -103,11 +107,14 @@
 				step:1,
 				animate: "fast",
 				slide: function (event, ui) {
-					var interval = ui.value;
-					$("#interval").text(rankNames[ui.value]);
-					jQuery.ajax({type:'POST',data:{'interval': interval, 'id': ${userInstance.id}}, url:'${createLink(action:'ajaxGetTopArtists')}',success:function(data,textStatus){jQuery('#artists').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+					updateArtists(ui.value);
 				}
 			});
+		});
+
+		$(document).ready( function() {
+			console.log("here");
+			updateArtists(2);
 		});
 		</script>
 		
