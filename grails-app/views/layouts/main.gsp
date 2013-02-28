@@ -47,7 +47,7 @@
 			</span>
 		</div>
 		<div id="spinner" class="spinner" style="display:none;">
-			<g:img dir="images" file="ajax-loader.gif" width="16" height="16" />
+			<g:img dir="images" file="spinner.gif" width="16" height="16" />
 		</div>
 		<g:javascript library="application"/>
 		<r:layoutResources />

@@ -42,6 +42,7 @@ class UserArtist {
 				topoverallRank]
 	
 	static rankNames = ["7day", "1month", "3month", "6month", "12month", "overall"]
+	static humanRankNames = ["7 days", "1 month", "3 months", "6 months", "12 months", "Overall" ] 
 	
 	Date lastSynced
 	

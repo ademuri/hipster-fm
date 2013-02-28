@@ -1,5 +1,6 @@
 package hipsterfm
 
+import grails.converters.JSON
 import org.springframework.dao.DataIntegrityViolationException
 
 class UserController {
@@ -125,7 +126,8 @@ class UserController {
 		redirect(action: "list")
 	}
 	
-	def getTopArtists(Long id, Integer max) {
+	def ajaxGetTopArtists(Long id) {
+		log.info "get top artists, params: ${params}"
 		def userInstance = User.get(id)
 		if (!userInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [message(code: 'user.label', default: 'User'), id])
@@ -133,11 +135,13 @@ class UserController {
 			return
 		}
 		
-		def topArtists = lastFmService.getUserTopArtists(userInstance)
-		params.max = Math.min(max ?: 10, 30)
-		params.sort = "numScrobbles"
-		params.order = "desc"
+		def interval = "3month"
+		if (params?.interval) {
+			interval = UserArtist.rankNames[params.interval as int]
+		}
 		
-		return ["artistList": UserArtist.list(params), "artistTotal": topArtists.size()]
+		def topArtists = lastFmService.getUserTopArtists(userInstance, interval)
+		
+		render (template: 'updateArtists', model: ["artistList": topArtists])
 	}
 }

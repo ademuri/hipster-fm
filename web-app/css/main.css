@@ -111,7 +111,6 @@ img {
 }
 
 .footer {
-	width: 100%;
 	background: #666;
 	color: #FFF;
 	clear: both;
@@ -143,7 +142,7 @@ img {
 }
 
 .spinner {
-	background: url(../images/spinner.gif) 50% 50% no-repeat transparent;
+	background: url(../images/ajaxLoad.gif) 50% 50% no-repeat transparent;
 	height: 16px;
 	width: 16px;
     padding: 0.5em;
@@ -656,4 +655,11 @@ div#ui-datepicker-div {
 	max-width: 600px;
 	word-wrap: break-word;
 	font-family: monospace;
+}
+
+#interval-container {
+	max-width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+	padding-top: .5em;
 }

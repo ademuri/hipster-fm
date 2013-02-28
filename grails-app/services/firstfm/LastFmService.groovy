@@ -299,7 +299,7 @@ class LastFmService {
 		return tracks.size()
 	}
 	
-	def getUserTopArtists(user, interval) {
+	def getUserTopArtists(user, interval = "3month") {
 		log.info "Getting top artists for user ${user}, interval ${interval}"
 		
 		if (!user) {
@@ -310,7 +310,12 @@ class LastFmService {
 		// if we've synced this recently, don't do it again
 		if (user?.topArtistsLastSynced[interval] && user?.topArtistsLastSynced[interval] > (new Date()-7)) {
 //			log.info "Synced top artists for ${user.username}, interval ${interval} recently, not syncing"
-			return
+			return UserArtist.withCriteria {
+				eq('user', user)
+				eq("isTop${interval}", true)
+				order("top${interval}Rank", 'asc')
+				maxResults(20)
+			}
 		}
 		
 		def query = [
@@ -321,6 +326,8 @@ class LastFmService {
 		
 		def data = queryApi(query)
 //		log.info "data: ${data}"
+		
+		def topArtists = []
 		
 		if ((data?.topartists?."@attr"?.total) && (data.topartists."@attr".total as int) > 0) {
 			def artists = data.topartists.artist
@@ -346,11 +353,19 @@ class LastFmService {
 				}
 				userArtist."top${interval}Rank" = it."@attr".rank as int
 				userArtist."isTop${interval}" = true
+				topArtists.push(userArtist)
 			}
 		}
 		
 		user.topArtistsLastSynced[interval] = new Date()
+		topArtists = topArtists.sort {
+			it."top${interval}Rank"
+		}
 		
-		return user.artists
+		if (topArtists.size() > 20) {
+			topArtists = topArtists.subList(0, 20)
+		}
+		
+		return topArtists
 	}
 }

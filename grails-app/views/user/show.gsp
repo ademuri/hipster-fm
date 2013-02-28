@@ -1,5 +1,8 @@
 
 <%@ page import="hipsterfm.User" %>
+<%@ page import="hipsterfm.UserArtist" %>
+<%@ page import="grails.converters.JSON" %>
+
 <!doctype html>
 <html>
 	<head>
@@ -52,16 +55,22 @@
 				</li>
 				</g:if>
 			
-				<g:if test="${userInstance?.artists}">
+				<li class="fieldcontain">
+					<span id="interval-label" class="property-label">Interval</span>
+					<span id="interval" class="property-value" aria-labelledby="interval-label">3 month</span>
+				</li>
+				<div id="interval-container">
+					<div id="interval-slider"></div>
+				</div>
+			
 				<li class="fieldcontain">
 					<span id="artists-label" class="property-label"><g:message code="user.artists.label" default="Artists" /></span>
-					
-						<g:each in="${userInstance.artists}" var="a">
-						<span class="property-value" aria-labelledby="artists-label"><g:link controller="userArtist" action="show" id="${a.id}">${a?.toString()}</g:link></span>
-						</g:each>
-					
+					<span id="artists" class="property-value" aria-labelledby="artists-label">
+						<ul>
+							<g:render template="updateArtists" model="[artistList: artistList]" />
+						</ul>
+					</span>
 				</li>
-				</g:if>
 			
 			</ol>
 			<g:form>
@@ -70,7 +79,7 @@
 					<g:link class="edit" action="edit" id="${userInstance?.id}"><g:message code="default.button.edit.label" default="Edit" /></g:link>
 					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
 					<g:link class="getFriends" action="getFriends" id="${userInstance.id}">Get Friends</g:link>
-					<g:link class="getTopArtists" action="getTopArtists" id="${userInstance.id}">Get Top Artists</g:link>
+					<g:remoteLink action="ajaxGetTopArtists" update="artists" id="${userInstance.id}">Get top artists</g:remoteLink>
 				</fieldset>
 			</g:form>
 		</div>
@@ -82,5 +91,25 @@
 				<g:submitButton name="search" value="Search"/>
 			</g:form>
 		</div>
+		
+		<script>
+		$(function() {
+			var rankNames = ${UserArtist.humanRankNames as JSON}
+			console.log(rankNames);
+			$("#interval-slider").slider({
+				value:2,
+				min:0,
+				max:5,
+				step:1,
+				animate: "fast",
+				slide: function (event, ui) {
+					var interval = ui.value;
+					$("#interval").text(rankNames[ui.value]);
+					jQuery.ajax({type:'POST',data:{'interval': interval, 'id': ${userInstance.id}}, url:'${createLink(action:'ajaxGetTopArtists')}',success:function(data,textStatus){jQuery('#artists').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+				}
+			});
+		});
+		</script>
+		
 	</body>
 </html>

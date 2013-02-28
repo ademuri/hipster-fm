@@ -48,12 +48,7 @@
 					
 				</li>
 				</g:if>
-				
-				<li class="fieldcontain">
-					<span id="numscrobbles-label" class="property-label"><g:message code="userartist.scrobbles.label" default="Number of plays" /></span>
-						<span class="property-value" aria-labelledby="numscrobbles-label">${artistInstance.numScrobbles}</span>
-				</li>
-			
+
 				<g:if test="${artistInstance?.tracks}">
 				<li class="fieldcontain">
 					<span id="tracks-label" class="property-label"><g:message code="artist.tracks.label" default="Tracks" /></span>
