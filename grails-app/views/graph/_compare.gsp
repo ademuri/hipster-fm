@@ -17,7 +17,8 @@ var jqplotOptions = {
 	axes: {
 		xaxis: {
 			renderer: $.jqplot.DateAxisRenderer,
-			pad: 0
+			pad: 0,
+			padMin: 0,
 		},
 		yaxis: {
 			min: 0,

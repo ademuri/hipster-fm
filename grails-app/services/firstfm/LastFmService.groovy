@@ -50,7 +50,7 @@ class LastFmService {
 			}
 			timeSinceLastQuery = System.currentTimeMillis()
 		}
-		log.info "Running ${query}"
+//		log.info "Running ${query}"
 		
 		query.api_key = api
 		query.format = 'json'
@@ -168,7 +168,7 @@ class LastFmService {
 		
 		if (!force && (existingArtist && UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced > cutoffDate)
 			|| (user.notFoundLastSynced[rawArtistName] && user.notFoundLastSynced[rawArtistName].after(cutoffTS))) {
-			log.info "Not syncing ${rawArtistName} for ${user}, synced recently"
+//			log.info "Not syncing ${rawArtistName} for ${user}, synced recently"
 			return 0
 		}
 			
@@ -260,7 +260,7 @@ class LastFmService {
 				def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: artist).save(failOnError: true, flush: true)
 				def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true, flush: true)
 				album.addToUserAlbums(userAlbum).save(failOnError: true, flush: true)
-				log.info "album: ${album}, userAlbums: ${album.userAlbums}"
+//				log.info "album: ${album}, userAlbums: ${album.userAlbums}"
 				albums.add(userAlbum)
 			}
 		}
@@ -309,7 +309,7 @@ class LastFmService {
 		
 		// if we've synced this recently, don't do it again
 		if (user?.topArtistsLastSynced[interval] && user?.topArtistsLastSynced[interval] > (new Date()-7)) {
-			log.info "Synced top artists for ${user.username}, interval ${interval} recently, not syncing"
+//			log.info "Synced top artists for ${user.username}, interval ${interval} recently, not syncing"
 			return
 		}
 		

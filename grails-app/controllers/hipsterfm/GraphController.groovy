@@ -25,7 +25,7 @@ class GraphController {
 			def userInstance = User.findByUsername(user)
 			
 			if (userInstance) {
-				log.info "Found user ${user}"
+//				log.info "Found user ${user}"
 				lastFmService.getFriends(userInstance)
 				friends = userInstance.friends
 				
@@ -148,7 +148,7 @@ class GraphController {
 	def ajaxGraphData = {
 		Long artistId = params.artistId as Long
 		Boolean removeOutliers = params.removeOutliers == "true"
-		log.info "params.removeOutliers: ${params.removeOutliers}, removeOutliers: ${removeOutliers}"
+//		log.info "params.removeOutliers: ${params.removeOutliers}, removeOutliers: ${removeOutliers}"
 		def userIdList = []
 		def userList = []
 		def userArtistList = []
@@ -169,7 +169,7 @@ class GraphController {
 		}
 		
 		userIdList = userIdList.sort()
-		log.info "user list: ${userIdList}"
+//		log.info "user list: ${userIdList}"
 		
 		userIdList.each {
 			def userInstance = User.get(it)
@@ -242,8 +242,8 @@ class GraphController {
 			if (!(startDate && endDate)) {
 				def dates
 				if (albumId) {
-					log.info "album id: ${albumId}"
-					log.info "user artist albums: ${userArtist.albums}"
+//					log.info "album id: ${albumId}"
+//					log.info "user artist albums: ${userArtist.albums}"
 					dates = userArtist.albums.find { it.album.id == albumId }?.tracks.collect { it.date } as Set
 				} else { 
 					dates = userArtist.tracks.collect { it.date } as Set
@@ -257,7 +257,7 @@ class GraphController {
 				
 				dates.sort()
 				
-				log.info "Found dates from ${dates.first()} to ${dates.last()} for artist ${artistInstance}, user ${userArtist.user}; ${dates.size()} total days"
+//				log.info "Found dates from ${dates.first()} to ${dates.last()} for artist ${artistInstance}, user ${userArtist.user}; ${dates.size()} total days"
 		//			log.info dates
 				
 				
@@ -312,15 +312,27 @@ class GraphController {
 		
 		def outliers = new PriorityQueue<Integer>()
 		
+//		log.info "globalFirst: ${globalFirst}"
+		
 		userArtistList.each { userArtist ->
-			log.info "getting for user artist: ${userArtist.user}"
+//			log.info "getting for user artist: ${userArtist.user}"
 			def counts = []
-			def found = false	// only start adding when we've found some tracks
 			def userAlbumId
 			
 			if (albumId) {
 				userAlbumId = userArtist.albums.find { it.album.id == albumId }.id
 			}
+			
+			def found = Track.createCriteria().count {
+				eq("artist.id", userArtist.id)
+				lt('date', globalFirst)
+				if (albumId) {
+					eq("album.id", userAlbumId)
+				}
+			}
+			
+			
+			
 			
 			for (int i=0; i<(globalLast-globalFirst); i+=tickSize) {
 				def c = Track.createCriteria()
