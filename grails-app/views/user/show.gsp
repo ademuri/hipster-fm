@@ -101,16 +101,16 @@
 			console.log("hiding");
 			for (var i=0; i<=5; i++) {
 				if (i != interval) {
-					$("#artists" + i).hide(0.1);
-				} else {
-					$("#artists" + i).show(0.1);
+					$("#artists" + i).hide();
+				} else { 
+					$("#artists" + i).show();
 				}
 			}
 		}
 		
 		function updateArtists(interval) {
+			$("#interval").text(rankNames[interval]);
 			if (!synced[interval]) {
-				$("#interval").text(rankNames[interval]);
 				$.ajax({type:'POST',data:{'interval': interval, 'id': ${userInstance.id}}, url:'${createLink(action:'ajaxGetTopArtists')}',success:function(data,textStatus){jQuery('#artists' + interval).html(data); showHide(interval); synced[interval] = true;},error:function(XMLHttpRequest,textStatus,errorThrown){}});
 			} else {
 				showHide(interval);
