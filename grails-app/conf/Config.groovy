@@ -15,7 +15,7 @@
 //def extConfig = System.properties.getProperty('EXTCONFIG')
 def extConfig = System.getenv().get('EXTCONFIG').toString()
 log.error "extConfig: ${extConfig}"
-grails.config.locations = [ "file:${extConfig}/config.groovy" ]
+grails.config.locations = [ "file:/opt/grails-config/config.groovy", hipsterfm.DatabaseCredentials ]
 
 grails.project.groupId = appName // change this to alter the default package name and Maven publishing destination
 grails.mime.file.extensions = true // enables the parsing of file extensions from URLs into the request format
@@ -71,7 +71,7 @@ environments {
     }
     production {
         grails.logging.jul.usebridge = false
-        // TODO: grails.serverURL = "http://www.changeme.com"
+        grails.serverURL = "http://www.ademuri.com/hipster"
     }
 }
 
