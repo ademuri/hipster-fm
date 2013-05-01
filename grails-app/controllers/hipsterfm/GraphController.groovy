@@ -208,7 +208,7 @@ class GraphController {
 		artistIdList.each {
 			def artistInstance = Artist.get(it)
 			if (!artistInstance) {
-				log.warn "Couldn't find artist with id ${artistId}"
+				log.warn "Couldn't find artist with id ${it}"
 				flash.message += "${it} "
 			} else {
 				artistList.push(artistInstance)
