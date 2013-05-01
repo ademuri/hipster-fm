@@ -11,7 +11,7 @@
 		<div class="nav" role="navigation">
 			<ul>
 				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
-				<li><g:link class="find" action="find">Find user</g:link></li>
+				<li><g:link class="find" controller="user" action="find">Find user</g:link></li>
 			</ul>
 		</div>
 		
@@ -60,8 +60,8 @@
 							<g:each var="user" in="${friends}" status="i">
 								<span class="friend-select">
 									<div class="single-friend">
-										<g:checkBox name="user_${user.id}"/>
-										<label for="user_${user.id}">${user.toString()}</label>
+										<g:checkBox name="u_${user.id}"/>
+										<label for="u_${user.id}">${user.toString()}</label>
 									</div>
 								</span>
 							</g:each>
@@ -72,7 +72,7 @@
 								<label for="artist">
 									Artist
 								</label>
-								<g:textField name="artist" value="${artist}" />
+								<g:textField name="artist" value="${artistName}" />
 							</div>
 						
 							<g:if test="${topArtists?.size() > 0}">

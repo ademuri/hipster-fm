@@ -9,6 +9,7 @@ import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
 class GraphController {
 
 	def lastFmService
+	def graphDataService
 	
 	def index() {
 		redirect(action: 'setup')
@@ -42,9 +43,10 @@ class GraphController {
 			}
 		}
 		
-		def newParams = [friends: friends, user: user, topArtists: topArtists, interval: interval]
+		def newParams = params
+		newParams.putAll([friends: friends, user: user, topArtists: topArtists, interval: interval])
 		if (params.artist) {
-			newParams.artist = params.artist
+			newParams.artistName = params.artist
 		}
 		
 		
@@ -71,9 +73,9 @@ class GraphController {
 		
 		// grab users from the checkboxes
 		params.each {
-			if (it.key.contains("user_")) {
+			if (it.key.contains("u_")) {
 				if (it.value.contains("on")) {
-					def userInstance = User.get((it.key - "user_") as Long)
+					def userInstance = User.get((it.key - "u_") as Long)
 					
 					// note: this shouldn't happen unless people are monkeying around with the page
 					if (!userInstance) {
@@ -134,7 +136,7 @@ class GraphController {
 		}
 		
 		userList.eachWithIndex { it, i ->
-			newParams["user_${i}"] = it.id
+			newParams["u_${i}"] = it.id
 		}
 		
 		redirect(action: "show", params: newParams)
@@ -154,7 +156,6 @@ class GraphController {
 	def ajaxGraphData = {
 		Long artistId = params.artistId as Long
 		Boolean removeOutliers = params.removeOutliers == "true"
-//		log.info "params.removeOutliers: ${params.removeOutliers}, removeOutliers: ${removeOutliers}"
 		def userIdList = []
 		def userList = []
 		def userArtistList = []
@@ -168,7 +169,7 @@ class GraphController {
 		}
 		
 		params.each {
-			if (it.key.startsWith("user_")) {
+			if (it.key.startsWith("u_")) {
 //				log.info "Got user ${it.value}"
 				userIdList.push(it.value)
 			}
@@ -204,7 +205,6 @@ class GraphController {
 		}
 		def albumName = albumId ? Album.get(albumId).name : ""
 
-		def data = []
 		def users = []
 		
 		def intervalSize = 25.0 	// about a month
@@ -216,209 +216,27 @@ class GraphController {
 			intervalSize = params.intervalSize as long
 		}
 		
-//		log.info "params: ${params}"
-//		log.info "tickSize: ${tickSize}, intervalSize: ${intervalSize}"
 		
-		// parameters for setting ymax based removing outliers
-		def kOutlierMin = 30	
-		def kNumOutliers = 10
-		def kOutlierRatioUpper = 1.5	// threshold for max being an outlier
-		def kOutlierMax = 200
 		
 		def userMaxY
 		if (params.userMaxY) {
 			userMaxY = params.userMaxY as Integer
 		}		
 		
-		def globalFirst, globalLast
-		
 		def startDate = params.startDate ? params.date('startDate', "MM/dd/yyyy") : null
 		def endDate = params.endDate ? params.date('endDate', "MM/dd/yyyy") : null
 		
-		if (startDate && endDate) {
-			globalFirst = startDate
-			globalLast = endDate
-		}
-		
 		log.info "Getting date stuff"
 		
-		userArtistList.each { userArtist ->
-			users.add(userArtist.user.toString())
-			
-			if (!(startDate && endDate)) {
-				def dates
-				if (albumId) {
-//					log.info "album id: ${albumId}"
-//					log.info "user artist albums: ${userArtist.albums}"
-					dates = userArtist.albums.find { it.album.id == albumId }?.tracks.collect { it.date } as Set
-				} else { 
-					dates = userArtist.tracks.collect { it.date } as Set
-				}
-			
-				dates = dates as List	// only grab unique elements, but should be sorted
-				
-				if (dates.size() == 0) {
-					return 	// closure, so only skip this user artist id
-				}
-				
-				dates.sort()
-				
-//				log.info "Found dates from ${dates.first()} to ${dates.last()} for artist ${artistInstance}, user ${userArtist.user}; ${dates.size()} total days"
-		//			log.info dates
-				
-				
-				def start = dates.first()
-				start.hours = 0
-				start.minutes = 0
-				start.seconds = 0
-				
-				def end = dates.last()
-				end.hours = 0
-				end.minutes = 0
-				end.seconds = 0
-				
-				if (!globalFirst) {
-					globalFirst = start
-				} else {
-					if (globalFirst > start) {
-						globalFirst = start
-					}
-				}
-				
-				if (!globalLast) {
-					globalLast = end
-				} else {
-					if (globalLast < end) {
-						globalLast = end
-					}
-				}
-			}
-		}
-		
-		if (startDate) {
-			globalFirst = startDate
-		}
-		
-		if (endDate) {
-			globalLast = endDate
-		}
-		
-		log.info "Done getting date stuff"
-		
-		tickSize = (globalLast - globalFirst) / tickSize as int
-		intervalSize = (globalLast - globalFirst) / intervalSize as int
-		
-		if (tickSize < 1) {
-			tickSize = 1
-		}
-		if (intervalSize < 1) {
-			intervalSize = 1
-		}
 		
 		
-		def outliers = new PriorityQueue<Integer>()
+		def chartdata = graphDataService.getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, graphDataService.kByUser, albumId)
 		
-//		log.info "globalFirst: ${globalFirst}"
 		
-		userArtistList.each { userArtist ->
-//			log.info "getting for user artist: ${userArtist.user}"
-			def counts = []
-			def userAlbumId
-			
-			if (albumId) {
-				userAlbumId = userArtist.albums.find { it.album.id == albumId }.id
-			}
-			
-			def found = Track.createCriteria().count {
-				eq("artist.id", userArtist.id)
-				lt('date', globalFirst)
-				if (albumId) {
-					eq("album.id", userAlbumId)
-				}
-			}
-			
-			
-			
-			
-			for (int i=0; i<(globalLast-globalFirst); i+=tickSize) {
-				def c = Track.createCriteria()
-				def count = c.count{
-					eq("artist.id", userArtist.id)
-					between('date', globalFirst+i, globalFirst+i+intervalSize)
-					if (albumId) {
-						eq("album.id", userAlbumId)
-					}
-				}
-				
-				if (removeOutliers && !userMaxY) {
-					if (outliers.size() < kNumOutliers || count >= outliers.min()) {
-						outliers.add(count)
-						if (outliers.size() > kNumOutliers) {
-							outliers.remove()	//remove smallest element
-						}
-					}
-				}
-				
-				if (found || count > 0) {
-					found = true
-					counts.add([String.format('%tY-%<tm-%<td', globalFirst+i), count])
-				}
-			}
-			data.add(counts)
-		}
-		
-		log.info "Done getting counts"
-		
-		def maxY
-		
-		if (removeOutliers && !userMaxY) {
-			def outlierList = outliers as List
-			outlierList.sort()
-			log.info "Outliers: ${outlierList}"
-			def outlierMin = outlierList.first()
-			def outlierMax = outlierList.last()
-			
-			if (outlierMin > kOutlierMax) {	// chop off at a maximum value
-				maxY = kOutlierMax
-			} 
-			else if (outlierMax < kOutlierMin) {
-				maxY = null 	// don't set a max, let jqplot autoscale
-			} 
-			else if (outlierMax > (outlierMin * kOutlierRatioUpper)) {
-				int i;
-				for (i=0; i<outlierList.size(); i++) {
-					if (outlierList[i] > outlierList[i-1] * kOutlierRatioUpper) {
-						break
-					}
-				}
-				
-				maxY = Math.max((int)(outlierList[i-1]*1.1), kOutlierMin)	// give us a little of breathing room above the curve
-			}
-			
-			if (maxY) {
-				log.info "Selected maxY as ${maxY}"
-			}
-		}
-		
-		if(userMaxY) {
-			log.info "Setting userMaxY to ${userMaxY}"
-			maxY = userMaxY
-		} else if (!removeOutliers) {
-			maxY = 0
-		}
-		
-		log.info "maxY: ${maxY}"
-		
-		def chartdata = [:]
-		chartdata.data = data
-		chartdata.series = []
-		users.each {
-			chartdata.series.add(["label": it])
-		}
 		
 		log.info "rendering page"
 		
-		def theData = [chartdata:chartdata, maxY: maxY]
+		def theData = [chartdata:chartdata]
 		render theData as JSON
 	}
 }
