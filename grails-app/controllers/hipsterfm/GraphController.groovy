@@ -180,7 +180,7 @@ class GraphController {
 		def userArtistList = []
 		
 		def by = params.by ? params.by as int : graphDataService.kByUser
-		log.info "params.by: ${params.by}, by: ${by}"
+//		log.info "params.by: ${params.by}, by: ${by}"
 
 		// users		
 		params.each {
@@ -203,8 +203,8 @@ class GraphController {
 			}
 		}
 		
-		log.info "Artist id list: ${artistIdList}"
-		flash.message = "Couldn't find artist with ids: "
+//		log.info "Artist id list: ${artistIdList}"
+//		flash.message = "Couldn't find artist with ids: "
 		artistIdList.each {
 			def artistInstance = Artist.get(it)
 			if (!artistInstance) {
@@ -214,7 +214,7 @@ class GraphController {
 				artistList.push(artistInstance)
 			}
 		}
-		log.info "Artist list: ${artistList}"
+//		log.info "Artist list: ${artistList}"
 		
 		// if we don't have any artists, quit
 		if (artistList.size() == 0) {
@@ -225,12 +225,17 @@ class GraphController {
 			flash.message = ""
 		}
 		
-		
-		userList.each { user ->
-			artistList.each { artist ->
-				lastFmService.getArtistTracks(user, artist.name) // TODO: probably shouldn't pass name
+		log.info "Begin get tracks"
+		GParsPool.withPool {
+			userList.eachParallel { user ->
+				GParsPool.withPool {
+					artistList.eachParallel { artist ->
+						lastFmService.getArtistTracksSafe(user.id, artist.name) // TODO: probably shouldn't pass name
+					}
+				}
 			}
 		}
+		log.info "End get tracks"
 		
 		userList.each { user ->
 			artistList.each { artist ->
@@ -268,14 +273,8 @@ class GraphController {
 		def startDate = params.startDate ? params.date('startDate', "MM/dd/yyyy") : null
 		def endDate = params.endDate ? params.date('endDate', "MM/dd/yyyy") : null
 		
-		log.info "Getting date stuff"
-		
-		
-		
-		
+		log.info "Getting graph data"
 		def chartdata = graphDataService.getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId)
-		
-		
 		
 		log.info "rendering page"
 		

@@ -35,7 +35,7 @@
 				//console.log(response);
 				var responseObject = JSON.parse(response.responseText); 
 				var chartdata = responseObject.chartdata;
-				maxY = responseObject.maxY;
+				maxY = chartdata.maxY;
 				//console.log(chartdata);
 				var series = chartdata.series;
 				var data = chartdata.data;

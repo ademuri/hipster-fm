@@ -162,6 +162,12 @@ class LastFmService {
 		}
 	}
 	
+	// thread safe: pass IDs, not instances
+	int getArtistTracksSafe(userId, artistName, force = false) {
+		def user = User.get(userId)
+		return getArtistTracks(user, artistName, force)
+	}
+	
 	int getArtistTracks(user, rawArtistName, force = false) {
 		
 		def existingArtist = Artist.findByName(rawArtistName)
@@ -233,7 +239,7 @@ class LastFmService {
 		}
 		
 		log.info "Found ${tracks.size()} tracks."
-		log.info tracks
+//		log.info tracks
 		
 		
 		def artistName = tracks[0]?.artist?."#text"
@@ -244,7 +250,7 @@ class LastFmService {
 			log.warn "Search for ${rawArtistName} returned no artist id"
 			return 0
 		}
-		println "artist name: ${artistName}"
+//		println "artist name: ${artistName}"
 		def artist = Artist.findByLastId(artistId) ?: new Artist(name: artistName, lastId: artistId).save(flush: true, failOnError: true)
 		def userArtist = UserArtist.findByUserAndArtist(user, artist) ?: new UserArtist(user: user, artist: artist).save(flush: true, failOnError: true)
 		artist.addToUserArtists(userArtist)
@@ -301,7 +307,7 @@ class LastFmService {
 				track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 			} else {
 //				log.info "name: ${it.name}, date: ${date}"
-				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true, flush: true)
+				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 //				log.info track	
 			}
 			userArtist.addToTracks(track)
@@ -309,9 +315,7 @@ class LastFmService {
 		
 		log.info "Done creating tracks"
 
-		userArtist.save(flush: true, failOnError: true)		
 		userArtist.lastSynced = new Date()
-		
 		
 		return tracks.size()
 	}
