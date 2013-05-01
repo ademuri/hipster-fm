@@ -62,6 +62,8 @@
 				<div id="interval-container">
 					<div id="interval-slider"></div>
 				</div>
+				
+				<g:link class="graph" controller="graph" action="show" elementId="graphInterval">Graph</g:link>
 			
 				<li class="fieldcontain">
 					<span id="artists-label" class="property-label"><g:message code="user.artists.label" default="Artists" /></span>
@@ -102,10 +104,35 @@
 			for (var i=0; i<=5; i++) {
 				if (i != interval) {
 					$("#artists" + i).hide();
+					$("#artists" + i).addClass("hidden");
+					$("#artists" + i).removeClass("shown");
 				} else { 
 					$("#artists" + i).show();
+					$("#artists" + i).removeClass("hidden");
+					$("#artists" + i).addClass("shown");
 				}
 			}
+
+			// update Graph button
+			var link = $("#graphInterval");
+			var href = link.prop("href");
+			var to = href.indexOf("?");
+			if (to > 0) {
+				href = href.substring(0, to);
+			}
+			href += "?";
+
+			console.log("href: " + href);
+			$.each($("span.shown li"), function(i, val) {
+				href += "a_" + i + "=" + val.id + "&";
+				if (i > 8) {
+					return false;	// don't graph 20 artists!
+				}
+			}); 
+
+			href += "by=1&u_0=" + ${userInstance.id};
+
+			link.prop("href", href);
 		}
 		
 		function updateArtists(interval) {

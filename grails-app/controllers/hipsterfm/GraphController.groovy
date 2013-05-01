@@ -116,7 +116,7 @@ class GraphController {
 		
 //		log.info "start date: ${startDate}, end date: ${endDate}"
 		
-		def newParams = [artistId: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false,
+		def newParams = [a_0: artistInstance.id, removeOutliers: params.removeOutliers?.contains("on") ? true : false,
 			tickSize: params.tickSize, intervalSize: params.intervalSize, addAllFriends: params.addAllFriends]
 
 		def album = params.album ? Album.findWhere(artist: artistInstance, name: params.album).id : ""
@@ -139,6 +139,10 @@ class GraphController {
 			newParams["u_${i}"] = it.id
 		}
 		
+		if (userList.size() == 1) {
+			newParams.userName = userList[0].toString()
+		}
+		
 		redirect(action: "show", params: newParams)
 	}
 	
@@ -147,55 +151,95 @@ class GraphController {
 			params.remove("_action_show")
 		}
 		
+		def userId
+		
 		def newParams = params
-		newParams.artistName = Artist.get(params.artistId) ?: null 
+		newParams.artistName = Artist.get(params.artistId) ?: null
+		
+		def userIdList = []
+		params.each {
+			if (it.key.contains("u_")) {
+				userIdList.push(it.value)
+			}
+		}
+		
+		if (userIdList.size() == 1) {
+			newParams.userName = User.get(userIdList[0])
+		} 
 		
 		params
 	}
 	
 	def ajaxGraphData = {
-		Long artistId = params.artistId as Long
+		//Long artistId	// if there's only 1 artist
 		Boolean removeOutliers = params.removeOutliers == "true"
 		def userIdList = []
 		def userList = []
+		def artistIdList = []
+		def artistList = []
 		def userArtistList = []
 		
-		def artistInstance = Artist.get(artistId)
-		if (!artistInstance) {
-			log.warn "Couldn't find artist with id ${artistId}"
-			flash.message = "Couldn't find artist with id ${artistId}"
-			redirect(action: "setup")
-			return
-		}
-		
+		def by = params.by ? params.by as int : graphDataService.kByUser
+		log.info "params.by: ${params.by}, by: ${by}"
+
+		// users		
 		params.each {
 			if (it.key.startsWith("u_")) {
-//				log.info "Got user ${it.value}"
 				userIdList.push(it.value)
 			}
 		}
 		
 		userIdList = userIdList.sort()
-//		log.info "user list: ${userIdList}"
 		
 		userIdList.each {
 			def userInstance = User.get(it)
-//			log.info "userInstance: ${userInstance}"
 			userList.push(userInstance)
 		}
 		
-		userList.each {
-//			log.info "Syncing for user ${it}"
-			lastFmService.getArtistTracks(it, artistInstance.name) // TODO: probably shouldn't pass name
+		// artists
+		params.each {
+			if (it.key.startsWith("a_")) {
+				artistIdList.push(it.value)
+			}
 		}
 		
-		userList.each { userInstance ->
-//			log.info "generating user list, ${userInstance}"
-			def userArtistInstance = UserArtist.findByUserAndArtist(userInstance, artistInstance)
-			if (!userArtistInstance) {
-				log.info "User ${userInstance} has no scrobbles for artist ${artistInstance}"
+		log.info "Artist id list: ${artistIdList}"
+		flash.message = "Couldn't find artist with ids: "
+		artistIdList.each {
+			def artistInstance = Artist.get(it)
+			if (!artistInstance) {
+				log.warn "Couldn't find artist with id ${artistId}"
+				flash.message += "${it} "
 			} else {
-				userArtistList.add(userArtistInstance)
+				artistList.push(artistInstance)
+			}
+		}
+		log.info "Artist list: ${artistList}"
+		
+		// if we don't have any artists, quit
+		if (artistList.size() == 0) {
+			redirect(action: "setup")
+			return
+		} 
+		else if (artistIdList.size() == artistList.size()) {
+			flash.message = ""
+		}
+		
+		
+		userList.each { user ->
+			artistList.each { artist ->
+				lastFmService.getArtistTracks(user, artist.name) // TODO: probably shouldn't pass name
+			}
+		}
+		
+		userList.each { user ->
+			artistList.each { artist ->
+				def userArtist = UserArtist.findByUserAndArtist(user, artist)
+				if (!userArtist) {
+					log.info "User ${user} has no scrobbles for artist ${artist}"
+				} else {
+					userArtistList.add(userArtist)
+				}
 			}
 		}
 		
@@ -216,8 +260,6 @@ class GraphController {
 			intervalSize = params.intervalSize as long
 		}
 		
-		
-		
 		def userMaxY
 		if (params.userMaxY) {
 			userMaxY = params.userMaxY as Integer
@@ -230,7 +272,8 @@ class GraphController {
 		
 		
 		
-		def chartdata = graphDataService.getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, graphDataService.kByUser, albumId)
+		
+		def chartdata = graphDataService.getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId)
 		
 		
 		

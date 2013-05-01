@@ -34,7 +34,7 @@ class LastFmService {
 			}
 			timeSinceLastQuery = System.currentTimeMillis()
 		}
-		log.info "Running ${query}"
+//		log.info "Running ${query}"
 		
 		query.api_key = api
 		query.format = 'json'
@@ -297,12 +297,12 @@ class LastFmService {
 			def track
 			
 			if (existingTracks) {
-				log.info "Searching for existing tracks name: ${it.name}, date: ${date}"
+//				log.info "Searching for existing tracks name: ${it.name}, date: ${date}"
 				track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 			} else {
-				log.info "name: ${it.name}, date: ${date}"
+//				log.info "name: ${it.name}, date: ${date}"
 				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true, flush: true)
-				log.info track	
+//				log.info track	
 			}
 			userArtist.addToTracks(track)
 		}
