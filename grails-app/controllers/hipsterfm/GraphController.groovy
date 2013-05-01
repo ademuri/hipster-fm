@@ -175,6 +175,7 @@ class GraphController {
 		Boolean removeOutliers = params.removeOutliers == "true"
 		def userIdList = []
 		def userList = []
+		def artistUnsortedList = []	// grab key-value pairs, then sort them
 		def artistIdList = []
 		def artistList = []
 		def userArtistList = []
@@ -199,8 +200,21 @@ class GraphController {
 		// artists
 		params.each {
 			if (it.key.startsWith("a_")) {
-				artistIdList.push(it.value)
+				artistUnsortedList.push(it)
 			}
+		}
+		
+		artistUnsortedList.sort { a, b ->
+			if (!(a && b)) {
+				return a <=> b
+			}
+			
+//			log.info "sub: ${a.key.substring(2, a.key.size())}"
+			return (a.key.substring(2, a.key.size()) as long) <=> (b.key.substring(2, b.key.size()) as long)
+		}
+		
+		artistUnsortedList.each {
+			artistIdList.push(it.value)
 		}
 		
 //		log.info "Artist id list: ${artistIdList}"
