@@ -34,7 +34,7 @@ class LastFmService {
 			}
 			timeSinceLastQuery = System.currentTimeMillis()
 		}
-//		log.info "Running ${query}"
+		log.info "Running ${query}"
 		
 		query.api_key = api
 		query.format = 'json'
@@ -85,6 +85,11 @@ class LastFmService {
 	}
 	
 	def Artist getArtist(name) {
+		def artist = Artist.findByName(name) 
+		if (artist) {
+			return artist
+		}
+		
 		log.info "Querying last.fm API for ${name}"
 		def query = [
 			method: "artist.getinfo",
@@ -98,7 +103,7 @@ class LastFmService {
 			return
 		}
 		
-		def artist = Artist.findByName(name) ?: new Artist(name: data.artist.name, lastId: data.artist.mbid).save(failOnError: true)
+		artist = new Artist(name: data.artist.name, lastId: data.artist.mbid).save(failOnError: true)
 		
 		return artist
 	}
@@ -210,8 +215,13 @@ class LastFmService {
 		if (paging.totalPages.toInteger() > 1) {		
 			GParsPool.withPool {
 				(2..paging.totalPages.toInteger()).eachParallel { i ->
-					query["page"] = i
-					data = queryApi(query)
+					def newquery =  [
+						method: 'user.getartisttracks',
+						user: user.username,
+						artist: rawArtistName,
+						]
+					newquery["page"] = i
+					data = queryApi(newquery)
 					if (!data?.artisttracks) {
 						log.error "Didn't get track data for page ${i}"
 					}
@@ -223,6 +233,8 @@ class LastFmService {
 		}
 		
 		log.info "Found ${tracks.size()} tracks."
+		log.info tracks
+		
 		
 		def artistName = tracks[0]?.artist?."#text"
 		
@@ -232,7 +244,7 @@ class LastFmService {
 			log.warn "Search for ${rawArtistName} returned no artist id"
 			return 0
 		}
-		//println "artist name: ${artistName}"
+		println "artist name: ${artistName}"
 		def artist = Artist.findByLastId(artistId) ?: new Artist(name: artistName, lastId: artistId).save(flush: true, failOnError: true)
 		def userArtist = UserArtist.findByUserAndArtist(user, artist) ?: new UserArtist(user: user, artist: artist).save(flush: true, failOnError: true)
 		artist.addToUserArtists(userArtist)
@@ -272,8 +284,10 @@ class LastFmService {
 		
 		tracks.each {
 			if (!it?.date) {
+				log.info "Invalid date!: ${it}"
 				return	//skip this track
 			}
+			
 			def trackId = it.mbid
 			def date = dateFormat.parse(it.date."#text")
 			if (syncFromDate && date < syncFromDate) {
@@ -283,15 +297,19 @@ class LastFmService {
 			def track
 			
 			if (existingTracks) {
+				log.info "Searching for existing tracks name: ${it.name}, date: ${date}"
 				track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 			} else {
-				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)	
+				log.info "name: ${it.name}, date: ${date}"
+				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true, flush: true)
+				log.info track	
 			}
 			userArtist.addToTracks(track)
 		}
 		
 		log.info "Done creating tracks"
-		
+
+		userArtist.save(flush: true, failOnError: true)		
 		userArtist.lastSynced = new Date()
 		
 		
