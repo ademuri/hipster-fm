@@ -18,4 +18,11 @@ modules = {
 		resource url:"${spectrum_dir}/spectrum.js"
 		resource url:"${spectrum_dir}/spectrum.css"
 	}
+	
+	def store_dir = 'js/store.js'
+	store_js {
+		dependsOn "jquery"
+		resource url:"${store_dir}/store.js"
+		resource url:"${store_dir}/json.js"
+	}
 }

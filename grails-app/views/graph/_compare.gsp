@@ -41,3 +41,9 @@ var jqplotOptions = {
 	},
 	series: series
 };
+
+var colors = store.get('colors');
+if (colors) {
+	jqplotOptions.seriesColors = colors;
+	console.log("setting colors: " + colors);
+}

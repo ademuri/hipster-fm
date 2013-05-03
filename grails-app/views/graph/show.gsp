@@ -3,7 +3,7 @@
 	<head>
 		<meta name="layout" content="main">
 		<title>Show Graph</title>
-		<r:require modules="jquery, jqplot" />
+		<r:require modules="jquery, jqplot, store_js" />
 	</head>
 	<body>
 		<div class="nav" role="navigation">

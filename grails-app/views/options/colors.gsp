@@ -3,7 +3,7 @@
 	<head>
 		<meta name="layout" content="main">
 		<title>Options - Colors</title>
-		<r:require modules="jquery, jqplot, spectrum" />
+		<r:require modules="jquery, jqplot, spectrum, store_js" />
 	</head>
 	<body>
 		<div class="nav" role="navigation">
@@ -13,13 +13,15 @@
 		</div>
 		
 		<div id="options-colors" class="content" role="main">
-			<g:form>
+			<g:form onsubmit="return setcolors()">
 				<g:render template="colorpicker" />
 				<g:render template="colorpicker" />
 				<g:render template="colorpicker" />
 				<div class="color-picker">
 					<span class="color-button color-add last-add">+</span>
 				</div>
+				
+				<g:actionSubmit value="Apply"/>
 			</g:form>
 		</div>
 		
@@ -51,6 +53,17 @@
 				});
 				
 			});
+
+			function setcolors() {
+				store.remove('colors');
+				var colors = [];
+				$("#options-colors .spectrum-input").each (function(i, val) {
+					colors.push($(val).spectrum("get").toHexString());
+				});
+				//console.log("colors: " + colors);
+				store.set('colors', colors);
+				return false;
+			}
 		</script>
 	<div id="color-picker-template">
 		<g:render template="colorpicker" />
