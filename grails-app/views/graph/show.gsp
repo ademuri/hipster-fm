@@ -30,17 +30,22 @@
 		
 		<script>
 			var response;
+			var responseObject;
 			var maxY;
+			var params = ${params.encodeAsJSON()};
+			var ONE_DAY = 1000 * 60 * 60 * 24;
+			
 			function graph() {
-				//console.log("graphing");
-				//console.log(response);
-				var responseObject = JSON.parse(response.responseText); 
+				if (!responseObject) {
+					responseObject = JSON.parse(response.responseText);
+					responseObject.date = new Date();
+					store.set(params, responseObject);
+				} 
+				
 				var chartdata = responseObject.chartdata;
 				maxY = chartdata.maxY;
-				//console.log(chartdata);
 				var series = chartdata.series;
 				var data = chartdata.data;
-				//console.log(data);
 
 				<g:if test="${params?.type == 'breakout'}">
 					<g:render template="breakout" />
@@ -57,7 +62,15 @@
 			}
 
 			$(window).load(function() {
-				//console.log("loading");
+				var storedData = store.get(params);
+
+				// cache result for 2 days
+				if (storedData && storedData.date - (new Date()) < ONE_DAY*2) {
+					responseObject = store.get(params);
+					graph();
+					return
+				}
+
 				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};
 			});
 		</script>
