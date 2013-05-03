@@ -140,7 +140,7 @@ class GraphController {
 		}
 		
 		if (userList.size() == 1) {
-			newParams.userName = userList[0].toString()
+			newParams.userName = userList.iterator()[0].toString()
 		}
 		
 		redirect(action: "show", params: newParams)
