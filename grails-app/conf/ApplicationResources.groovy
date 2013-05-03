@@ -11,4 +11,11 @@ modules = {
 		resource url:"${jqplot_dir}/jquery.jqplot.css"
 		resource url:"css/jqplot_custom.css"
 	}
+	
+	def spectrum_dir = 'js/spectrum'
+	spectrum {
+		dependsOn "jquery"
+		resource url:"${spectrum_dir}/spectrum.js"
+		resource url:"${spectrum_dir}/spectrum.css"
+	}
 }

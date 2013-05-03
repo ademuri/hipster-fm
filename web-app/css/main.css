@@ -663,3 +663,16 @@ div#ui-datepicker-div {
 	margin-right: auto;
 	padding-top: .5em;
 }
+
+
+.color-picker {
+	margin: 1em 3em; 	
+}
+.color-button {
+	margin: .2em;
+	font-size: 1.5em;
+	cursor: pointer;
+}
+#color-picker-template {
+	display: none;
+}
