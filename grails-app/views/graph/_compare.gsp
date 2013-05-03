@@ -4,9 +4,6 @@ var jqplotOptions = {
 					"#1ECC21", "#00E8C2", "#E232EA", "#4F826A", "#999999",
 					"#333333", "#804000", "#FF6AD7", "#80002E", "#77AAFF"
 					],
-	/*seriesColors: ["#DDDDDD", "#BBBBBB", "#999999", "#777777",
-		"#555555", "#333333", "#111111"
-	],*/					
 	seriesDefaults: {
 		markerOptions: {
 			show: true, 

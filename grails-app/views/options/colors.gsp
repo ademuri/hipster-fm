@@ -13,13 +13,14 @@
 		</div>
 		
 		<div id="options-colors" class="content" role="main">
-			<g:form onsubmit="return setcolors()">
+			<g:form onsubmit="return false">
 				<g:render template="colorpicker" />
 				<div class="color-picker">
 					<span class="color-button color-add last-add">+</span>
 				</div>
 				
-				<g:actionSubmit value="Apply"/>
+				<g:actionSubmit value="Apply" class="apply"/>
+				<g:actionSubmit value="Reset" class="reset"/>
 			</g:form>
 		</div>
 		
@@ -32,6 +33,11 @@
 					localStorageKey: "spectrum.colors",
 					showButtons: false
 				}
+
+			var defaultColors = ["#FF0000", "#FFBA10", "#970CE8", "#0D4EFF", "#E87C15", 
+									"#1ECC21", "#00E8C2", "#E232EA", "#4F826A", "#999999",
+									"#333333", "#804000", "#FF6AD7", "#80002E", "#77AAFF"
+									];
 			
 			function remove() {
 				$(this).parent().remove();
@@ -50,10 +56,7 @@
 				var picker = $("#options-colors .spectrum-input");
 
 				if (!colors) {
-					colors = ["#FF0000", "#FFBA10", "#970CE8", "#0D4EFF", "#E87C15", 
-								"#1ECC21", "#00E8C2", "#E232EA", "#4F826A", "#999999",
-								"#333333", "#804000", "#FF6AD7", "#80002E", "#77AAFF"
-								];
+					colors = defaultColors;
 				}
 				
 				for(var i=0; i<colors.length-1; i++) {
@@ -67,7 +70,9 @@
 				$("#options-colors .spectrum-input").each (function(i, val) {
 					$(val).spectrum("set", colors[i]);
 				});
-				
+
+				$(".reset").click(reset);
+				$(".apply").click(setcolors);
 			});
 
 			function setcolors() {
@@ -78,7 +83,13 @@
 				});
 				//console.log("colors: " + colors);
 				store.set('colors', colors);
+				$(".apply").effect("highlight", {}, 1000);
 				return false;
+			}
+
+			function reset() {
+				store.set('colors', defaultColors);
+				location.reload();
 			}
 		</script>
 	<div id="color-picker-template">
