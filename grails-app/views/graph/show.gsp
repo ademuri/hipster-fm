@@ -32,14 +32,14 @@
 			var response;
 			var responseObject;
 			var maxY;
-			var params = ${params.encodeAsJSON()};
+			var params = Object.keys(${params.encodeAsJSON()}).sort();
 			var ONE_DAY = 1000 * 60 * 60 * 24;
 			
 			function graph() {
 				if (!responseObject) {
 					responseObject = JSON.parse(response.responseText);
 					responseObject.date = new Date();
-					store.set(params, responseObject);
+					store.set(JSON.stringify(params), responseObject);
 				} 
 				
 				var chartdata = responseObject.chartdata;
@@ -62,13 +62,19 @@
 			}
 
 			$(window).load(function() {
-				var storedData = store.get(params);
+				//var dataCache = store.get('graphCache');
+				console.log(JSON.stringify(params));
+				var storedData = store.get(JSON.stringify(params));
 
 				// cache result for 2 days
-				if (storedData && storedData.date - (new Date()) < ONE_DAY*2) {
-					responseObject = store.get(params);
+				console.log(storedData);
+				console.log(new Date());
+				if (storedData && ((new Date()) - (new Date(storedData.date))) < ONE_DAY) {
+					responseObject = storedData;
 					graph();
 					return
+				} else {
+					 //console.log((new Date()) - (new Date(storedData.date)));
 				}
 
 				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};
