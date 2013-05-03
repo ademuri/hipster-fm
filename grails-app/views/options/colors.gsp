@@ -62,8 +62,10 @@
 				for(var i=0; i<colors.length-1; i++) {
 					add.call(picker);
 				}
-				
+
 				$("#options-colors .spectrum-input").spectrum(options);
+				$(".color-remove").unbind();
+				$(".color-add").unbind();
 				$(".color-remove").click(remove);
 				$(".color-add").click(add);
 
