@@ -32,8 +32,13 @@
 			var response;
 			var responseObject;
 			var maxY;
-			var params = Object.keys(${params.encodeAsJSON()}).sort();
+			var params = []; 
 			var ONE_DAY = 1000 * 60 * 60 * 24;
+
+			var rawParams = $(location).attr('href');
+			rawParams = rawParams.substring(rawParams.indexOf('?')+1, rawParams.length);
+			params = rawParams.split('&');
+			params.sort();
 			
 			function graph() {
 				if (!responseObject) {
@@ -62,19 +67,13 @@
 			}
 
 			$(window).load(function() {
-				//var dataCache = store.get('graphCache');
-				console.log(JSON.stringify(params));
 				var storedData = store.get(JSON.stringify(params));
 
 				// cache result for 2 days
-				console.log(storedData);
-				console.log(new Date());
 				if (storedData && ((new Date()) - (new Date(storedData.date))) < ONE_DAY) {
 					responseObject = storedData;
 					graph();
 					return
-				} else {
-					 //console.log((new Date()) - (new Date(storedData.date)));
 				}
 
 				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};

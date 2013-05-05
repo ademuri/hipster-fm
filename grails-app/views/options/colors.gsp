@@ -13,16 +13,32 @@
 		</div>
 		
 		<div id="options-colors" class="content" role="main">
-			<g:form onsubmit="return false">
-				<g:render template="colorpicker" />
-				<div class="color-picker">
-					<span class="color-button color-add last-add">+</span>
-				</div>
-				
-				<g:actionSubmit value="Apply" class="apply"/>
-				<g:actionSubmit value="Reset" class="reset"/>
-			</g:form>
+			<div id="options-color-pickers">
+				<g:form onsubmit="return false">
+					<g:render template="colorpicker" />
+					<div class="color-picker">
+						<span class="color-button color-add last-add">+</span>
+					</div>
+					
+					<g:actionSubmit value="Apply" class="apply" />
+					<g:actionSubmit value="Reset" class="reset" />
+					<g:textField name="schemeName"/>
+					<g:actionSubmit value="Save" class="save" />
+				</g:form>
+			</div>
+			
+			<div id="options-color-palettes">
+				<g:form onsubmit="return false">
+					<div id="options-color-palettes-label">Colors</div>
+					<ul class="color-palette-list">
+					</ul>
+				</g:form>
+			</div>
+			
+			
 		</div>
+		
+		
 		
 		<script>
 			var options = {
@@ -38,6 +54,10 @@
 									"#1ECC21", "#00E8C2", "#E232EA", "#4F826A", "#999999",
 									"#333333", "#804000", "#FF6AD7", "#80002E", "#77AAFF"
 									];
+
+			var greyScale = ["#BBB", "#999", "#777", "#555", "#333", "#000"];
+
+			var colorSchemes = [{name: "Default", colors: defaultColors}, {name: "Greyscale", colors: greyScale}];
 			
 			function remove() {
 				$(this).parent().remove();
@@ -75,6 +95,30 @@
 
 				$(".reset").click(reset);
 				$(".apply").click(setcolors);
+				$(".save").click(save);
+
+				// display color schemes
+				if (store.get('color-schemes')) {
+					colorSchemes = store.get('color-schemes');
+				}
+				
+				var items = [];
+				$.each(colorSchemes, function(i, scheme) {
+					var item = '<li id="' + i + '">' + scheme.name + ': <div class="color-swatch">';
+					$.each(scheme.colors, function(j, color) {
+						item += '<div class="color-block" style="background-color:' + color + ';"></div>';
+					});
+					item += '</div></li>';
+
+					items.push(item);			
+				});
+
+				$("#options-color-palettes ul").append(items.join(''));
+				$("#options-color-palettes li").click( function() {
+					console.log("id: " + $(this).attr("id"));
+					store.set('colors', colorSchemes[$(this).attr("id")].colors);
+					location.reload();
+				});
 			});
 
 			function setcolors() {
@@ -92,6 +136,16 @@
 			function reset() {
 				store.set('colors', defaultColors);
 				location.reload();
+			}
+
+			function save() {
+				var colors = [];
+				$("#options-colors .spectrum-input").each (function(i, val) {
+					colors.push($(val).spectrum("get").toHexString());
+				});
+
+				colorSchemes.push({name: $("#schemeName").val(), colors: colors});
+				store.set('color-schemes', colorSchemes);
 			}
 		</script>
 	<div id="color-picker-template">

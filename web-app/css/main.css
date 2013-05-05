@@ -131,6 +131,7 @@ img {
 	float: right;
 	vertical-align: bottom;
 	padding-bottom: .1em;
+	font-style: italic;
 }
 
 .last-fm-logo-img {
@@ -682,4 +683,36 @@ div#ui-datepicker-div {
 }
 #color-picker-template {
 	display: none;
+}
+
+#options-color-pickers {
+	float: left;
+	width: 40%;	
+}
+#options-color-palettes {
+	float: right;
+	width: 40%;
+}
+#options-color-palettes li {
+	width: 100%;
+	cursor: pointer;
+	margin: .2em;
+}
+#options-color-palettes-label {
+	font-weight: bold;
+}
+.color-swatch {
+	outline: 1px solid black;
+	height: 1em;
+	padding-bottom: -1em;
+	display: inline-block;
+	width: auto;
+}
+.color-block {
+	width: 1em;
+	height: 1em;
+	display: inline-block;
+}
+
+#schemeName {
 }
