@@ -70,6 +70,37 @@
 				thing.children(".color-add").click(add);
 				thing.children(".color-remove").click(remove);
 			}
+
+			function displaySchemes(schemes) {
+				var items = [];
+				var maxId = $("#options-color-palettes li").length;
+				
+				$.each(schemes, function(i, scheme) {
+					var item = '<li><span class="color-click" id="' + (i+maxId) + '">' + scheme.name + ': <div class="color-swatch">';
+					$.each(scheme.colors, function(j, color) {
+						item += '<div class="color-block" style="background-color:' + color + ';"></div>';
+					});
+					item += '</div></span><span class="color-scheme-delete" id="' + (i+maxId) + '">(X)</div></li>';
+
+					items.push(item);			
+				});
+
+				$("#options-color-palettes ul").append(items.join(''));
+				$("#options-color-palettes .color-click").click( function() {
+					console.log("id: " + $(this).attr("id"));
+					store.set('colors', colorSchemes[$(this).attr("id")].colors);
+					location.reload();
+				});
+				$("#options-color-palettes .color-scheme-delete").unbind();
+				$("#options-color-palettes .color-scheme-delete").click( function() {
+					console.log("id: " + $(this).attr("id"));
+					colorSchemes.splice([$(this).attr("id")], 1);
+					store.set('color-schemes', colorSchemes);
+					$("#options-color-palettes li").remove();
+					displaySchemes(colorSchemes);
+				});
+				
+			}
 			
 			$(document).ready( function() {
 				var colors = store.get('colors');
@@ -102,23 +133,7 @@
 					colorSchemes = store.get('color-schemes');
 				}
 				
-				var items = [];
-				$.each(colorSchemes, function(i, scheme) {
-					var item = '<li id="' + i + '">' + scheme.name + ': <div class="color-swatch">';
-					$.each(scheme.colors, function(j, color) {
-						item += '<div class="color-block" style="background-color:' + color + ';"></div>';
-					});
-					item += '</div></li>';
-
-					items.push(item);			
-				});
-
-				$("#options-color-palettes ul").append(items.join(''));
-				$("#options-color-palettes li").click( function() {
-					console.log("id: " + $(this).attr("id"));
-					store.set('colors', colorSchemes[$(this).attr("id")].colors);
-					location.reload();
-				});
+				displaySchemes(colorSchemes);				
 			});
 
 			function setcolors() {
@@ -127,7 +142,6 @@
 				$("#options-colors .spectrum-input").each (function(i, val) {
 					colors.push($(val).spectrum("get").toHexString());
 				});
-				//console.log("colors: " + colors);
 				store.set('colors', colors);
 				$(".apply").effect("highlight", {}, 1000);
 				return false;
@@ -144,8 +158,10 @@
 					colors.push($(val).spectrum("get").toHexString());
 				});
 
-				colorSchemes.push({name: $("#schemeName").val(), colors: colors});
+				var scheme = {name: $("#schemeName").val(), colors: colors};
+				colorSchemes.push(scheme);
 				store.set('color-schemes', colorSchemes);
+				displaySchemes([scheme]);
 			}
 		</script>
 	<div id="color-picker-template">

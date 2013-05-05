@@ -695,7 +695,6 @@ div#ui-datepicker-div {
 }
 #options-color-palettes li {
 	width: 100%;
-	cursor: pointer;
 	margin: .2em;
 }
 #options-color-palettes-label {
@@ -714,5 +713,14 @@ div#ui-datepicker-div {
 	display: inline-block;
 }
 
-#schemeName {
+.color-scheme-delete {
+	font-size: .8em;
+	font-style: italic;
+	color: 0x333;
+	margin: .1em;
+	padding: 1em;
+	cursor: pointer;
+}
+.color-click {
+	cursor: pointer;
 }
