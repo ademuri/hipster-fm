@@ -67,8 +67,6 @@
 				var thing = $("#color-picker-template div").clone(); 
 				thing.insertBefore($(this).parent());
 				thing.children(".spectrum-input").spectrum(options);
-				thing.children(".color-add").click(add);
-				thing.children(".color-remove").click(remove);
 			}
 
 			function displaySchemes(schemes) {
@@ -89,8 +87,13 @@
 				$("#options-color-palettes .color-click").click( function() {
 					console.log("id: " + $(this).attr("id"));
 					store.set('colors', colorSchemes[$(this).attr("id")].colors);
-					location.reload();
+
+					var toRemove = $("#options-color-pickers .color-picker");
+					toRemove.splice(0, 1);
+					toRemove.remove();
+					displayScheme(colorSchemes[$(this).attr("id")].colors);
 				});
+				
 				$("#options-color-palettes .color-scheme-delete").unbind();
 				$("#options-color-palettes .color-scheme-delete").click( function() {
 					console.log("id: " + $(this).attr("id"));
@@ -101,9 +104,8 @@
 				});
 				
 			}
-			
-			$(document).ready( function() {
-				var colors = store.get('colors');
+
+			function displayScheme(colors) {
 				var picker = $("#options-colors .spectrum-input");
 
 				if (!colors) {
@@ -123,15 +125,20 @@
 				$("#options-colors .spectrum-input").each (function(i, val) {
 					$(val).spectrum("set", colors[i]);
 				});
-
-				$(".reset").click(reset);
-				$(".apply").click(setcolors);
-				$(".save").click(save);
+			}
+			
+			$(document).ready( function() {
+				var colors = store.get('colors');
+				displayScheme(colors);
 
 				// display color schemes
 				if (store.get('color-schemes')) {
 					colorSchemes = store.get('color-schemes');
 				}
+
+				$(".reset").click(reset);
+				$(".apply").click(setcolors);
+				$(".save").click(save);
 				
 				displaySchemes(colorSchemes);				
 			});
