@@ -19,7 +19,7 @@
 		<r:layoutResources />
 		
 		<!-- show spinner automatically when Ajax is running -->
-		<script>
+		<r:script>
 			$(document).ready(function() {
 				$("#spinner").bind("ajaxSend", function() {
 					$(this).show();
@@ -29,7 +29,7 @@
 					$(this).hide();
 				});
 			});
-		</script>
+		</r:script>
 	</head>
 	<body>
 		
@@ -43,11 +43,11 @@
 				<span><g:link controller="about" action="source">source</g:link></span>
 			</span>
 			<span class="last-fm-logo">
-				Powered by <a href="last.fm"><g:img class="last-fm-logo-img" dir="images/last-fm" file="badge_black_small.gif" /></a>
+				Powered by <a href="last.fm"><r:img class="last-fm-logo-img" dir="images/last-fm" file="badge_black_small.gif" /></a>
 			</span>
 		</div>
 		<div id="spinner" class="spinner" style="display:none;">
-			<g:img dir="images" file="spinner.gif" width="16" height="16" />
+			<r:img dir="images" file="spinner.gif" width="16" height="16" />
 		</div>
 		<g:javascript library="application"/>
 		<r:layoutResources />

@@ -1,0 +1,2 @@
+Install and configure Cache Headers http://grails.org/plugin/cache-headers
+Examine the hibernate stats http://grails.org/plugin/hibernate-stats

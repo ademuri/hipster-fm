@@ -28,7 +28,7 @@
 			
 		</div>
 		
-		<script>
+		<r:script>
 			var response;
 			var responseObject;
 			var maxY;
@@ -78,7 +78,7 @@
 
 				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};
 			});
-		</script>
+		</r:script>
 		
 		
 		

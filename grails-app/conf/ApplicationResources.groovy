@@ -15,6 +15,7 @@ modules = {
 	def spectrum_dir = 'js/spectrum'
 	spectrum {
 		dependsOn "jquery"
+		defaultBundle 'lib'
 		resource url:"${spectrum_dir}/spectrum.js"
 		resource url:"${spectrum_dir}/spectrum.css"
 	}
@@ -22,6 +23,7 @@ modules = {
 	def store_dir = 'js/store.js'
 	store_js {
 		dependsOn "jquery"
+		defaultBundle 'lib'
 		resource url:"${store_dir}/store.js"
 		resource url:"${store_dir}/json.js"
 	}

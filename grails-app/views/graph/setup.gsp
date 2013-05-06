@@ -106,10 +106,10 @@
 			</div>
 		
 		</div>
-		<script>
+		<r:script>
 		$("#artist-select").change(function() {
 			$("#artist").val($("#artist-select").val());
 		});
-		</script>
+		</r:script>
 	</body>
 </html>

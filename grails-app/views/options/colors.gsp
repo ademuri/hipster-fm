@@ -40,7 +40,7 @@
 		
 		
 		
-		<script>
+		<r:script>
 			var options = {
 					showInput: true,
 					showPalette: true,
@@ -197,7 +197,7 @@
 				displaySchemes([scheme]);
 				flashApply();
 			}
-		</script>
+		</r:script>
 	<div id="color-picker-template">
 		<g:render template="colorpicker" />
 	</div>	

@@ -22,9 +22,9 @@
 	</fieldset>
 </div>
 
-<script>
+<r:script>
 $(document).ready(function() {
 	$("#startDate").datepicker();
 	$("#endDate").datepicker();
 });
-</script>
+</r:script>
