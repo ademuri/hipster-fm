@@ -57,7 +57,22 @@
 
 			var greyScale = ["#BBB", "#999", "#777", "#555", "#333", "#000"];
 
-			var colorSchemes = [{name: "Default", colors: defaultColors}, {name: "Greyscale", colors: greyScale}];
+			var deut = ["#30F", "#F0C", "#F90", "#3F0", "#0CF", "#F03", "#930", "#060"
+						];
+
+			var deut2 = ["#F00", "#900", "#F36", "#F60", "#C06", "#C6C", "#909", "#6F3"
+			 			];
+
+ 			var prot = ["#6F0", "#690", "#366", "#900", "#C09", "#606", "#F39", "#333"];
+
+ 			var deutanopia = ["#33F", "#F0F", "#009", "#000", "#600", "#933", "#F33", "#F39"];
+
+ 			var protanomaly = ["#03F", "#C3F", "#F06", "#F60", "#FC0", "#3F0", "#090", "#900", "#09F" ];
+
+			var colorSchemes = [{name: "Default", colors: defaultColors}, {name: "Greyscale", colors: greyScale},
+			        			{name: "Deutanomaly", colors: deut}, {name: "Deutanamoly II", colors: deut2},
+			        			{name: "Protanopy", colors: prot}, {name: "Deutanopy", colors: deutanopia},
+			        			{name: "Protanomaly", colors: protanomaly}];
 			
 			function remove() {
 				$(this).parent().remove();
@@ -139,10 +154,21 @@
 				$(".reset").click(reset);
 				$(".apply").click(setcolors);
 				$(".save").click(save);
+
+				// 
+				$("#schemeName").keyup(function(event){
+				    if(event.keyCode == 13){
+				        $(".save").click();
+				    }
+				});
 				
 				displaySchemes(colorSchemes);				
 			});
 
+			function flashApply() {
+				$(".apply").effect("highlight", {}, 1000);
+			}
+			
 			function setcolors() {
 				store.remove('colors');
 				var colors = [];
@@ -150,7 +176,7 @@
 					colors.push($(val).spectrum("get").toHexString());
 				});
 				store.set('colors', colors);
-				$(".apply").effect("highlight", {}, 1000);
+				flashApply();
 				return false;
 			}
 
@@ -169,6 +195,7 @@
 				colorSchemes.push(scheme);
 				store.set('color-schemes', colorSchemes);
 				displaySchemes([scheme]);
+				flashApply();
 			}
 		</script>
 	<div id="color-picker-template">
