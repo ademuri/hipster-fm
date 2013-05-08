@@ -8,8 +8,8 @@
 	<body>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
 				<li><g:link class="setup" action="setup">Setup graph</g:link></li>
+				<li><g:link class="find" controller="user" action="find">Find user</g:link></li>
 				<li><g:link class="setup" action="setup" params="${params}">Filter graph</g:link></li>
 				<li><g:link class="setup" controller="options" action="colors">Colors</g:link></li>
 			</ul>

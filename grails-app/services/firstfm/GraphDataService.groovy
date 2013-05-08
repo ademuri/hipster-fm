@@ -272,8 +272,8 @@ class GraphDataService {
 				userArtists: (idList as JSON).toString())
 		cache.chartdata = chartdata
 		cache.save(failOnError: true, flush: true)
-		log.info "Save to cache ${cache}"
-		log.info "user artist size: ${cache.userArtists.size()}"
+//		log.info "Save to cache ${cache}"
+//		log.info "user artist size: ${cache.userArtists.size()}"
 		
 		return chartdata
 	}

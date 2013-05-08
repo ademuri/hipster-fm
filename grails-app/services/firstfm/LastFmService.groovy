@@ -226,7 +226,7 @@ class LastFmService {
 		
 		// grab the earliest scrobbles
 		def paging = data.artisttracks."@attr"
-		log.info "Got ${paging.totalPages} pages for search ${rawArtistName}"
+//		log.info "Got ${paging.totalPages} pages for search ${rawArtistName}"
 
 		if (paging.totalPages.toInteger() > 1) {		
 			GParsPool.withPool {
@@ -296,7 +296,7 @@ class LastFmService {
 		albums.each {
 			albumMap[it.lastId] = it
 		}
-		log.info "Done with albums"
+//		log.info "Done with albums"
 		
 		tracks.each {
 			if (!it?.date) {
