@@ -41,6 +41,8 @@ class UserArtist {
 				top12monthRank,
 				topoverallRank]
 	
+	Date lastGraphed
+	
 	static rankNames = ["7day", "1month", "3month", "6month", "12month", "overall"]
 	static humanRankNames = ["7 days", "1 month", "3 months", "6 months", "12 months", "Overall" ] 
 	
@@ -53,5 +55,6 @@ class UserArtist {
 
     static constraints = {
 		lastSynced nullable: true
+		lastGraphed nullable: true
     }
 }

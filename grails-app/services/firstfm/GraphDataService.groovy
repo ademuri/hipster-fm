@@ -1,8 +1,10 @@
 package firstfm
 
-import grails.converters.JSON
-import hipsterfm.GraphDataCache
-import hipsterfm.Track
+import grails.converters.JSON;
+import hipsterfm.GraphDataCache;
+import hipsterfm.Track;
+import hipsterfm.User;
+import org.springframework.transaction.annotation.Transactional;
 
 class GraphDataService {
 	
@@ -14,7 +16,10 @@ class GraphDataService {
 	
 	def kByUser = 0
 	def kByArtist = 1
+	
+	def lastFmService
 
+	@Transactional
     def getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize,
 			removeOutliers = false, userMaxY, by = kByUser, albumId = null) {
 		def data = []
@@ -272,4 +277,31 @@ class GraphDataService {
 		
 		return chartdata
 	}
+			
+	def autoUpdateUsers() {
+		def now = new Date()
+		
+		def users = User.withCriteria {
+			or {
+				lt("allTopArtistsLastSynced", now-7)
+				isNull("allTopArtistsLastSynced")
+			}
+			artists {
+				between("lastGraphed", (now-7), now)
+			}
+		}
+		
+		log.info "Users to update: ${users}"
+		
+		users.each { user ->
+			log.info "Fetching top artists for user ${user.toString()}"
+			def artists = lastFmService.getUserAllTopArtists(user, 0)
+			
+			artists.each { artist ->
+				log.info "Fetching tracks for ${user}: ${artist}"
+				lastFmService.getArtistTracks(user, artist.name, false, 0)
+			}
+			user.allTopArtistsLastSynced = new Date()
+		}
+	}			
 }

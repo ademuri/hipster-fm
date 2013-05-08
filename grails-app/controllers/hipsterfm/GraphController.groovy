@@ -249,6 +249,7 @@ class GraphController {
 					log.info "User ${user} has no scrobbles for artist ${artist}"
 				} else {
 					userArtistList.add(userArtist)
+					userArtist.lastGraphed = new Date()
 				}
 			}
 		}
@@ -285,5 +286,11 @@ class GraphController {
 		
 		def theData = [chartdata:chartdata]
 		render theData as JSON
+	}
+	
+	def fetchTopArtists() {
+		graphDataService.autoUpdateUsers()
+		
+		return
 	}
 }

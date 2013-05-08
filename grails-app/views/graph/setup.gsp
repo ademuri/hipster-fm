@@ -13,6 +13,7 @@
 				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
 				<li><g:link class="find" controller="user" action="find">Find user</g:link></li>
 				<li><g:link class="setup" controller="options" action="colors">Colors</g:link></li>
+				<li><g:link class="find" controller="graph" action="fetchTopArtists">Fetch top artists</g:link></li>
 			</ul>
 		</div>
 		

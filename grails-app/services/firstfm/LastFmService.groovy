@@ -24,13 +24,23 @@ class LastFmService {
 	
 	def timeSinceLastQuery
 	
+	def volatile priority1 = 0
+	
 	// allowError: if we're expecting an error, don't keep trying if we get that one
-	def queryApi(query, allowError = -1) {
+	// priority: higher = higher priority
+	def queryApi(query, allowError = -1, priority = 1) {
 //		log.info "Enter query ${query}"
 		synchronized(queryLock) {
-			while (timeSinceLastQuery && (System.currentTimeMillis() - timeSinceLastQuery) < 190) {
+			if (priority == 1) {
+				priority1++
+			}
+			while ((timeSinceLastQuery && (System.currentTimeMillis() - timeSinceLastQuery) < 190) 
+				|| (priority == 0 && priority1 > 0)) {
 				Thread.sleep(25)
 //				log.info "sleeping"
+			}
+			if (priority == 1) {
+				priority1--
 			}
 			timeSinceLastQuery = System.currentTimeMillis()
 		}
@@ -168,7 +178,7 @@ class LastFmService {
 		return getArtistTracks(user, artistName, force)
 	}
 	
-	int getArtistTracks(user, rawArtistName, force = false) {
+	int getArtistTracks(user, rawArtistName, force = false, priority = 1) {
 		
 		def existingArtist = Artist.findByName(rawArtistName)
 		def cutoffDate = (new Date())-7
@@ -191,7 +201,7 @@ class LastFmService {
 			artist: rawArtistName,
 			]
 		
-		def data = queryApi(query)
+		def data = queryApi(query, -1, priority)
 //		log.info "user ${user}, artist ${rawArtistName}, data: ${data}"
 		
 		if (data?.error) {
@@ -227,7 +237,7 @@ class LastFmService {
 						artist: rawArtistName,
 						]
 					newquery["page"] = i
-					data = queryApi(newquery)
+					data = queryApi(newquery, -1, priority)
 					if (!data?.artisttracks) {
 						log.error "Didn't get track data for page ${i}"
 					}
@@ -320,7 +330,16 @@ class LastFmService {
 		return tracks.size()
 	}
 	
-	def getUserTopArtists(user, interval = "3month") {
+	def getUserAllTopArtists(user, priority) {
+		def artists = []
+		UserArtist.rankNames.each {
+			artists.addAll(getUserTopArtists(user, it, priority))
+		}
+		
+		return artists
+	}
+	
+	def getUserTopArtists(user, interval = "3month", priority = 1) {
 		log.info "Getting top artists for user ${user}, interval ${interval}"
 		
 		if (!user) {
@@ -345,7 +364,7 @@ class LastFmService {
 			period: interval,
 			]
 		
-		def data = queryApi(query)
+		def data = queryApi(query, -1, priority)
 //		log.info "data: ${data}"
 		
 		def topArtists = []
