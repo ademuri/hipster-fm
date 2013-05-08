@@ -1,3 +1,5 @@
+import org.apache.log4j.DailyRollingFileAppender
+
 // locations to search for config files that get merged into the main config;
 // config files can be ConfigSlurper scripts, Java properties files, or classes
 // in the classpath in ConfigSlurper format
@@ -76,26 +78,76 @@ environments {
 }
 
 // log4j configuration
-log4j = {
-    // Example of changing the log pattern for the default console appender:
-    //
-    //appenders {
-    //    console name:'stdout', layout:pattern(conversionPattern: '%c{2} %m%n')
-    //}
+dev = {
+	log4j = {
+		// Example of changing the log pattern for the default console appender:
+		//
+		//appenders {
+		//    console name:'stdout', layout:pattern(conversionPattern: '%c{2} %m%n')
+		//}
+	
+		error  'org.codehaus.groovy.grails.web.servlet',        // controllers
+			   'org.codehaus.groovy.grails.web.pages',          // GSP
+			   'org.codehaus.groovy.grails.web.sitemesh',       // layouts
+			   'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
+			   'org.codehaus.groovy.grails.web.mapping',        // URL mapping
+			   'org.codehaus.groovy.grails.commons',            // core / classloading
+			   'org.codehaus.groovy.grails.plugins',            // plugins
+			   'org.codehaus.groovy.grails.orm.hibernate',      // hibernate integration
+			   'org.springframework',
+			   'org.hibernate',
+			   'net.sf.ehcache.hibernate'
+			   
+		warn 'groovyx.net.http'
+	
+		info   'grails.app'
+	}
+}
 
-    error  'org.codehaus.groovy.grails.web.servlet',        // controllers
-           'org.codehaus.groovy.grails.web.pages',          // GSP
-           'org.codehaus.groovy.grails.web.sitemesh',       // layouts
-           'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
-           'org.codehaus.groovy.grails.web.mapping',        // URL mapping
-           'org.codehaus.groovy.grails.commons',            // core / classloading
-           'org.codehaus.groovy.grails.plugins',            // plugins
-           'org.codehaus.groovy.grails.orm.hibernate',      // hibernate integration
-           'org.springframework',
-           'org.hibernate',
-           'net.sf.ehcache.hibernate'
-		   
-	warn 'groovyx.net.http'
-
-	info   'grails.app'
+//String commonPattern = "%d{yyyy-MMM-dd HH:mm:ss,SSS} [%t] %c %x%n %-5p %m%n"
+def commonPattern = "%d{yyyy-MMM-dd HH mm ss,SSS} [%t] %c %x%n %-5p %m%n"
+def logDirectory = "/opt/apache-tomcat-7.0.34/logs"
+environments {
+	development(dev)
+	test(dev)
+	
+	production {
+		log4j = {
+			info 'grails.app'
+			warn 'groovyx.net.http'
+			error 'org.codehaus.groovy.grails.web.servlet',        // controllers
+			   'org.codehaus.groovy.grails.web.pages',          // GSP
+			   'org.codehaus.groovy.grails.web.sitemesh',       // layouts
+			   'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
+			   'org.codehaus.groovy.grails.web.mapping',        // URL mapping
+			   'org.codehaus.groovy.grails.commons',            // core / classloading
+			   'org.codehaus.groovy.grails.plugins',            // plugins
+			   'org.codehaus.groovy.grails.orm.hibernate',      // hibernate integration
+			   'org.springframework',
+			   'org.hibernate',
+			   'net.sf.ehcache.hibernate'
+			   
+			   appenders {
+				   file name: "errors", file: "${logDirectory}/hipster-errors.log",
+				   		layout: pattern(conversionPattern: commonPattern)
+					appender new DailyRollingFileAppender(
+		               name:"roll", datePattern: "'.'yyyy-MM-dd",
+		               file:"${logDirectory}/hipster-rolling.log",
+		               layout: pattern(conversionPattern: commonPattern))
+					
+					file name: "prod-errors", file: "${logDirectory}/hipster-errors.log",
+						layout: pattern(conversionPattern: commonPattern)
+					appender new DailyRollingFileAppender(
+						  name:"prod-roll", datePattern: "'.'yyyy-MM-dd",
+						  file:"${logDirectory}/hipster-errors-daily.log",
+						  layout: pattern(conversionPattern: commonPattern))
+			   }
+			   
+			   root {
+				   info "prod-roll", "prod-errors", "roll", "errors"
+			   }
+		}
+	}
+	
+	
 }

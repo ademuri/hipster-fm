@@ -18,6 +18,6 @@ class AutoFetchTopArtistsJob {
 
 
     def execute() {
-		graphDataService.autoUpdateUsers()
+		//graphDataService.autoUpdateUsers()
     }
 }
