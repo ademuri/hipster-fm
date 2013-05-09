@@ -154,7 +154,21 @@ class GraphController {
 		def userId
 		
 		def newParams = params
-		newParams.artistName = Artist.get(params.artistId) ?: null
+		
+		def artists = []
+		def artistName = ""
+		params.each {
+			if (it.key.startsWith("a_")) {
+				artists.push(it.value)
+			}
+		}
+		for(int i=0; i<artists.size()-1; i++) {
+			artistName += (Artist.get(artists.get(i)).toString() + ", ") ?: null
+		}
+		if (artists.size() > 0) {
+			artistName += Artist.get(artists.last()).toString() ?: null
+		} 
+		newParams.artistName = artistName
 		
 		def userIdList = []
 		params.each {

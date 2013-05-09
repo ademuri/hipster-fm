@@ -9,12 +9,12 @@
 		<meta name="layout" content="main">
 		<g:set var="entityName" value="${message(code: 'user.label', default: 'User')}" />
 		<title><g:message code="default.show.label" args="[entityName]" /></title>
+		<r:require modules="jquery, jquery-ui" />
 	</head>
 	<body>
 		<a href="#show-user" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
 				<li><g:link class="setup" controller="graph" action="setup">Setup graph</g:link></li>
 				<li><g:link class="find" action="find">Find user</g:link></li>
 			</ul>
@@ -102,14 +102,15 @@
 		function showHide(interval) {
 			console.log("hiding");
 			for (var i=0; i<=5; i++) {
+				console.log("thing: " + $("#artists" + i));
 				if (i != interval) {
 					$("#artists" + i).hide();
 					$("#artists" + i).addClass("hidden");
 					$("#artists" + i).removeClass("shown");
-				} else { 
+				} else {
 					$("#artists" + i).show();
-					$("#artists" + i).removeClass("hidden");
 					$("#artists" + i).addClass("shown");
+					$("#artists" + i).removeClass("hidden");
 				}
 			}
 
@@ -136,6 +137,7 @@
 		}
 		
 		function updateArtists(interval) {
+			console.log("updateArtists");
 			$("#interval").text(rankNames[interval]);
 			if (!synced[interval]) {
 				$.ajax({type:'POST',data:{'interval': interval, 'id': ${userInstance.id}}, url:'${createLink(action:'ajaxGetTopArtists')}',success:function(data,textStatus){jQuery('#artists' + interval).html(data); showHide(interval); synced[interval] = true;},error:function(XMLHttpRequest,textStatus,errorThrown){}});
@@ -144,7 +146,7 @@
 			}
 		}
 		
-		$(function() {
+		$(document).ready( function() {
 			for (var i=0; i<=5; i++) {
 				synced[i] = false;
 			}
@@ -159,9 +161,7 @@
 					updateArtists(ui.value);
 				}
 			});
-		});
-
-		$(document).ready( function() {
+			
 			updateArtists(2);
 		});
 		</script>

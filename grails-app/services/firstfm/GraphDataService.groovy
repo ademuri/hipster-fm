@@ -245,7 +245,7 @@ class GraphDataService {
 			maxY = 0
 		}
 		
-		log.info "maxY: ${maxY}"
+//		log.info "maxY: ${maxY}"
 		
 		def chartdata = [:]
 		chartdata.data = data
@@ -294,7 +294,10 @@ class GraphDataService {
 		log.info "Users to update: ${users}"
 		
 		users.each { user ->
-			log.info "Fetching top artists for user ${user.toString()}"
+			log.info "Fetching friends for user ${user.toString()}"
+			lastFmService.getFriends(user)
+			
+			log.info "Fetching top artists for user ${user}"
 			def artists = lastFmService.getUserAllTopArtists(user, 0)
 			
 			artists.each { artist ->
@@ -303,5 +306,6 @@ class GraphDataService {
 			}
 			user.allTopArtistsLastSynced = new Date()
 		}
-	}			
+	}
+	
 }
