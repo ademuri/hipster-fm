@@ -261,9 +261,9 @@ class LastFmService {
 			return 0
 		}
 //		println "artist name: ${artistName}"
-		def artist = Artist.findByLastId(artistId) ?: new Artist(name: artistName, lastId: artistId).save(flush: true, failOnError: true)
-		def userArtist = UserArtist.findByUserAndArtist(user, artist) ?: new UserArtist(user: user, artist: artist).save(flush: true, failOnError: true)
-		artist.addToUserArtists(userArtist)
+		def theArtist = Artist.findByLastId(artistId) ?: new Artist(name: artistName, lastId: artistId).save(flush: true, failOnError: true)
+		def userArtist = UserArtist.findByUserAndArtist(user, theArtist) ?: new UserArtist(user: user, artist: theArtist).save(flush: true, failOnError: true)
+		theArtist.addToUserArtists(userArtist)
 		
 		// example: 19 Jun 2012, 21:16
 		def dateFormat = new SimpleDateFormat("dd MMM yyyy, kk:mm")
@@ -284,7 +284,7 @@ class LastFmService {
 //				log.info "album ${rawAlbum}"
 				// create the album
 //				log.info "Id ${rawAlbum.mbid}, name: ${rawAlbum.'#text'}"
-				def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: artist).save(failOnError: true, flush: true)
+				def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: theArtist).save(failOnError: true, flush: true)
 				def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true, flush: true)
 				album.addToUserAlbums(userAlbum).save(failOnError: true, flush: true)
 //				log.info "album: ${album}, userAlbums: ${album.userAlbums}"
@@ -297,6 +297,22 @@ class LastFmService {
 			albumMap[it.lastId] = it
 		}
 //		log.info "Done with albums"
+		
+		def lastExtDate
+		def lastTrack = Track.withCriteria {
+			maxResults(1)
+			order('date', 'desc')
+			artist {
+				eq("id", userArtist.id)
+			}
+		}
+		
+		if (lastTrack.size() == 0) {
+			log.info "No previous tracks found"
+		} else {
+			log.info "Last track: ${lastTrack.get(0).date}"
+			lastExtDate = lastTrack.get(0).date	
+		}
 		
 		tracks.each {
 			if (!it?.date) {
@@ -312,7 +328,7 @@ class LastFmService {
 			}
 			def track
 			
-			if (existingTracks) {
+			if (existingTracks || date > lastExtDate) {
 //				log.info "Searching for existing tracks name: ${it.name}, date: ${date}"
 				track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 			} else {

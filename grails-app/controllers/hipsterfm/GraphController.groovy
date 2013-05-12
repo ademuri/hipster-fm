@@ -304,7 +304,11 @@ class GraphController {
 	
 	def fetchTopArtists() {
 		graphDataService.autoUpdateUsers()
-		
+		return
+	}
+	
+	def updateCache() {
+		graphDataService.autoUpdateGraphDataCache()
 		return
 	}
 }

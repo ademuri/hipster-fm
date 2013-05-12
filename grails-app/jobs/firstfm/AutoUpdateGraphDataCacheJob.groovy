@@ -5,7 +5,7 @@ import hipsterfm.User;
 
 
 
-class AutoFetchTopArtistsJob {
+class AutoUpdateGraphDataCacheJob {
 	def graphDataService
 	
 	static def SEC = 1000l
@@ -13,15 +13,16 @@ class AutoFetchTopArtistsJob {
 	static def HOUR = MIN * 60
 	
     static triggers = {
-      simple repeatInterval: 3*HOUR, startDelay: 10*MIN // start 10m after server starts, run every 3 hours
+      simple repeatInterval: 6*HOUR, startDelay: 1*HOUR // start 1h after server starts, run every 6 hours
 		//cron name: 'cronTrigger', cronExpression: '0 0 2 ? * MON-FRI'
     }
 
 
     def execute() {
+		log.info "Running autoUpdateGraphDataCache"
 		Environment.executeForCurrentEnvironment {
 			production {
-				graphDataService.autoUpdateUsers()
+				graphDataService.autoUpdateGraphDataCache()
 			}
 		}
     }

@@ -6,22 +6,19 @@ class GraphDataCache {
 	
 	Date startDate
 	Date endDate
-	
-	Date dateCreated
-	
 	Long tickSize
 	Long intervalSize
 	Long userMaxY
 	Long groupBy
 	Long albumId
-	
 	boolean removeOutliers
+	String userArtists 	// yes, this is gross.
 	
 	def chartdata
-	
 	String chartdataJSON
-
-		String userArtists 	// yes, this is gross.
+	Long hitsSinceSync = 0
+	Date dateCreated
+	Date lastUpdated
 	
 	def afterLoad() {
 		if (chartdataJSON) {
@@ -39,6 +36,8 @@ class GraphDataCache {
 
     static constraints = {
 		dateCreated()
+		lastUpdated()
+		hitsSinceSync()
 		
 		startDate(nullable: true)
 		endDate(nullable: true)

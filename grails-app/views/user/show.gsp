@@ -51,7 +51,6 @@
 						<g:each in="${userInstance.friends}" var="a">
 						<span class="property-value" aria-labelledby="friends-label"><g:link controller="user" action="show" id="${a.id}">${a?.toString()}</g:link></span>
 						</g:each>
-					
 				</li>
 				</g:if>
 			

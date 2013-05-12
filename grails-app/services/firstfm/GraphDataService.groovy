@@ -4,7 +4,8 @@ import grails.converters.JSON;
 import hipsterfm.GraphDataCache;
 import hipsterfm.Track;
 import hipsterfm.User;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Transactional
+import hipsterfm.UserArtist
 
 class GraphDataService {
 	
@@ -21,64 +22,63 @@ class GraphDataService {
 
 	@Transactional
     def getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize,
-			removeOutliers = false, userMaxY, by = kByUser, albumId = null) {
+			removeOutliers = false, userMaxY, by = kByUser, albumId = null, force = false) {
 		def data = []
 		def users = []
 		def theUserArtists = []
 		def globalFirst, globalLast
 		def newTickSize, newIntervalSize
 		
-		def allCache = GraphDataCache.all
-//		log.info "cache: "
-//		allCache.each {
-//			log.info it.dump()
-//		}
-//		log.info "startDate: ${startDate}"
-//		log.info "user artist size: ${userArtistList.size()}"
 		def idList = userArtistList.id.sort()
 		
-		def prevCache = GraphDataCache.withCriteria {
-			def compare = { name, val ->
-				if (val == null) {
-					isNull(name)
+		if (!force) {
+			def allCache = GraphDataCache.all
+			
+			def prevCache = GraphDataCache.withCriteria {
+				def compare = { name, val ->
+					if (val == null) {
+						isNull(name)
+					} else {
+						eq(name, val)
+					}
+				}
+				
+				and {
+					isNotNull("chartdataJSON")
+					compare("startDate", startDate)
+					compare("endDate", endDate)
+					compare("tickSize", tickSize as Long)
+					compare("intervalSize", intervalSize as Long)
+					compare("userMaxY", userMaxY as Long)
+					compare("groupBy", by as Long)
+					compare("albumId", albumId as Long)
+					compare("removeOutliers", removeOutliers)
+					compare("userArtists", (idList as JSON).toString())
+				}
+			}
+			
+			if (prevCache.size() > 0) {
+				log.info "Found previous cache!"
+				if (prevCache.size() > 1) {
+					log.info "cache: "
+					prevCache.each {
+						log.info it.dump()
+					}
+				}
+				
+				def cachedEntry = prevCache.get(0)
+				
+				if ((new Date() - cachedEntry.lastUpdated) > 2) {
+					log.info "Cache too old - deleting"
+					cachedEntry.delete()
 				} else {
-					eq(name, val)
+					cachedEntry.hitsSinceSync++
+					cachedEntry.save()
+				
+	//			log.info "data: ${prevCache.get(0).chartdata}"
+	//			log.info "user artist size: ${prevCache.get(0).userArtists.size()}"
+					return cachedEntry.chartdata
 				}
-			}
-			
-			and {
-				isNotNull("chartdataJSON")
-				compare("startDate", startDate)
-				compare("endDate", endDate)
-				compare("tickSize", tickSize as Long)
-				compare("intervalSize", intervalSize as Long)
-				compare("userMaxY", userMaxY as Long)
-				compare("groupBy", by as Long)
-				compare("albumId", albumId as Long)
-				compare("removeOutliers", removeOutliers)
-				compare("userArtists", (idList as JSON).toString())
-			}
-		}
-		
-		if (prevCache.size() > 0) {
-			log.info "Found previous cache!"
-			if (prevCache.size() > 1) {
-				log.info "cache: "
-				prevCache.each {
-					log.info it.dump()
-				}
-			}
-			
-			def cachedEntry = prevCache.get(0)
-			
-			if ((new Date() - cachedEntry.dateCreated) > 2) {
-				log.info "Cache too old - deleting"
-				cachedEntry.delete()
-			} else {
-			
-//			log.info "data: ${prevCache.get(0).chartdata}"
-//			log.info "user artist size: ${prevCache.get(0).userArtists.size()}"
-				return cachedEntry.chartdata
 			}
 		}
 		
@@ -305,6 +305,44 @@ class GraphDataService {
 				lastFmService.getArtistTracks(user, artist.name, false, 0)
 			}
 			user.allTopArtistsLastSynced = new Date()
+		}
+	}
+	
+	def autoUpdateGraphDataCache() {
+		log.info "Auto updating graph cache"
+		def now = new Date()
+		
+		// select cache with at least 2 hits and created more than a day ago
+		def graphs = GraphDataCache.withCriteria {
+			ge("hitsSinceSync", 1l)
+			le("lastUpdated", now-1)	
+		}
+		
+		log.info "Found ${graphs.size()} candidate graphs"
+		
+		graphs.each { graph ->
+			def userArtistIds = JSON.parse(graph.userArtists)
+			log.info "user artist ids: ${userArtistIds}"
+			
+			def userArtists = []
+			userArtistIds.each { it ->
+				userArtists.push(UserArtist.get(it))
+			}
+			
+			def dirty = true
+			userArtists.each { userArtist ->
+				if (userArtist.lastSynced > graph.lastUpdated) {
+					dirty = true	
+				}
+			}
+			if (!dirty) {
+				log.info "Graph not dirty, updating lastUpdated"
+				graph.lastUpdated = now
+			} else {
+				log.info "Regenerating graph"
+				getGraphData(userArtists, graph.startDate, graph.endDate, graph.tickSize, graph.intervalSize,
+					graph.removeOutliers, graph.userMaxY, graph.groupBy, graph.albumId, true)
+			}
 		}
 	}
 	

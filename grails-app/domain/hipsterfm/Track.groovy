@@ -12,11 +12,14 @@ class Track {
 	String lastId
 	Date date
 	
+	Date dateCreated
+	
 	static mapping = {
 		sort "date"
 	}
 	
     static constraints = {
+		dateCreated()
 		date nullable: false
 		artist nullable: false
 		name nullable: false
