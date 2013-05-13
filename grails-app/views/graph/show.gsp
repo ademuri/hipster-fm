@@ -42,6 +42,7 @@
 			
 			function graph() {
 				if (!responseObject) {
+					console.log("response: " + response.responseText);
 					responseObject = JSON.parse(response.responseText);
 					responseObject.date = new Date();
 					store.set(JSON.stringify(params), responseObject);
@@ -69,7 +70,7 @@
 			$(window).load(function() {
 				var storedData = store.get(JSON.stringify(params));
 
-				// cache result for 2 days
+				// cache result for 1 day
 				if (storedData && ((new Date()) - (new Date(storedData.date))) < ONE_DAY) {
 					responseObject = storedData;
 					graph();

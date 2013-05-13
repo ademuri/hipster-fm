@@ -217,29 +217,21 @@ class GraphController {
 			artistIdList.push(it.value)
 		}
 		
-//		log.info "Artist id list: ${artistIdList}"
-//		flash.message = "Couldn't find artist with ids: "
 		artistIdList.each {
 			def artistInstance = Artist.get(it)
 			if (!artistInstance) {
 				log.warn "Couldn't find artist with id ${it}"
-				flash.message += "${it} "
 			} else {
 				artistList.push(artistInstance)
 			}
 		}
-//		log.info "Artist list: ${artistList}"
 		
 		// if we don't have any artists, quit
 		if (artistList.size() == 0) {
-			redirect(action: "setup")
-			return
+			return [error: "No artists found"]
 		} 
-		else if (artistIdList.size() == artistList.size()) {
-			flash.message = ""
-		}
 		
-		log.info "Begin get tracks"
+		log.info "Getting tracks..."
 		GParsPool.withPool {
 			userList.eachParallel { user ->
 				GParsPool.withPool {
@@ -249,7 +241,6 @@ class GraphController {
 				}
 			}
 		}
-		log.info "End get tracks"
 		
 		userList.each { user ->
 			artistList.each { artist ->

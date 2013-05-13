@@ -1,9 +1,11 @@
 modules = {
     application {
+		defaultBundle 'core'
         resource url:'js/application.js'
     }
 	def jqplot_dir = 'js/jqplot-1.0.4r1121'
 	jqplot {
+		defaultBundle 'core'
 		dependsOn "jquery"
 		resource url:"${jqplot_dir}/jquery.jqplot.js"
 		resource url:"${jqplot_dir}/plugins/jqplot.dateAxisRenderer.js"
@@ -26,5 +28,11 @@ modules = {
 		defaultBundle 'lib'
 		resource url:"${store_dir}/store.js"
 		resource url:"${store_dir}/json.js"
+	}
+	
+	overrides {
+		jquery {
+			defaultBundle 'core'
+		}
 	}
 }

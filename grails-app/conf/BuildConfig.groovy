@@ -43,8 +43,8 @@ grails.project.dependency.resolution = {
 
     plugins {
         runtime ":hibernate:$grailsVersion"
-        runtime ":jquery:1.7.2"
-        runtime ":resources:1.1.6"
+//        runtime ":jquery:1.7.2"
+//        runtime ":resources:1.1.6"
 		//runtime "com.mysql.jdbc.Driver"
 
         // Uncomment these (or add new ones) to enable additional resources capabilities
@@ -55,9 +55,9 @@ grails.project.dependency.resolution = {
         build ":tomcat:$grailsVersion"
 		
 
-        runtime ":database-migration:1.1"
+//        runtime ":database-migration:1.1"
 
 //		compile "org.codehaus.gpars:gpars:0.12"
-        compile ':cache:1.0.0'
+//        compile ':cache:1.0.0'
     }
 }

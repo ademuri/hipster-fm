@@ -1,5 +1,7 @@
 package firstfm
 
+import grails.converters.JSON
+import hipsterfm.GraphDataCache
 import hipsterfm.Track
 
 class GraphDataService {
@@ -17,8 +19,64 @@ class GraphDataService {
 			removeOutliers = false, userMaxY, by = kByUser, albumId = null) {
 		def data = []
 		def users = []
-		def userArtists = []
+		def theUserArtists = []
 		def globalFirst, globalLast
+		def newTickSize, newIntervalSize
+		
+		def allCache = GraphDataCache.all
+//		log.info "cache: "
+//		allCache.each {
+//			log.info it.dump()
+//		}
+//		log.info "startDate: ${startDate}"
+//		log.info "user artist size: ${userArtistList.size()}"
+		def idList = userArtistList.id.sort()
+		
+		def prevCache = GraphDataCache.withCriteria {
+			def compare = { name, val ->
+				if (val == null) {
+					isNull(name)
+				} else {
+					eq(name, val)
+				}
+			}
+			
+			and {
+				isNotNull("chartdataJSON")
+				compare("startDate", startDate)
+				compare("endDate", endDate)
+				compare("tickSize", tickSize as Long)
+				compare("intervalSize", intervalSize as Long)
+				compare("userMaxY", userMaxY as Long)
+				compare("groupBy", by as Long)
+				compare("albumId", albumId as Long)
+				compare("removeOutliers", removeOutliers)
+				compare("userArtists", (idList as JSON).toString())
+			}
+		}
+		
+		if (prevCache.size() > 0) {
+			log.info "Found previous cache!"
+			if (prevCache.size() > 1) {
+				log.info "cache: "
+				prevCache.each {
+					log.info it.dump()
+				}
+			}
+			
+			def cachedEntry = prevCache.get(0)
+			
+			if ((new Date() - cachedEntry.dateCreated) > 2) {
+				log.info "Cache too old - deleting"
+				cachedEntry.delete()
+			} else {
+			
+//			log.info "data: ${prevCache.get(0).chartdata}"
+//			log.info "user artist size: ${prevCache.get(0).userArtists.size()}"
+				return cachedEntry.chartdata
+			}
+		}
+		
 		
 		if (startDate && endDate) {
 			globalFirst = startDate
@@ -28,7 +86,7 @@ class GraphDataService {
 		
 		userArtistList.each { userArtist ->
 			users.add(userArtist.user.toString())
-			userArtists.add(userArtist.toString())
+			theUserArtists.add(userArtist.toString())
 			
 			if (!(startDate && endDate)) {
 				def dates
@@ -86,14 +144,14 @@ class GraphDataService {
 		
 		log.info "Done getting date stuff"
 		
-		tickSize = (globalLast - globalFirst) / tickSize as int
-		intervalSize = (globalLast - globalFirst) / intervalSize as int
+		newTickSize = (globalLast - globalFirst) / tickSize as int
+		newIntervalSize = (globalLast - globalFirst) / intervalSize as int
 		
-		if (tickSize < 1) {
-			tickSize = 1
+		if (newTickSize < 1) {
+			newTickSize = 1
 		}
-		if (intervalSize < 1) {
-			intervalSize = 1
+		if (newIntervalSize < 1) {
+			newIntervalSize = 1
 		}
 		
 		def outliers = new PriorityQueue<Integer>()
@@ -115,11 +173,11 @@ class GraphDataService {
 				}
 			}
 			
-			for (int i=0; i<(globalLast-globalFirst); i+=tickSize) {
+			for (int i=0; i<(globalLast-globalFirst); i+=newTickSize) {
 				def c = Track.createCriteria()
 				def count = c.count{
 					eq("artist.id", userArtist.id)
-					between('date', globalFirst+i, globalFirst+i+intervalSize)
+					between('date', globalFirst+i, globalFirst+i+newIntervalSize)
 					if (albumId) {
 						eq("album.id", userAlbumId)
 					}
@@ -193,7 +251,7 @@ class GraphDataService {
 		if (by == kByUser) {
 			byList = users
 		} else if (by == kByArtist) {
-			byList = userArtists
+			byList = theUserArtists
 		} else {
 			log.error "No category for by in getGraphData"
 		}
@@ -201,6 +259,16 @@ class GraphDataService {
 		byList.each {
 			chartdata.series.add(["label": it])
 		}
+		
+		
+		
+		def cache = new GraphDataCache(startDate: startDate, endDate: endDate, tickSize: tickSize, intervalSize: intervalSize, 
+				userMaxY: userMaxY, groupBy: by, albumId: albumId, removeOutliers: removeOutliers, chartdataJSON: "",
+				userArtists: (idList as JSON).toString())
+		cache.chartdata = chartdata
+		cache.save(failOnError: true, flush: true)
+		log.info "Save to cache ${cache}"
+		log.info "user artist size: ${cache.userArtists.size()}"
 		
 		return chartdata
 	}

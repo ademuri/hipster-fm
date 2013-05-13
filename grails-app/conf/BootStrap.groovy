@@ -7,7 +7,7 @@ import grails.util.Environment
 class BootStrap {
 
     def init = { servletContext ->
-		if (Environment.getCurrent() != Environment.PRODUCTION) {
+		if (Environment.getCurrent() == Environment.DEVELOPMENT) {
 			User adam = new User(username: "Adamsmasher", email: "adam.demuri@gmail.com").save(flush: true, failOnError: true)
 			User doug = new User(username: "Warmsounds", email: "").save(flush: true, failOnError: true)
 			
