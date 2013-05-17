@@ -306,6 +306,7 @@ class GraphDataService {
 			}
 			user.allTopArtistsLastSynced = new Date()
 		}
+		lastFmService.printStats()
 	}
 	
 }

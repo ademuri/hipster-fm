@@ -7,6 +7,9 @@ import hipsterfm.UserArtist
 import hipsterfm.Track
 import hipsterfm.User
 import java.text.SimpleDateFormat
+
+import groovy.time.TimeCategory;
+import groovy.time.TimeDuration;
 import groovyx.gpars.GParsPool
 
 class LastFmService {
@@ -178,6 +181,20 @@ class LastFmService {
 		return getArtistTracks(user, artistName, force)
 	}
 	
+	def static cumInsertTime = new TimeDuration(0, 0, 0, 0)
+	def static cumDownloadTime =  new TimeDuration(0, 0, 0, 0)
+	def cumTracks = 0
+	def cumUserArtists = 0
+	
+	def printStats( ){
+		log.info ""
+		log.info "Cumulative stats:"
+		log.info "Insert time: ${cumInsertTime}"
+		log.info "Download time: ${cumDownloadTime}"
+		log.info "Tracks: ${cumTracks}"
+		log.info "User artists: ${cumUserArtists}"
+	}
+	
 	int getArtistTracks(user, rawArtistName, force = false, priority = 1) {
 		
 		def existingArtist = Artist.findByName(rawArtistName)
@@ -200,6 +217,8 @@ class LastFmService {
 			user: user.username,
 			artist: rawArtistName,
 			]
+		
+		def downloadTime = new Date()
 		
 		def data = queryApi(query, -1, priority)
 //		log.info "user ${user}, artist ${rawArtistName}, data: ${data}"
@@ -251,9 +270,15 @@ class LastFmService {
 		log.info "Found ${tracks.size()} tracks."
 //		log.info tracks
 		
+		def duration = TimeCategory.minus(new Date(), downloadTime)
+		log.warn "Download time: ${duration}"
+		cumDownloadTime += duration
+		log.warn "Cumulative download time: ${cumDownloadTime}"
+		
 		
 		def artistName = tracks[0]?.artist?."#text"
 		
+		def insertTime = new Date()
 		
 		def artistId = tracks[0]?.artist?.mbid
 		if (!artistId) {
@@ -297,33 +322,45 @@ class LastFmService {
 			albumMap[it.lastId] = it
 		}
 //		log.info "Done with albums"
+
+		def count = 0	// clear the session every so often
+//		Track.withTransaction {		
+			tracks.each {
+				if (!it?.date) {
+					log.info "Invalid date!: ${it}"
+					return	//skip this track
+				}
+				
+				cumTracks++
+				
+				def trackId = it.mbid
+				def date = dateFormat.parse(it.date."#text")
+				if (syncFromDate && date < syncFromDate) {
+	//				log.info "Ignoring track with date ${date}, before cutoff ${syncFromDate}"
+					return
+				}
+				def track
+				
+				if (existingTracks) {
+	//				log.info "Searching for existing tracks name: ${it.name}, date: ${date}"
+					track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+				} else {
+	//				log.info "name: ${it.name}, date: ${date}"
+					track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+	//				log.info track	
+				}
+				userArtist.addToTracks(track)
+			}
+//		}
 		
-		tracks.each {
-			if (!it?.date) {
-				log.info "Invalid date!: ${it}"
-				return	//skip this track
-			}
-			
-			def trackId = it.mbid
-			def date = dateFormat.parse(it.date."#text")
-			if (syncFromDate && date < syncFromDate) {
-//				log.info "Ignoring track with date ${date}, before cutoff ${syncFromDate}"
-				return
-			}
-			def track
-			
-			if (existingTracks) {
-//				log.info "Searching for existing tracks name: ${it.name}, date: ${date}"
-				track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
-			} else {
-//				log.info "name: ${it.name}, date: ${date}"
-				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
-//				log.info track	
-			}
-			userArtist.addToTracks(track)
-		}
+		duration = TimeCategory.minus(new Date(), insertTime)
+		log.warn "Insert time: ${duration}"
+		cumInsertTime += duration
+		log.warn "Cumulative insert time: ${cumInsertTime}"
+		cumUserArtists++
+		log.warn "Cum user artists: ${cumUserArtists}, tracks: ${cumTracks}"
 		
-		log.info "Done creating tracks"
+//		log.info "Done creating tracks"
 
 		userArtist.lastSynced = new Date()
 		
