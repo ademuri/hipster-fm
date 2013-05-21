@@ -1,6 +1,6 @@
 
-<%@ page import="hipsterfm.User" %>
-<%@ page import="hipsterfm.UserArtist" %>
+<%@ page import="com.ademuri.hipster.User" %>
+<%@ page import="com.ademuri.hipster.UserArtist" %>
 <%@ page import="grails.converters.JSON" %>
 
 <!doctype html>

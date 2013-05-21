@@ -1,4 +1,4 @@
-<%@ page import="hipsterfm.Track" %>
+<%@ page import="com.ademuri.hipster.Track" %>
 
 
 
@@ -15,7 +15,7 @@
 		<g:message code="track.artist.label" default="Artist" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:select id="artist" name="artist.id" from="${hipsterfm.UserArtist.list()}" optionKey="id" required="" value="${trackInstance?.artist?.id}" class="many-to-one"/>
+	<g:select id="artist" name="artist.id" from="${com.ademuri.hipster.UserArtist.list()}" optionKey="id" required="" value="${trackInstance?.artist?.id}" class="many-to-one"/>
 </div>
 
 <div class="fieldcontain ${hasErrors(bean: trackInstance, field: 'lastId', 'error')} ">

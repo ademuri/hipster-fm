@@ -1,8 +1,8 @@
-import hipsterfm.Artist
-import hipsterfm.GraphDataCache
-import hipsterfm.Track
-import hipsterfm.User
-import hipsterfm.UserArtist
+import com.ademuri.hipster.Artist
+import com.ademuri.hipster.GraphDataCache
+import com.ademuri.hipster.Track
+import com.ademuri.hipster.User
+import com.ademuri.hipster.UserArtist
 import grails.converters.JSON
 import grails.util.Environment
 

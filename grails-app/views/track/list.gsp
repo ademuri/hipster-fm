@@ -1,5 +1,5 @@
 
-<%@ page import="hipsterfm.Track" %>
+<%@ page import="com.ademuri.hipster.Track" %>
 <!doctype html>
 <html>
 	<head>

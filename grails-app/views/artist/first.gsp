@@ -1,6 +1,6 @@
-<%@ page import="hipsterfm.Artist" %>
-<%@ page import="hipsterfm.User" %>
-<%@ page import="hipsterfm.UserArtist" %>
+<%@ page import="com.ademuri.hipster.Artist" %>
+<%@ page import="com.ademuri.hipster.User" %>
+<%@ page import="com.ademuri.hipster.UserArtist" %>
 <!doctype html>
 <html>
 	<head>

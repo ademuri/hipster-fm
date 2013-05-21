@@ -19,7 +19,7 @@ import org.apache.log4j.DailyRollingFileAppender
 //def extConfig = System.properties.getProperty('EXTCONFIG')
 def extConfig = System.getenv().get('EXTCONFIG').toString()
 //log.error "extConfig: ${extConfig}"
-grails.config.locations = [ "file:/opt/grails-config/config.groovy", hipsterfm.DatabaseCredentials ]
+grails.config.locations = [ "file:/opt/grails-config/config.groovy", com.ademuri.hipster.DatabaseCredentials ]
 
 grails.project.groupId = appName // change this to alter the default package name and Maven publishing destination
 grails.mime.file.extensions = true // enables the parsing of file extensions from URLs into the request format

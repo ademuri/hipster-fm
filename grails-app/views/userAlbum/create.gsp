@@ -1,4 +1,4 @@
-<%@ page import="hipsterfm.UserAlbum" %>
+<%@ page import="com.ademuri.hipster.UserAlbum" %>
 <!DOCTYPE html>
 <html>
 	<head>
