@@ -33,11 +33,15 @@ class GraphDataCache {
 	}
 	
 	static transients = ['chartdata']
+	
+	static mapping = {
+		autoTimestamp true
+	}
 
     static constraints = {
-		dateCreated()
-		lastUpdated()
-		hitsSinceSync()
+		dateCreated(nullable: true)
+		lastUpdated(nullable: true)
+		hitsSinceSync(nullable: true)
 		
 		startDate(nullable: true)
 		endDate(nullable: true)

@@ -16,10 +16,11 @@ class Track {
 	
 	static mapping = {
 		sort "date"
+		autoTimestamp true
 	}
 	
     static constraints = {
-		dateCreated()
+		dateCreated(nullable: true)
 		date nullable: false
 		artist nullable: false
 		name nullable: false

@@ -77,7 +77,7 @@ environments {
     }
 	stage {
 		grails.logging.jul.usebridge = false
-		grails.serverURL = "http://www.ademuri.com/hipster"
+		grails.serverURL = "http://www.ademuri.com/stage"
 	}
 }
 
@@ -181,7 +181,7 @@ environments {
 							layout: pattern(conversionPattern: commonPattern)
 					 appender new DailyRollingFileAppender(
 						name:"stage-roll", datePattern: "'.'yyyy-MM-dd",
-						file:"${logDirectory}/stage-rolling.log",
+						file:"${logDirectory}/stage-errors-daily.log",
 						layout: pattern(conversionPattern: commonPattern))
 			   }
 			   

@@ -29,7 +29,7 @@ environments {
 			username = ""
 			password = ""
             dbCreate = "update"
-            url = "jdbc:mysql://localhost/adam_hipster"
+            url = "jdbc:mysql://localhost/adam_hipster?zeroDateTimeBehavior=convertToNull"
             properties {
                maxActive = -1
                minEvictableIdleTimeMillis=1800000
@@ -47,7 +47,7 @@ environments {
 			username = ""
 			password = ""
 			dbCreate = "update"
-			url = "jdbc:mysql://localhost/adam_hipster_stage"
+			url = "jdbc:mysql://localhost/adam_hipster_stage?zeroDateTimeBehavior=convertToNull"
 			properties {
 			   maxActive = -1
 			   minEvictableIdleTimeMillis=1800000
