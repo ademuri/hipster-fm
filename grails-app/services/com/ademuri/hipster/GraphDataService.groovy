@@ -31,7 +31,7 @@ class GraphDataService {
 		
 		def idList = userArtistList.id.sort()
 		
-		if (!force) {
+		
 			def allCache = GraphDataCache.all
 			
 			def prevCache = GraphDataCache.withCriteria {
@@ -57,6 +57,14 @@ class GraphDataService {
 				}
 			}
 			
+		if (force) {
+			if (prevCache.size() > 0) {
+				prevCache.each {
+					it.delete()
+				}
+			}
+		} 
+		else {
 			if (prevCache.size() > 0) {
 				log.info "Found previous cache!"
 				if (prevCache.size() > 1) {
