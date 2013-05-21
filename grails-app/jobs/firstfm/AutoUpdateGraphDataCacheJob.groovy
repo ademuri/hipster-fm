@@ -24,6 +24,9 @@ class AutoUpdateGraphDataCacheJob {
 			production {
 				graphDataService.autoUpdateGraphDataCache()
 			}
+			stage {
+				graphDataService.autoUpdateGraphDataCache()
+			}
 		}
     }
 }

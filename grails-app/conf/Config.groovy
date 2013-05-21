@@ -75,6 +75,10 @@ environments {
         grails.logging.jul.usebridge = false
         grails.serverURL = "http://www.ademuri.com/hipster"
     }
+	stage {
+		grails.logging.jul.usebridge = false
+		grails.serverURL = "http://www.ademuri.com/hipster"
+	}
 }
 
 // log4j configuration
@@ -145,6 +149,44 @@ environments {
 			   
 			   root {
 				   info "prod-roll", "prod-errors", "roll", "errors"
+			   }
+		}
+	}
+	
+	stage {
+		log4j = {
+			info 'grails.app'
+			warn 'groovyx.net.http'
+			error 'org.codehaus.groovy.grails.web.servlet',        // controllers
+			   'org.codehaus.groovy.grails.web.pages',          // GSP
+			   'org.codehaus.groovy.grails.web.sitemesh',       // layouts
+			   'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
+			   'org.codehaus.groovy.grails.web.mapping',        // URL mapping
+			   'org.codehaus.groovy.grails.commons',            // core / classloading
+			   'org.codehaus.groovy.grails.plugins',            // plugins
+			   'org.codehaus.groovy.grails.orm.hibernate',      // hibernate integration
+			   'org.springframework',
+			   'org.hibernate',
+			   'net.sf.ehcache.hibernate'
+			   
+			   appenders {
+				   file name: "errors", file: "${logDirectory}/stage-errors.log",
+						   layout: pattern(conversionPattern: commonPattern)
+					appender new DailyRollingFileAppender(
+					   name:"roll", datePattern: "'.'yyyy-MM-dd",
+					   file:"${logDirectory}/stage-rolling.log",
+					   layout: pattern(conversionPattern: commonPattern))
+					
+					file name: "stage-errors", file: "${logDirectory}/stage-errors.log",
+							layout: pattern(conversionPattern: commonPattern)
+					 appender new DailyRollingFileAppender(
+						name:"stage-roll", datePattern: "'.'yyyy-MM-dd",
+						file:"${logDirectory}/stage-rolling.log",
+						layout: pattern(conversionPattern: commonPattern))
+			   }
+			   
+			   root {
+				   info "stage-roll", "stage-errors", "roll", "errors"
 			   }
 		}
 	}

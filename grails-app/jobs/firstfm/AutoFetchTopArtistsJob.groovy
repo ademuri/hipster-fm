@@ -23,6 +23,9 @@ class AutoFetchTopArtistsJob {
 			production {
 				graphDataService.autoUpdateUsers()
 			}
+			stage {
+				graphDataService.autoUpdateUsers()
+			}
 		}
     }
 }
