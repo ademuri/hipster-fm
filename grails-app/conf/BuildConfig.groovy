@@ -27,6 +27,9 @@ grails.project.dependency.resolution = {
 
         mavenLocal()
         mavenCentral()
+		
+		// my maven server - right now has jquery-2.0.0
+		mavenRepo "http://ademuri.com:8080/nexus/content/repositories/releases/"
 
         // uncomment these (or add new ones) to enable remote dependency resolution from public Maven repositories
         mavenRepo "http://snapshots.repository.codehaus.org"
@@ -51,7 +54,6 @@ grails.project.dependency.resolution = {
 		compile ':cached-resources:1.0'
 		compile ':form-helper:0.2.8'
 		compile ':hibernate-stats:1.1'
-		compile ':jquery:1.7.2'
 		compile ':jquery-ui:1.8.7'
 		compile ':pretty-time:2.1.3.Final-1.0.1'
 		compile ':quartz:1.0-RC7'
@@ -61,5 +63,12 @@ grails.project.dependency.resolution = {
 		compile ':webxml:1.4.1'
 		compile ':yui-minify-resources:0.1.5'
 		compile ':zipped-resources:1.0'
+		
+		// publicly available
+//		compile ':jquery:1.7.2'
+		
+		// mine
+		compile ':jquery:2.0.0'
+		
     }
 }
