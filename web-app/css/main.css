@@ -744,3 +744,9 @@ div#ui-datepicker-div {
 #interval {
 	font-style: italic;
 }
+
+#shorten-link-button {
+	margin: .5em 3em;
+	color: #555;	
+	cursor: pointer;
+}
