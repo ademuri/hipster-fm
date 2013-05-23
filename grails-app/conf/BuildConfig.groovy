@@ -54,7 +54,6 @@ grails.project.dependency.resolution = {
 		compile ':cached-resources:1.0'
 		compile ':form-helper:0.2.8'
 		compile ':hibernate-stats:1.1'
-		compile ':jquery-ui:1.8.7'
 		compile ':pretty-time:2.1.3.Final-1.0.1'
 		compile ':quartz:1.0-RC7'
 		compile ':quartz-monitor:0.3-RC1'
@@ -66,9 +65,11 @@ grails.project.dependency.resolution = {
 		
 		// publicly available
 //		compile ':jquery:1.7.2'
+//		compile ':jquery-ui:1.8.7'
 		
 		// mine
 		compile ':jquery:2.0.0'
+		compile ':jquery-ui:1.10.2'
 		
     }
 }
