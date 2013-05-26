@@ -48,7 +48,7 @@ class GraphDataCache {
 		userMaxY(nullable: true)
 		albumId(nullable: true)
 		
-		removeOutliers(nullable: false)
+		removeOutliers()	// boolean doesn't support nullable
 		groupBy(nullable: false)
 		tickSize(nullable: false)
 		intervalSize(nullable: false)

@@ -300,6 +300,12 @@ class GraphController {
 		
 		log.info "Getting graph data"
 		def chartdata = graphDataService.getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId)
+		if (!chartdata) {
+			log.error "getGraphData returned no data"
+			def error = [error: "No scrobbles found"]
+			render error as JSON
+			return
+		}
 		
 		log.info "rendering page"
 		

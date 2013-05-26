@@ -147,6 +147,11 @@ class GraphDataService {
 			}
 		}
 		
+		if (!globalFirst || !globalLast) {
+			log.error "Found not graph data after scanning user artists"
+			return null
+		}
+		
 		if (startDate) {
 			globalFirst = startDate
 		}

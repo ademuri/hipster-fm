@@ -64,12 +64,12 @@ grails.project.dependency.resolution = {
 		compile ':zipped-resources:1.0'
 		
 		// publicly available
-//		compile ':jquery:1.7.2'
-//		compile ':jquery-ui:1.8.7'
+		compile ':jquery:1.7.2'
+		compile ':jquery-ui:1.8.7'
 		
 		// mine
-		compile ':jquery:2.0.0'
-		compile ':jquery-ui:1.10.2'
+//		compile ':jquery:2.0.0'
+//		compile ':jquery-ui:1.10.2'
 		
     }
 }

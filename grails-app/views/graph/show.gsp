@@ -51,7 +51,13 @@
 					responseObject = JSON.parse(response.responseText);
 					responseObject.date = new Date();
 					store.set(JSON.stringify(params), responseObject);
-				} 
+				}
+				
+				if (responseObject.error) {
+					console.log("error" + responseObject.error);
+					$("#chartdiv").text(responseObject.error);
+					return;
+				}
 				
 				var chartdata = responseObject.chartdata;
 				maxY = chartdata.maxY;
