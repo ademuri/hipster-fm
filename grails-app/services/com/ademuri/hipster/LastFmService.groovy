@@ -228,7 +228,7 @@ class LastFmService {
 		def paging = data.artisttracks."@attr"
 //		log.info "Got ${paging.totalPages} pages for search ${rawArtistName}"
 
-		if (paging.totalPages.toInteger() > 1) {		
+		if (paging?.totalPages?.toInteger() > 1) {		
 			GParsPool.withPool {
 				(2..paging.totalPages.toInteger()).eachParallel { i ->
 					def newquery =  [
@@ -240,6 +240,8 @@ class LastFmService {
 					data = queryApi(newquery, -1, priority)
 					if (!data?.artisttracks) {
 						log.error "Didn't get track data for page ${i}"
+						log.error "data: ${data}"
+						return 	// closure, so skip this page
 					}
 					data.artisttracks.track.each {
 						tracks.push(it)
