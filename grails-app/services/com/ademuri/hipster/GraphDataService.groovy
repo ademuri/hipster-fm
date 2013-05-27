@@ -4,6 +4,9 @@ import grails.converters.JSON;
 import com.ademuri.hipster.GraphDataCache;
 import com.ademuri.hipster.Track;
 import com.ademuri.hipster.User;
+
+import org.grails.datastore.mapping.query.api.Criteria;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.springframework.transaction.annotation.Transactional
 import com.ademuri.hipster.UserArtist
 
@@ -294,7 +297,7 @@ class GraphDataService {
 	def autoUpdateUsers() {
 		def now = new Date()
 		
-		def users = User.withCriteria {
+		def usersOld = User.withCriteria {
 			or {
 				lt("allTopArtistsLastSynced", now-7)
 				isNull("allTopArtistsLastSynced")
@@ -304,7 +307,22 @@ class GraphDataService {
 			}
 		}
 		
+		def users = User.createCriteria().listDistinct {
+			or {
+				lt("allTopArtistsLastSynced", now-7)
+				isNull("allTopArtistsLastSynced")
+			}
+			artists {
+				between("lastGraphed", (now-7), now)
+			}
+//			resultTransformer CriteriaSpecification.DISTINCT_ROOT_ENTITY
+//			resultTransformer org.hibernate.Criteria.DISTINCT_ROOT_ENTITY	// only unique
+		}
+		
 		log.info "Users to update: ${users}"
+		log.info "Old user list: ${usersOld}"
+		
+		def success = true
 		
 		users.each { user ->
 			log.info "Fetching friends for user ${user.toString()}"
@@ -313,11 +331,19 @@ class GraphDataService {
 			log.info "Fetching top artists for user ${user}"
 			def artists = lastFmService.getUserAllTopArtists(user, 0)
 			
-			artists.each { artist ->
-				log.info "Fetching tracks for ${user}: ${artist}"
-				lastFmService.getArtistTracks(user, artist.name, false, 0)
+			try {
+				artists.each { artist ->
+					log.info "Fetching tracks for ${user}: ${artist}"
+					lastFmService.getArtistTracks(user, artist.name, false, 0)
+				}
+			} catch (Exception e) {
+				log.warn "Exception occurred while fetching artists for ${user}"
+				success = false
 			}
-			user.allTopArtistsLastSynced = new Date()
+			
+			if (success) {
+				user.allTopArtistsLastSynced = new Date()
+			}
 		}
 	}
 	

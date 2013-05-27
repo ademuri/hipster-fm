@@ -202,10 +202,12 @@ class LastFmService {
 			]
 		
 		def data = queryApi(query, -1, priority)
-//		log.info "user ${user}, artist ${rawArtistName}, data: ${data}"
+		def success = true			// if we fail but can get most data, throw an exception after we commit the transaction so we save partial data
+		def failMessage = ""
 		
 		if (data?.error) {
 			log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
+			throw new LastFmException("Got error ${data.error}, message '${data?.message}' for query ${query}")
 			return 0
 		}
 		
@@ -241,6 +243,8 @@ class LastFmService {
 					if (!data?.artisttracks) {
 						log.error "Didn't get track data for page ${i}"
 						log.error "data: ${data}"
+						success = false
+						failMessage += "Didn't get track data for page ${i}, data: ${data}; "
 						return 	// closure, so skip this page
 					}
 					data.artisttracks.track.each {
@@ -262,6 +266,7 @@ class LastFmService {
 			log.warn "Search for ${rawArtistName} returned no artist id"
 			return 0
 		}
+		
 //		println "artist name: ${artistName}"
 		def theArtist = Artist.findByLastId(artistId) ?: new Artist(name: artistName, lastId: artistId).save(flush: true, failOnError: true)
 		def userArtist = UserArtist.findByUserAndArtist(user, theArtist) ?: new UserArtist(user: user, artist: theArtist).save(flush: true, failOnError: true)
@@ -271,77 +276,93 @@ class LastFmService {
 		def dateFormat = new SimpleDateFormat("dd MMM yyyy, kk:mm")
 		
 		def existingTracks = Track.countByArtist(userArtist) > 0	// don't check for duplicate tracks if none exist
+		def albums
+		def albumMap
 		
-		// do albums stuff efficiently - create them all here, then add tracks to them as needed
-		def albums = userArtist.albums ?: []
-		def rawAlbums = tracks.collect { it.album } as Set
-		Map albumMap = [:]
-		log.info "Got ${rawAlbums.size()} albums"
 		
-		rawAlbums.each { rawAlbum ->
-			if (!rawAlbum || rawAlbum.mbid == "") {
-				albumMap[""] = null
+		Album.withTransaction {
+			// do albums stuff efficiently - create them all here, then add tracks to them as needed
+			albums = userArtist.albums ?: []
+			def rawAlbums = tracks.collect { it.album } as Set
+			albumMap = [:]
+			log.info "Got ${rawAlbums.size()} albums"
+			
+			rawAlbums.each { rawAlbum ->
+				if (!rawAlbum || rawAlbum.mbid == "") {
+					albumMap[""] = null
+				}
+				else if (albums.find { it.lastId == rawAlbum.mbid } == null) {
+	//				log.info "album ${rawAlbum}"
+					// create the album
+	//				log.info "Id ${rawAlbum.mbid}, name: ${rawAlbum.'#text'}"
+					def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: theArtist).save(failOnError: true, flush: true)
+					def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true, flush: true)
+					album.addToUserAlbums(userAlbum).save(failOnError: true, flush: true)
+	//				log.info "album: ${album}, userAlbums: ${album.userAlbums}"
+					albums.add(userAlbum)
+				}
 			}
-			else if (albums.find { it.lastId == rawAlbum.mbid } == null) {
-//				log.info "album ${rawAlbum}"
-				// create the album
-//				log.info "Id ${rawAlbum.mbid}, name: ${rawAlbum.'#text'}"
-				def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: theArtist).save(failOnError: true, flush: true)
-				def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true, flush: true)
-				album.addToUserAlbums(userAlbum).save(failOnError: true, flush: true)
-//				log.info "album: ${album}, userAlbums: ${album.userAlbums}"
-				albums.add(userAlbum)
+			
+			
+			albums.each {
+				albumMap[it.lastId] = it
 			}
-		}
-		
-		
-		albums.each {
-			albumMap[it.lastId] = it
 		}
 //		log.info "Done with albums"
 		
-		def lastExtDate
-		def lastTrack = Track.withCriteria {
-			maxResults(1)
-			order('date', 'desc')
-			artist {
-				eq("id", userArtist.id)
-			}
-		}
-		
-		if (lastTrack.size() == 0) {
-			log.info "No previous tracks found"
-		} else {
-			log.info "Last track: ${lastTrack.get(0).date}"
-			lastExtDate = lastTrack.get(0).date	
-		}
-		
-		tracks.each {
-			if (!it?.date) {
-				log.info "Invalid date!: ${it}"
-				return	//skip this track
+		Track.withCriteria {
+			def lastExtDate
+			def lastTrack = Track.withCriteria {
+				maxResults(1)
+				order('date', 'desc')
+				artist {
+					eq("id", userArtist.id)
+				}
 			}
 			
-			def trackId = it.mbid
-			def date = dateFormat.parse(it.date."#text")
-			if (syncFromDate && date < syncFromDate) {
-//				log.info "Ignoring track with date ${date}, before cutoff ${syncFromDate}"
-				return
-			}
-			def track
-			
-			if (existingTracks || date > lastExtDate) {
-//				log.info "Searching for existing tracks name: ${it.name}, date: ${date}"
-				track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+			if (lastTrack.size() == 0) {
+				log.info "No previous tracks found"
 			} else {
-//				log.info "name: ${it.name}, date: ${date}"
-				track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
-//				log.info track	
+	//			log.info "Last track: ${lastTrack.get(0).date}"
+				lastExtDate = lastTrack.get(0).date	
 			}
-			userArtist.addToTracks(track)
+			
+			tracks.each {
+				if (!it?.date) {
+					log.warn "Invalid date!: ${it}"
+					success = false
+					failMessage += "Invalid date!: ${it}"
+					return	//skip this track
+				}
+				
+				def trackId = it.mbid
+				def date = dateFormat.parse(it.date."#text")
+				if (syncFromDate && date < syncFromDate) {
+	//				log.info "Ignoring track with date ${date}, before cutoff ${syncFromDate}"
+					return
+				}
+				def track
+				
+				if (existingTracks || date > lastExtDate) {
+	//				log.info "Searching for existing tracks name: ${it.name}, date: ${date}"
+					track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+				} else {
+	//				log.info "name: ${it.name}, date: ${date}"
+					track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+	//				log.info track	
+				}
+				userArtist.addToTracks(track)
+			}
 		}
 		
 		log.info "Done creating tracks"
+		
+		if (!success) {
+			// we should have committed all changes we've made, so throw an exception to tell our caller something went wrong
+			// 	additionally, don't update lastSynced (for now)
+			//		at some point, we should add an errorLastSynced (or similar) since last.fm caches the replies for a little while
+			throw new LastFmException(failMessage)
+		}
 
 		userArtist.lastSynced = new Date()
 		
@@ -389,8 +410,14 @@ class LastFmService {
 		
 		if ((data?.topartists?."@attr"?.total) && (data.topartists."@attr".total as int) > 0) {
 			def artists = data.topartists.artist
+			if (!(artists[0].hasProperty("mbid") && artists[0].hasProperty("name"))) {
+				log.info "Only got one artist, making it a list"
+				artists = [artists]
+			}
+			
 			artists.each {
-				if (!it?.mbid) {
+				if (!(it.hasProperty("mbid") && it?.mbid)) {
+					log.warn "Invalid artist: ${it}"
 					return
 				}
 				
