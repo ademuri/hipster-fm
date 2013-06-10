@@ -1,3 +1,5 @@
+import grails.util.Environment;
+
 import org.apache.log4j.DailyRollingFileAppender
 
 // locations to search for config files that get merged into the main config;
@@ -16,8 +18,8 @@ import org.apache.log4j.DailyRollingFileAppender
 // local configuration of DB stuff
 //def extConfig = System.properties.getProperty('EXTCONFIG')
 def extConfig = System.getenv().get('EXTCONFIG').toString()
-log.error "extConfig: ${extConfig}"
-grails.config.locations = [ "file:/opt/grails-config/config.groovy", hipsterfm.DatabaseCredentials ]
+//log.error "extConfig: ${extConfig}"
+grails.config.locations = [ "file:/opt/grails-config/config.groovy", com.ademuri.hipster.DatabaseCredentials ]
 
 grails.project.groupId = appName // change this to alter the default package name and Maven publishing destination
 grails.mime.file.extensions = true // enables the parsing of file extensions from URLs into the request format
@@ -67,6 +69,7 @@ grails.exceptionresolver.params.exclude = ['password']
 // configure auto-caching of queries by default (if false you can cache individual queries with 'cache: true')
 grails.hibernate.cache.queries = false
 
+def logDirectory
 environments {
     development {
         grails.logging.jul.usebridge = true
@@ -74,7 +77,13 @@ environments {
     production {
         grails.logging.jul.usebridge = false
         grails.serverURL = "http://www.ademuri.com/hipster"
+		logDirectory = "/opt/apache-tomcat-7.0.34/logs"
     }
+	stage{
+		grails.logging.jul.usebridge = false
+		grails.serverURL = "http://www.ademuri.com/stage"
+		logDirectory = "/opt/tomcat_stage/logs"
+	}
 }
 
 // log4j configuration
@@ -106,7 +115,7 @@ dev = {
 
 //String commonPattern = "%d{yyyy-MMM-dd HH:mm:ss,SSS} [%t] %c %x%n %-5p %m%n"
 def commonPattern = "%d{yyyy-MMM-dd HH mm ss,SSS} [%t] %c %x%n %-5p %m%n"
-def logDirectory = "/opt/apache-tomcat-7.0.34/logs"
+
 environments {
 	development(dev)
 	test(dev)
@@ -145,6 +154,44 @@ environments {
 			   
 			   root {
 				   info "prod-roll", "prod-errors", "roll", "errors"
+			   }
+		}
+	}
+	
+	stage{
+		log4j = {
+			info 'grails.app'
+			warn 'groovyx.net.http'
+			error 'org.codehaus.groovy.grails.web.servlet',        // controllers
+			   'org.codehaus.groovy.grails.web.pages',          // GSP
+			   'org.codehaus.groovy.grails.web.sitemesh',       // layouts
+			   'org.codehaus.groovy.grails.web.mapping.filter', // URL mapping
+			   'org.codehaus.groovy.grails.web.mapping',        // URL mapping
+			   'org.codehaus.groovy.grails.commons',            // core / classloading
+			   'org.codehaus.groovy.grails.plugins',            // plugins
+			   'org.codehaus.groovy.grails.orm.hibernate',      // hibernate integration
+			   'org.springframework',
+			   'org.hibernate',
+			   'net.sf.ehcache.hibernate'
+			   
+			   appenders {
+				   file name: "s-errors", file: "${logDirectory}/stage-errors.log",
+						   layout: pattern(conversionPattern: commonPattern)
+					appender new DailyRollingFileAppender(
+					   name:"s-roll", datePattern: "'.'yyyy-MM-dd",
+					   file:"${logDirectory}/stage-rolling.log",
+					   layout: pattern(conversionPattern: commonPattern))
+					
+					file name: "stage-errors", file: "${logDirectory}/stage-errors.log",
+							layout: pattern(conversionPattern: commonPattern)
+					 appender new DailyRollingFileAppender(
+						name:"stage-roll", datePattern: "'.'yyyy-MM-dd",
+						file:"${logDirectory}/stage-errors-daily.log",
+						layout: pattern(conversionPattern: commonPattern))
+			   }
+			   
+			   root {
+				   info "stage-roll", "stage-errors", "s-roll", "s-errors"
 			   }
 		}
 	}

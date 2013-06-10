@@ -22,9 +22,11 @@
 					<li><a href="http://johannburkard.de/blog/programming/java/date-formatting-parsing-humans-humantime.html">HumanTime</a> (<g:link action="showLicense" params="[license: 'humanTime']">license</g:link>)</li>
 					<li><a href="http://jquery.org/">jQuery</a> (<g:link action="showLicense" params="[license: 'jquery']">license</g:link>)</li>
 					<li><a href="http://www.jqplot.com/">jqPlot</a> (<g:link action="showLicense" params="[license: 'jqplot']">license</g:link>)</li>
+					<li><a href="http://bgrins.github.io/spectrum/">Spectrum</a> (<g:link action="showLicense" params="[license: 'spectrum']">license</g:link>)</li>
+					<li><a href="https://github.com/marcuswestin/store.js/">store.js</a> (<g:link action="showLicense" params="[license: 'store_js']">license</g:link>)</li>
 				</ul>
 			</div>
-		</div
+		</div>
 	</div>
 	
 </body>

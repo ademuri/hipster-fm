@@ -27,6 +27,9 @@ grails.project.dependency.resolution = {
 
         mavenLocal()
         mavenCentral()
+		
+		// my maven server - right now has jquery-2.0.0
+		mavenRepo "http://ademuri.com:8080/nexus/content/repositories/releases/"
 
         // uncomment these (or add new ones) to enable remote dependency resolution from public Maven repositories
         mavenRepo "http://snapshots.repository.codehaus.org"
@@ -43,25 +46,31 @@ grails.project.dependency.resolution = {
 
     plugins {
         runtime ":hibernate:$grailsVersion"
-//        runtime ":jquery:1.7.2"
-//        runtime ":resources:1.1.6"
-		//runtime "com.mysql.jdbc.Driver"
-
-        // Uncomment these (or add new ones) to enable additional resources capabilities
-//        runtime ":zipped-resources:1.0"
-//        runtime ":cached-resources:1.0"
-        //runtime ":yui-minify-resources:0.1.4"
 
         build ":tomcat:$grailsVersion"
 		compile ":rest:0.7"
 		
-		runtime ":jquery:1.7.2"
-		compile ":jquery-ui:1.8.24"
-		runtime ':resources:1.2'
-
-//        runtime ":database-migration:1.1"
-
-//		compile "org.codehaus.gpars:gpars:0.12"
-//        compile ':cache:1.0.0'
+		compile ':cache:1.0.1'
+		compile ':cache-headers:1.1.5'
+		compile ':cached-resources:1.0'
+		compile ':form-helper:0.2.8'
+		compile ':hibernate-stats:1.1'
+		compile ':pretty-time:2.1.3.Final-1.0.1'
+		compile ':quartz:1.0-RC7'
+		compile ':quartz-monitor:0.3-RC1'
+		compile ':resources:1.2.RC2'
+		compile ':rest:0.7'
+		compile ':webxml:1.4.1'
+		compile ':yui-minify-resources:0.1.5'
+		compile ':zipped-resources:1.0'
+		
+		// publicly available
+		compile ':jquery:1.7.2'
+		compile ':jquery-ui:1.8.7'
+		
+		// mine
+//		compile ':jquery:2.0.0'
+//		compile ':jquery-ui:1.10.2'
+		
     }
 }

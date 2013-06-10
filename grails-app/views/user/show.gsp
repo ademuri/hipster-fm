@@ -1,6 +1,6 @@
 
-<%@ page import="hipsterfm.User" %>
-<%@ page import="hipsterfm.UserArtist" %>
+<%@ page import="com.ademuri.hipster.User" %>
+<%@ page import="com.ademuri.hipster.UserArtist" %>
 <%@ page import="grails.converters.JSON" %>
 
 <!doctype html>
@@ -51,7 +51,6 @@
 						<g:each in="${userInstance.friends}" var="a">
 						<span class="property-value" aria-labelledby="friends-label"><g:link controller="user" action="show" id="${a.id}">${a?.toString()}</g:link></span>
 						</g:each>
-					
 				</li>
 				</g:if>
 			
@@ -61,9 +60,14 @@
 				</li>
 				<div id="interval-container">
 					<div id="interval-slider"></div>
+					<div id="interval-7day">7 Days</div>
+					<div id="interval-overall">Overall</div>
 				</div>
 				
-				<g:link class="graph" controller="graph" action="show" elementId="graphInterval">Graph</g:link>
+				<br>
+				<li class="fieldcontain">
+					<g:link class="graph property-value" controller="graph" action="show" elementId="graphInterval">Graph</g:link>
+				</li>
 			
 				<li class="fieldcontain">
 					<span id="artists-label" class="property-label"><g:message code="user.artists.label" default="Artists" /></span>
@@ -77,25 +81,18 @@
 				</li>
 			
 			</ol>
-			<g:form>
-				<fieldset class="buttons">
-					<g:hiddenField name="id" value="${userInstance?.id}" />
-					<g:link class="edit" action="edit" id="${userInstance?.id}"><g:message code="default.button.edit.label" default="Edit" /></g:link>
-					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
-					<g:link class="getFriends" action="getFriends" id="${userInstance.id}">Get Friends</g:link>
-				</fieldset>
-			</g:form>
+			<g:if env="development">
+				<g:form>
+					<fieldset class="buttons">
+						<g:hiddenField name="id" value="${userInstance?.id}" />
+						<g:link class="edit" action="edit" id="${userInstance?.id}"><g:message code="default.button.edit.label" default="Edit" /></g:link>
+						<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
+					</fieldset>
+				</g:form>
+			</g:if>
 		</div>
 		
-		<div id="Artist Search">
-			<g:form name="artistSearch" action="artistSearch">
-				<g:hiddenField name="id" value="${userInstance?.id}" />
-				<g:textField name="artist" />
-				<g:submitButton name="search" value="Search"/>
-			</g:form>
-		</div>
-		
-		<script>
+		<r:script>
 		var rankNames = ${UserArtist.humanRankNames as JSON}
 		var synced = new Array();	// whether we've synced each interval
 
@@ -164,7 +161,7 @@
 			
 			updateArtists(2);
 		});
-		</script>
+		</r:script>
 		
 	</body>
 </html>

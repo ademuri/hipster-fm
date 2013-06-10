@@ -82,6 +82,10 @@
 				var thing = $("#color-picker-template div").clone(); 
 				thing.insertBefore($(this).parent());
 				thing.children(".spectrum-input").spectrum(options);
+				$(".color-remove").unbind();
+				$(".color-add").unbind();
+				$(".color-remove").click(remove);
+				$(".color-add").click(add);
 			}
 
 			function displaySchemes(schemes) {

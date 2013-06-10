@@ -12,6 +12,7 @@
 				<li><g:link class="find" controller="user" action="find">Find user</g:link></li>
 				<li><g:link class="setup" action="setup" params="${params}">Filter graph</g:link></li>
 				<li><g:link class="setup" controller="options" action="colors">Colors</g:link></li>
+				<li><g:link class="setup" controller="graph" action="updateCache">Update cache</g:link></li>
 			</ul>
 		</div>
 		
@@ -23,6 +24,10 @@
 			<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 			</g:if>
+			
+			<div id="shorten-link-button"><h5>Link to this page</h5>
+			<input id="shorten-link-result" type="text" readonly="" />
+			</div>
 		
 			<div id="chartdiv" style="height:800px;width:95%;"></div>
 			
@@ -46,7 +51,13 @@
 					responseObject = JSON.parse(response.responseText);
 					responseObject.date = new Date();
 					store.set(JSON.stringify(params), responseObject);
-				} 
+				}
+				
+				if (responseObject.error) {
+					console.log("error" + responseObject.error);
+					$("#chartdiv").text(responseObject.error);
+					return;
+				}
 				
 				var chartdata = responseObject.chartdata;
 				maxY = chartdata.maxY;
@@ -66,8 +77,37 @@
 
 				$.jqplot('chartdiv', data, jqplotOptions);
 			}
+			
+			function showShortened(data, textStatus) {
+				$("#shorten-link-result").show();
+				console.log("data: " + data);
+				console.log(data);
+				console.log("textStatus: " + textStatus);
+				
+				$("#shorten-link-result").val(data.url);
+				$("#shorten-link-result").select();
+				$("#shorten-link-result").attr('size', $("#shorten-link-result").val().length);
+				
+				$("#shorten-link-button").click( function() {
+					$("#shorten-link-result").select();
+				});	
+			}
+			
+			function errorFunc(XMLHttpRequest,textStatus,errorThrown) {
+				console.log("error: " + textStatus + ", " + errorThrown);	
+			}
 
 			$(window).load(function() {
+				// deal with short link
+				$("#shorten-link-result").hide();
+				$("#shorten-link-button").click( function() {
+					$("#shorten-link-button").unbind();
+					$("#shorten-link-result").show;
+					
+					// ajax call to get shortened url
+					$.ajax({type:'POST',data:{fullUrl: window.location.pathname + window.location.search}, url:'${createLink(controller: 'shortLink', action: 'ajaxShortenUrl')}',success:showShortened,error:errorFunc});
+				});
+			
 				var storedData = store.get(JSON.stringify(params));
 
 				// cache result for 1 day

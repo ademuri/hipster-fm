@@ -176,7 +176,7 @@ img {
 }
 
 .nav a {
-	color: #666666;
+	color: #333;
 	display: block;
 	padding: 0.25em 0.7em;
 	text-decoration: none;
@@ -186,7 +186,7 @@ img {
 }
 
 .nav a:active, .nav a:visited {
-	color: #666666;
+	color: #333;
 }
 
 .nav a:focus, .nav a:hover {
@@ -231,7 +231,7 @@ fieldset,
 
 .fieldcontain label,
 .fieldcontain .property-label {
-	color: #666666;
+	color: #333;
 	text-align: right;
 	width: 25%;
 }
@@ -436,7 +436,7 @@ th {
 	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #ffffff), color-stop(1, #eaeaea));
 	    filter: progid:DXImageTransform.Microsoft.gradient(startColorStr = '#ffffff', EndColorStr = '#eaeaea');
 	-ms-filter: "progid:DXImageTransform.Microsoft.gradient(startColorStr='#ffffff', EndColorStr='#eaeaea')";
-	color: #666666;
+	color: #333;
 	font-weight: bold;
 	line-height: 1.7em;
 	padding: 0.2em 0.6em;
@@ -452,7 +452,7 @@ th a {
 }
 
 th a:link, th a:visited {
-	color: #666666;
+	color: #333;
 }
 
 th a:hover, th a:focus {
@@ -500,7 +500,7 @@ th:hover, tr:hover {
 
 .pagination a,
 .pagination .currentStep {
-	color: #666666;
+	color: #333;
 	display: inline-block;
 	margin: 0 0.1em;
 	padding: 0.25em 0.7em;
@@ -539,7 +539,7 @@ th:hover, tr:hover {
 .buttons a {
 	background-color: transparent;
 	border: 0;
-	color: #666666;
+	color: #333;
 	cursor: pointer;
 	display: inline-block;
 	margin: 0 0.25em 0;
@@ -653,7 +653,6 @@ div#ui-datepicker-div {
 	padding-left: 2em;
 }
 .show-license {
-	max-width: 600px;
 	word-wrap: break-word;
 	font-family: monospace;
 }
@@ -722,5 +721,32 @@ div#ui-datepicker-div {
 	cursor: pointer;
 }
 .color-click {
+	cursor: pointer;
+}
+#graphInterval {
+	border: 1px solid gray;
+	display: inline-block;
+	width: auto;
+	padding: .2em 1em;
+	margin-bottom: .2em;
+	color: #333;
+	background-color: #efefef;
+	float: left;
+}
+#interval-7day {
+	float: left;
+	display: inline-block;
+}
+#interval-overall {
+	float: right;
+	display: inline-block;
+}
+#interval {
+	font-style: italic;
+}
+
+#shorten-link-button {
+	margin: .5em 3em;
+	color: #555;	
 	cursor: pointer;
 }

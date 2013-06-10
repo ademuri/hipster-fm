@@ -1,4 +1,4 @@
-<%@ page import="hipsterfm.UserArtist" %>
+<%@ page import="com.ademuri.hipster.UserArtist" %>
 
 
 
@@ -24,6 +24,6 @@
 		<g:message code="artist.user.label" default="User" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:select id="user" name="user.id" from="${hipsterfm.User.list()}" optionKey="id" required="" value="${artistInstance?.user?.id}" class="many-to-one"/>
+	<g:select id="user" name="user.id" from="${com.ademuri.hipster.User.list()}" optionKey="id" required="" value="${artistInstance?.user?.id}" class="many-to-one"/>
 </div>
 

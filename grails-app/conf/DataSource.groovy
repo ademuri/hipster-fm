@@ -29,7 +29,7 @@ environments {
 			username = ""
 			password = ""
             dbCreate = "update"
-            url = "jdbc:mysql://localhost/adam_hipster"
+            url = "jdbc:mysql://localhost/adam_hipster?zeroDateTimeBehavior=convertToNull"
             properties {
                maxActive = -1
                minEvictableIdleTimeMillis=1800000
@@ -42,4 +42,22 @@ environments {
             }
         }
     }
+	stage {
+		dataSource {
+			username = ""
+			password = ""
+			dbCreate = "update"
+			url = "jdbc:mysql://localhost/adam_hipster_stage?zeroDateTimeBehavior=convertToNull"
+			properties {
+			   maxActive = -1
+			   minEvictableIdleTimeMillis=1800000
+			   timeBetweenEvictionRunsMillis=1800000
+			   numTestsPerEvictionRun=3
+			   testOnBorrow=true
+			   testWhileIdle=true
+			   testOnReturn=true
+			   validationQuery="SELECT 1"
+			}
+		}
+	}
 }
