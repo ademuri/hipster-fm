@@ -404,20 +404,17 @@ class LastFmService {
 			]
 		
 		def data = queryApi(query, -1, priority)
-//		log.info "data: ${data}"
+//		log.info "data.class: ${data.@class}"
 		
 		def topArtists = []
 		
 		if ((data?.topartists?."@attr"?.total) && (data.topartists."@attr".total as int) > 0) {
 			def artists = data.topartists.artist
-			if (!(artists[0].hasProperty("mbid") && artists[0].hasProperty("name"))) {
-				log.info "Only got one artist, making it a list"
-				artists = [artists]
-			}
 			
 			artists.each {
-				if (!(it.hasProperty("mbid") && it?.mbid)) {
+				if (!it.has("mbid")) {
 					log.warn "Invalid artist: ${it}"
+					log.info "raw data: ${data}"
 					return
 				}
 				
