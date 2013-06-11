@@ -94,12 +94,18 @@
 		
 		<r:script>
 		var rankNames = ${UserArtist.humanRankNames as JSON}
-		var synced = new Array();	// whether we've synced each interval
+		var requested = new Array();	// whether we've synced each interval
+		var received = new Array();
+		var interval = 2;
 
-		function showHide(interval) {
+		function showHide() {
+			console.log("showHide: " + interval);
+			if (!received[interval]) {
+				return;
+			}
+			
 			console.log("hiding");
 			for (var i=0; i<=5; i++) {
-				console.log("thing: " + $("#artists" + i));
 				if (i != interval) {
 					$("#artists" + i).hide();
 					$("#artists" + i).addClass("hidden");
@@ -133,19 +139,22 @@
 			link.prop("href", href);
 		}
 		
-		function updateArtists(interval) {
-			console.log("updateArtists");
+		function updateArtists(newInterval) {
+			console.log("updateArtists, interval: " + newInterval);
+			interval = newInterval;
 			$("#interval").text(rankNames[interval]);
-			if (!synced[interval]) {
-				$.ajax({type:'POST',data:{'interval': interval, 'id': ${userInstance.id}}, url:'${createLink(action:'ajaxGetTopArtists')}',success:function(data,textStatus){jQuery('#artists' + interval).html(data); showHide(interval); synced[interval] = true;},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+			if (!requested[interval]) {
+			 	requested[interval] = true;
+				$.ajax({type:'POST',data:{'interval': newInterval, 'id': ${userInstance.id}}, url:'${createLink(action:'ajaxGetTopArtists')}',success:function(data,textStatus){jQuery('#artists' + newInterval).html(data); received[newInterval] = true; showHide();},error:function(XMLHttpRequest,textStatus,errorThrown){}});
 			} else {
-				showHide(interval);
+				showHide();
 			}
 		}
 		
 		$(document).ready( function() {
 			for (var i=0; i<=5; i++) {
-				synced[i] = false;
+				requested[i] = false;
+				received[i] = false;
 			}
 			
 			$("#interval-slider").slider({

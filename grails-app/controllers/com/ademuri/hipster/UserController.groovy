@@ -150,19 +150,20 @@ class UserController {
 	
 	def ajaxGetTopArtists(Long id) {
 		log.info "get top artists, params: ${params}"
-		def userInstance = User.get(id)
-		if (!userInstance) {
-			flash.message = message(code: 'default.not.found.message', args: [message(code: 'user.label', default: 'User'), id])
-			redirect(action: "list")
-			return
-		}
 		
 		def interval = "3month"
 		if (params?.interval) {
 			interval = UserArtist.rankNames[params.interval as int]
 		}
 		
-		def topArtists = lastFmService.getUserTopArtists(userInstance.id, interval)
+		def topArtists = lastFmService.getUserTopArtists(id, interval)
+		
+		def userInstance = User.get(id)
+		if (!userInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'user.label', default: 'User'), id])
+			redirect(action: "list")
+			return
+		}
 		
 		render (template: 'updateArtists', model: ["artistList": topArtists, "user": userInstance.username])
 	}
