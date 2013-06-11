@@ -372,19 +372,22 @@ class LastFmService {
 	def getUserAllTopArtists(user, priority) {
 		def artists = []
 		UserArtist.rankNames.each {
-			artists.addAll(getUserTopArtists(user, it, priority))
+			artists.addAll(getUserTopArtists(user.id, it, priority))
 		}
 		
 		return artists
 	}
 	
-	def getUserTopArtists(user, interval = "3month", priority = 1) {
-		log.info "Getting top artists for user ${user}, interval ${interval}"
+	def getUserTopArtists(userId, interval = "3month", priority = 1) {
+		def user = User.lock(userId)
 		
 		if (!user) {
 			log.warn "getUserTopArtists called with null user"
 			return
 		}
+		
+		log.info "Getting top artists for user ${user}, interval ${interval}"
+		
 		
 		// if we've synced this recently, don't do it again
 		if (user?.topArtistsLastSynced[interval] && user?.topArtistsLastSynced[interval] > (new Date()-7)) {

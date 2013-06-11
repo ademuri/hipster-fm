@@ -162,7 +162,7 @@ class UserController {
 			interval = UserArtist.rankNames[params.interval as int]
 		}
 		
-		def topArtists = lastFmService.getUserTopArtists(userInstance, interval)
+		def topArtists = lastFmService.getUserTopArtists(userInstance.id, interval)
 		
 		render (template: 'updateArtists', model: ["artistList": topArtists, "user": userInstance.username])
 	}

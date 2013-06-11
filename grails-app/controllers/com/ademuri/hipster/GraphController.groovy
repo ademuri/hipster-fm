@@ -35,7 +35,7 @@ class GraphController {
 				lastFmService.getFriends(userInstance)
 				friends = userInstance.friends
 				
-				lastFmService.getUserTopArtists(userInstance, interval)
+				lastFmService.getUserTopArtists(userInstance.id, interval)
 				if (userInstance.artists.size() > 0) {
 //					topArtists = userInstance.artists.sort { it.numScrobbles }.reverse().getAt(0..(Math.min(userInstance.artists.size()-1, 30)))
 					topArtists = UserArtist.withCriteria {
