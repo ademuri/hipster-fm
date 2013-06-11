@@ -7,6 +7,9 @@ import com.ademuri.hipster.UserArtist
 import com.ademuri.hipster.Track
 import com.ademuri.hipster.User
 import java.text.SimpleDateFormat
+
+import groovy.time.TimeCategory;
+import groovy.time.TimeDuration;
 import groovyx.gpars.GParsPool
 
 class LastFmService {
@@ -178,6 +181,20 @@ class LastFmService {
 		return getArtistTracks(user, artistName, force)
 	}
 	
+	def static cumInsertTime = new TimeDuration(0, 0, 0, 0)
+	def static cumDownloadTime =  new TimeDuration(0, 0, 0, 0)
+	def cumTracks = 0
+	def cumUserArtists = 0
+	
+	def printStats( ){
+		log.info ""
+		log.info "Cumulative stats:"
+		log.info "Insert time: ${cumInsertTime}"
+		log.info "Download time: ${cumDownloadTime}"
+		log.info "Tracks: ${cumTracks}"
+		log.info "User artists: ${cumUserArtists}"
+	}
+	
 	int getArtistTracks(user, rawArtistName, force = false, priority = 1) {
 		
 		def existingArtist = Artist.findByName(rawArtistName)
@@ -200,6 +217,8 @@ class LastFmService {
 			user: user.username,
 			artist: rawArtistName,
 			]
+		
+		def downloadTime = new Date()
 		
 		def data = queryApi(query, -1, priority)
 		def success = true			// if we fail but can get most data, throw an exception after we commit the transaction so we save partial data
@@ -257,9 +276,15 @@ class LastFmService {
 		log.info "Found ${tracks.size()} tracks."
 //		log.info tracks
 		
+		def duration = TimeCategory.minus(new Date(), downloadTime)
+		log.warn "Download time: ${duration}"
+		cumDownloadTime += duration
+		log.warn "Cumulative download time: ${cumDownloadTime}"
+		
 		
 		def artistName = tracks[0]?.artist?."#text"
 		
+		def insertTime = new Date()
 		
 		def artistId = tracks[0]?.artist?.mbid
 		if (!artistId) {
@@ -309,8 +334,11 @@ class LastFmService {
 			}
 		}
 //		log.info "Done with albums"
-		
-		Track.withCriteria {
+
+		def count = 0	// clear the session every so often
+//		Track.withTransaction {		
+
+		Track.withTransaction {
 			def lastExtDate
 			def lastTrack = Track.withCriteria {
 				maxResults(1)
@@ -319,7 +347,7 @@ class LastFmService {
 					eq("id", userArtist.id)
 				}
 			}
-			
+		
 			if (lastTrack.size() == 0) {
 				log.info "No previous tracks found"
 			} else {
@@ -334,6 +362,8 @@ class LastFmService {
 					failMessage += "Invalid date!: ${it}"
 					return	//skip this track
 				}
+				
+				cumTracks++
 				
 				def trackId = it.mbid
 				def date = dateFormat.parse(it.date."#text")
@@ -354,6 +384,13 @@ class LastFmService {
 				userArtist.addToTracks(track)
 			}
 		}
+			
+		duration = TimeCategory.minus(new Date(), insertTime)
+		log.warn "Insert time: ${duration}"
+		cumInsertTime += duration
+		log.warn "Cumulative insert time: ${cumInsertTime}"
+		cumUserArtists++
+		log.warn "Cum user artists: ${cumUserArtists}, tracks: ${cumTracks}"
 		
 		log.info "Done creating tracks"
 		

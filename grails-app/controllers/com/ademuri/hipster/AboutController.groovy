@@ -7,4 +7,6 @@ class AboutController {
 	def showLicense() { }
 	
 	def source() { }
+	
+	def news() { }
 }

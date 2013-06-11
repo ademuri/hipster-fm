@@ -383,6 +383,7 @@ class GraphDataService {
 					graph.removeOutliers, graph.userMaxY, graph.groupBy, graph.albumId, true)
 			}
 		}
+		lastFmService.printStats()
 	}
 	
 }
