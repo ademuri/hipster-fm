@@ -30,6 +30,12 @@ modules = {
 		resource url:"${store_dir}/json.js"
 	}
 	
+	def d3_dir = 'js/d3-v3'
+	d3 {
+		defaultBundle 'lib'
+		resource url:"${d3_dir}/d3.v3.js"
+	}
+	
 	overrides {
 		jquery {
 			defaultBundle 'core'
