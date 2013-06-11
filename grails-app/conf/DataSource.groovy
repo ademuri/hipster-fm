@@ -29,16 +29,21 @@ environments {
 			username = ""
 			password = ""
             dbCreate = "update"
-            url = "jdbc:mysql://localhost/adam_hipster?zeroDateTimeBehavior=convertToNull"
+            url = "jdbc:mysql://127.0.0.1/adam_hipster?zeroDateTimeBehavior=convertToNull"
             properties {
                maxActive = -1
-               minEvictableIdleTimeMillis=1800000
-               timeBetweenEvictionRunsMillis=1800000
+               minEvictableIdleTimeMillis=1000 * 60 * 30
+			   timeBetweenEvictionRunsMillis=1000 * 60 * 30
                numTestsPerEvictionRun=3
                testOnBorrow=true
                testWhileIdle=true
                testOnReturn=true
                validationQuery="SELECT 1"
+			   
+			   // trying to fix idle connection problems
+			   maxWait = 1800000
+			   maxIdle = 10
+			   minIdle = 0
             }
         }
     }
@@ -47,16 +52,21 @@ environments {
 			username = ""
 			password = ""
 			dbCreate = "update"
-			url = "jdbc:mysql://localhost/adam_hipster_stage?zeroDateTimeBehavior=convertToNull"
+			url = "jdbc:mysql://127.0.0.1/adam_hipster_stage?zeroDateTimeBehavior=convertToNull"
 			properties {
 			   maxActive = -1
-			   minEvictableIdleTimeMillis=1800000
-			   timeBetweenEvictionRunsMillis=1800000
+			   minEvictableIdleTimeMillis=1000 * 60 * 15
+			   timeBetweenEvictionRunsMillis=1000 * 60 * 15
 			   numTestsPerEvictionRun=3
 			   testOnBorrow=true
 			   testWhileIdle=true
 			   testOnReturn=true
 			   validationQuery="SELECT 1"
+			   
+			   // trying to fix idle connection problems
+			   maxWait = 10000
+			   maxIdle = 10
+			   minIdle = 0
 			}
 		}
 	}
