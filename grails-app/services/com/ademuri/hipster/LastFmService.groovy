@@ -16,6 +16,11 @@ class LastFmService {
 	
 	public static String api = '9cc72e8864ba4ec102ee347ec557f262'
 	public static String userAgent = 'Grails Last.Fm Notifier Service'
+	def url = 'http://ws.audioscrobbler.com/'
+	def path = '/2.0/'
+	
+//	def url = 'http://localhost:8180/'
+//	def path = 'LastFmProxy/2.0/'
 
 	//http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=rj&api_key=b25b959554ed76058ac220b7b2e0a026&format=json
 	
@@ -55,9 +60,9 @@ class LastFmService {
 		def data
 		
 		try {
-			withRest(uri:"http://ws.audioscrobbler.com/") {
+			withRest(uri:url) {
 				for (int i=0; i<5; i++) {
-					def resp = get(path: '/2.0/', query: query)
+					def resp = get(path: path, query: query)
 					data = resp.getData()
 					if (data?.error && data.error != allowError) {
 						log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
@@ -266,7 +271,12 @@ class LastFmService {
 						failMessage += "Didn't get track data for page ${i}, data: ${data}; "
 						return 	// closure, so skip this page
 					}
-					data.artisttracks.track.each {
+					def trackList = data.artisttracks.track
+					if (!trackList[0]?.artist) {
+						log.info "Making a list"
+						trackList = [trackList]
+					}
+					trackList.each {
 						tracks.push(it)
 					}
 				}
@@ -359,7 +369,7 @@ class LastFmService {
 				if (!it?.date) {
 					log.warn "Invalid date!: ${it}"
 					success = false
-					failMessage += "Invalid date!: ${it}"
+					failMessage += "Invalid date!: ${it}\n"
 					return	//skip this track
 				}
 				
