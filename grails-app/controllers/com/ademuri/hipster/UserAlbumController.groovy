@@ -21,13 +21,13 @@ class UserAlbumController {
 			def newParams = params.findAll {
 				!(it.key == 'sort')
 			}
-			list = UserAlbum.list(newParams)
-			
-			list.sort {
-				it.lastId
-			}
-			if (params.order == 'desc') {
-				list.reverse(true)
+			def first = params?.offset ? params.offset as Integer : 0 
+			list = UserAlbum.withCriteria {
+				join 'album'
+				createAlias("album", "_album")
+				order("_album." + params.sort, params.order)
+				maxResults(params.max)
+				firstResult(first)
 			}
 		} else {
 			list = UserAlbum.list(params)
