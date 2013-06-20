@@ -28,5 +28,6 @@ class UserAlbum {
 		lastId(nullable: false, blank: false)
 		name(blank: true)
 		artist(nullable: false)
+		album(nullable: false)
     }
 }
