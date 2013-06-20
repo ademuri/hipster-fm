@@ -200,7 +200,27 @@ class LastFmService {
 		log.info "User artists: ${cumUserArtists}"
 	}
 	
+	def syncing = [:]
+	
 	int getArtistTracks(user, rawArtistName, force = false, priority = 1) {
+		
+		// make sure no-one else is already syncing
+		synchronized(syncing) {
+			if (syncing[user.name] && syncing[user.name][rawArtistName]) {
+				log.info "Another thread is already syncing this artist"
+				synchronized(syncing[user.name][rawArtistName]) {
+					syncing[user.name][rawArtistName].wait()
+				}
+				log.info "Other thread has been sync, returning"
+				return
+			} else {
+				// create the entry
+				if (!syncing[user.name]) {
+					syncing[user.name] = [:]
+				}
+				syncing[user.name][rawArtistName] = true
+			}
+		}
 		
 		def existingArtist = Artist.findByName(rawArtistName)
 		def cutoffDate = (new Date())-7
@@ -213,6 +233,7 @@ class LastFmService {
 //			log.info "Not syncing ${rawArtistName} for ${user}, synced recently"
 			return 0
 		}
+		log.info "Getting artist tracks for ${user}, ${rawArtistName}"
 			
 		def syncFromDate = lastSynced ? lastSynced - 16 : null		// if we've synced before, sync for 15 days from the last day
 		// last.fm lets you sync back up to 2 weeks, so this should give us 2 days of margin	
@@ -302,7 +323,6 @@ class LastFmService {
 			return 0
 		}
 		
-//		println "artist name: ${artistName}"
 		def theArtist = Artist.findByLastId(artistId) ?: new Artist(name: artistName, lastId: artistId).save(flush: true, failOnError: true)
 		def userArtist = UserArtist.findByUserAndArtist(user, theArtist) ?: new UserArtist(user: user, artist: theArtist).save(flush: true, failOnError: true)
 		theArtist.addToUserArtists(userArtist)
@@ -343,10 +363,8 @@ class LastFmService {
 				albumMap[it.lastId] = it
 			}
 		}
-//		log.info "Done with albums"
 
 		def count = 0	// clear the session every so often
-//		Track.withTransaction {		
 
 		Track.withTransaction {
 			def lastExtDate
@@ -389,7 +407,6 @@ class LastFmService {
 				} else {
 	//				log.info "name: ${it.name}, date: ${date}"
 					track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
-	//				log.info track	
 				}
 				userArtist.addToTracks(track)
 			}
@@ -412,6 +429,14 @@ class LastFmService {
 		}
 
 		userArtist.lastSynced = new Date()
+		
+		// note: ALWAYS ACQUIRE LOCKS IN THIS ORDER to prevent deadlock
+		synchronized(syncing) {
+			synchronized(syncing[user.name][rawArtistName]) {
+				syncing[user.name][rawArtistName].notifyAll()
+			}
+			syncing[user.name][rawArtistName] = false	// TODO: we should delete this instead
+		}
 		
 		return tracks.size()
 	}
