@@ -151,7 +151,7 @@ class GraphDataService {
 		}
 		
 		if (!globalFirst || !globalLast) {
-			log.error "Found not graph data after scanning user artists"
+			log.error "Found no graph data after scanning user artists"
 			return null
 		}
 		
@@ -319,21 +319,18 @@ class GraphDataService {
 //			resultTransformer org.hibernate.Criteria.DISTINCT_ROOT_ENTITY	// only unique
 		}
 		
-		log.info "Users to update: ${users}"
-		log.info "Old user list: ${usersOld}"
+		log.info "autoUpdateUser will update: ${users}"
+//		log.info "Old user list: ${usersOld}"
 		
 		def success = true
 		
 		users.each { user ->
-			log.info "Fetching friends for user ${user.toString()}"
 			lastFmService.getFriends(user)
-			
-			log.info "Fetching top artists for user ${user}"
 			def artists = lastFmService.getUserAllTopArtists(user, 0)
 			
 			try {
 				artists.each { artist ->
-					log.info "Fetching tracks for ${user}: ${artist}"
+					log.trace "Fetching tracks for ${user}: ${artist}"
 					lastFmService.getArtistTracks(user, artist.name, false, 0)
 				}
 			} catch (Exception e) {
@@ -361,7 +358,7 @@ class GraphDataService {
 		
 		graphs.each { graph ->
 			def userArtistIds = JSON.parse(graph.userArtists)
-			log.info "user artist ids: ${userArtistIds}"
+//			log.info "user artist ids: ${userArtistIds}"
 			
 			def userArtists = []
 			userArtistIds.each { it ->

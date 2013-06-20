@@ -21,7 +21,6 @@ class GraphController {
 	}
 	
     def setup(String user) {
-		log.info "params: ${params}"
 		def friends
 		def topArtists
 		
@@ -59,19 +58,14 @@ class GraphController {
 	}
 	
 	def search(String user, String artist) {
-//		log.info "search params: ${params}"
 		def usernameList = user.tokenize()
 		Set userList = []
 		
 		for(String username : usernameList) {
-//		usernameList.each {
 			def userInstance = User.findByUsername(username)
 			if (!userInstance) {
 				log.info "Didn't find user with username ${user}"
 				userInstance = new User(username: username).save(flush: true, failOnError: true)
-//				flash.message = "Didn't find user with username ${user}"
-//				redirect(action: "setup")
-//				return
 			}
 			userList.add(userInstance)
 		}
@@ -113,8 +107,6 @@ class GraphController {
 			redirect(action: "setup")
 			return
 		}
-		
-		
 		
 //		def startDate = params.startDate ? params.date('startDate', "MM/dd/yyyy") : null
 //		def endDate = params.endDate ? params.date('endDate', "MM/dd/yyyy") : null
@@ -190,7 +182,6 @@ class GraphController {
 	}
 	
 	def ajaxGraphData = {
-		//Long artistId	// if there's only 1 artist
 		Boolean removeOutliers = params.removeOutliers == "true"
 		def userIdList = []
 		def userList = []
@@ -200,7 +191,6 @@ class GraphController {
 		def userArtistList = []
 		
 		def by = params.by ? params.by as int : graphDataService.kByUser
-//		log.info "params.by: ${params.by}, by: ${by}"
 
 		// users		
 		params.each {
@@ -228,7 +218,6 @@ class GraphController {
 				return a <=> b
 			}
 			
-//			log.info "sub: ${a.key.substring(2, a.key.size())}"
 			return (a.key.substring(2, a.key.size()) as long) <=> (b.key.substring(2, b.key.size()) as long)
 		}
 		
@@ -250,7 +239,7 @@ class GraphController {
 			return [error: "No artists found"]
 		} 
 		
-		log.info "Getting tracks..."
+		log.trace "Getting tracks..."
 		GParsPool.withPool {
 			userList.eachParallel { user ->
 				GParsPool.withPool {
@@ -265,7 +254,7 @@ class GraphController {
 			artistList.each { artist ->
 				def userArtist = UserArtist.findByUserAndArtist(user, artist)
 				if (!userArtist) {
-					log.info "User ${user} has no scrobbles for artist ${artist}"
+					log.trace "User ${user} has no scrobbles for artist ${artist}"
 				} else {
 					userArtistList.add(userArtist)
 					userArtist.lastGraphed = new Date()
@@ -298,7 +287,7 @@ class GraphController {
 		def startDate = params.startDate ? params.date('startDate', "MM/dd/yyyy") : null
 		def endDate = params.endDate ? params.date('endDate', "MM/dd/yyyy") : null
 		
-		log.info "Getting graph data"
+		log.trace "Getting graph data"
 		def chartdata = graphDataService.getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId)
 		if (!chartdata) {
 			log.error "getGraphData returned no data"
@@ -307,7 +296,7 @@ class GraphController {
 			return
 		}
 		
-		log.info "rendering page"
+		log.trace "rendering page"
 		
 		def theData = [chartdata:chartdata]
 		render theData as JSON

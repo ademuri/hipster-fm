@@ -29,6 +29,15 @@
 						<span class="property-value" aria-labelledby="artist-label"><g:link controller="artist" action="show" id="${artistInstance.artist.id}">${artistInstance.artist?.toString()}</g:link></span>
 				</g:if>
 				
+				<g:if test="${artistInstance?.user}">
+				<li class="fieldcontain">
+					<span id="user-label" class="property-label"><g:message code="artist.user.label" default="User" /></span>
+					
+						<span class="property-value" aria-labelledby="user-label"><g:link controller="user" action="show" id="${artistInstance?.user?.id}">${artistInstance?.user?.encodeAsHTML()}</g:link></span>
+					
+				</li>
+				</g:if>
+				
 				<g:if test="${artistInstance?.albums}">
 				<li class="fieldcontain">
 					<span id="albums-label" class="property-label"><g:message code="artist.albums.label" default="Albums" /></span>
@@ -40,15 +49,6 @@
 				</li>
 				</g:if>
 				
-				<g:if test="${artistInstance?.user}">
-				<li class="fieldcontain">
-					<span id="user-label" class="property-label"><g:message code="artist.user.label" default="User" /></span>
-					
-						<span class="property-value" aria-labelledby="user-label"><g:link controller="user" action="show" id="${artistInstance?.user?.id}">${artistInstance?.user?.encodeAsHTML()}</g:link></span>
-					
-				</li>
-				</g:if>
-
 				<g:if test="${artistInstance?.tracks}">
 				<li class="fieldcontain">
 					<span id="tracks-label" class="property-label"><g:message code="artist.tracks.label" default="Tracks" /></span>
@@ -63,7 +63,7 @@
 				<li class="fieldcontain">
 					<g:each in="${UserArtist.rankNames}">
 						<g:if test='${artistInstance."isTop${it}" }'>
-							<span id="top${it}Rank-label" class="property-label">${it} rank</span>
+							<span id="top${it}Rank-label" class="property-label">${it} rank:</span>
 							<span class="property-value" aria-labelledby="top${it}Rank-label">${artistInstance."top${it}Rank"}</span>
 						</g:if>
 					</g:each>
