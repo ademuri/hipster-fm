@@ -43,7 +43,7 @@
 			
 				<g:if test="${artistInstance?.userArtists}">
 				<li class="fieldcontain">
-					<span id="userArtists-label" class="property-label"><g:message code="artist.userArtists.label" default="Users" /></span>
+					<span id="userArtists-label" class="property-label"><g:message code="artist.userArtists.label" default="User Artists" /></span>
 					
 						<g:each in="${artistInstance.userArtists}" var="u">
 						<span class="property-value" aria-labelledby="userArtists-label"><g:link controller="userArtist" action="show" id="${u.id}">${u?.user.username}</g:link></span>
