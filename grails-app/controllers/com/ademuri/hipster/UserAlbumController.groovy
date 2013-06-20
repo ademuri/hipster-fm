@@ -16,26 +16,21 @@ class UserAlbumController {
 		def list
         params.max = Math.min(max ?: 10, 100)
 		
-		if (params?.sort == 'lastId') {
-			// lastId is a transient property, so Hibernate freaks out if we try to sort by it
-			log.info "sort by lastId"
+		if (params?.sort == 'lastId' || params?.sort == 'name') {
+			// lastId and name are transient properties, so Hibernate freaks out if we try to sort by them
 			def newParams = params.findAll {
 				!(it.key == 'sort')
 			}
-			log.info "params: ${newParams}"
 			list = UserAlbum.list(newParams)
+			
 			list.sort {
 				it.lastId
 			}
 			if (params.order == 'desc') {
 				list.reverse(true)
 			}
-			
-			
 		} else {
-			log.info "normal sort"
 			list = UserAlbum.list(params)
-			log.info "list: ${list}"
 		}
 		
         [albumInstanceList: list, albumInstanceTotal: UserAlbum.count()]
