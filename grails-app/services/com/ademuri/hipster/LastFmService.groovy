@@ -7,10 +7,12 @@ import com.ademuri.hipster.UserArtist
 import com.ademuri.hipster.Track
 import com.ademuri.hipster.User
 import java.text.SimpleDateFormat
+import java.util.concurrent.locks.ReentrantLock
 
 import groovy.time.TimeCategory;
 import groovy.time.TimeDuration;
 import groovyx.gpars.GParsPool
+import org.springframework.transaction.annotation.Transactional
 
 class LastFmService {
 	
@@ -102,6 +104,7 @@ class LastFmService {
 		}
 	}
 	
+	@Transactional
 	def Artist getArtist(name) {
 		def artist = Artist.findByName(name) 
 		if (artist) {
@@ -126,6 +129,7 @@ class LastFmService {
 		return artist
 	}
 	
+	@Transactional
 	def getFriends(User origUser) {
 		def today = new Date()
 		if (origUser.friendsLastSynced && origUser.friendsLastSynced > (today-7)) {
@@ -180,12 +184,6 @@ class LastFmService {
 		}
 	}
 	
-	// thread safe: pass IDs, not instances
-	int getArtistTracksSafe(userId, artistName, force = false) {
-		def user = User.get(userId)
-		return getArtistTracks(user, artistName, force)
-	}
-	
 	def static cumInsertTime = new TimeDuration(0, 0, 0, 0)
 	def static cumDownloadTime =  new TimeDuration(0, 0, 0, 0)
 	def cumTracks = 0
@@ -200,245 +198,250 @@ class LastFmService {
 		log.info "User artists: ${cumUserArtists}"
 	}
 	
-	def syncing = [:]
-	
-	int getArtistTracks(user, rawArtistName, force = false, priority = 1) {
+	def volatile syncing = [:]
+	def volatile syncLock = new ReentrantLock()	// lock for changing the data structure
+	/**
+	 * Get scrobbles for a user and artist. Assumes artist already exists.
+	 * @param userId
+	 * @param artistId
+	 * @return
+	 */
+	def getArtistTracks(userId, artistId, force = false, priority = 1) {
 		
 		// make sure no-one else is already syncing
-		synchronized(syncing) {
-			if (syncing[user.name] && syncing[user.name][rawArtistName]) {
-				log.info "Another thread is already syncing this artist"
-				synchronized(syncing[user.name][rawArtistName]) {
-					syncing[user.name][rawArtistName].wait()
-				}
-				log.info "Other thread has been sync, returning"
-				return
-			} else {
-				// create the entry
-				if (!syncing[user.name]) {
-					syncing[user.name] = [:]
-				}
-				syncing[user.name][rawArtistName] = true
+		syncLock.lock()
+		if (syncing[userId] && syncing[userId][artistId] && syncing[userId][artistId].isLocked()) {
+			log.info "Another thread is already syncing this artist"
+			syncLock.unlock()
+			syncing[userId][artistId].lock()
+			syncing[userId][artistId].unlock()
+//			Thread.sleep(1000)
+			log.info "Other thread has been synced, returning"
+			return 1
+		} else {
+			// create the entry
+			if (!syncing[userId]) {
+				syncing[userId] = [:]
 			}
+			syncing[userId][artistId] = new ReentrantLock()
+			syncing[userId][artistId].lock()
+			syncLock.unlock()
 		}
 		
-		def existingArtist = Artist.findByName(rawArtistName)
-		def cutoffDate = (new Date())-7
-		def cutoffTS = cutoffDate.toTimestamp()
-		
-		def lastSynced = existingArtist ? UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced : null
-		
-		if (!force && (existingArtist && UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced > cutoffDate)
-			|| (user.notFoundLastSynced[rawArtistName] && user.notFoundLastSynced[rawArtistName].after(cutoffTS))) {
-//			log.info "Not syncing ${rawArtistName} for ${user}, synced recently"
-			return 0
-		}
-		log.info "Getting artist tracks for ${user}, ${rawArtistName}"
-			
-		def syncFromDate = lastSynced ? lastSynced - 16 : null		// if we've synced before, sync for 15 days from the last day
-		// last.fm lets you sync back up to 2 weeks, so this should give us 2 days of margin	
-		
-		def query = [
-			method: 'user.getartisttracks',
-			user: user.username,
-			artist: rawArtistName,
-			]
-		
-		def downloadTime = new Date()
-		
-		def data = queryApi(query, -1, priority)
-		def success = true			// if we fail but can get most data, throw an exception after we commit the transaction so we save partial data
-		def failMessage = ""
-		
-		if (data?.error) {
-			log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
-			throw new LastFmException("Got error ${data.error}, message '${data?.message}' for query ${query}")
-			return 0
-		}
-		
-		if (data.artisttracks?.items && data.artisttracks?.items.toInteger() == 0) {
-			log.warn "Found no results for user ${user}, artist ${rawArtistName}"
-			user.notFoundLastSynced[rawArtistName] = new Date()
-			user.save(failOnError: true, flush: true)
-//			user.merge(failOnError: true, flush: true)
-			return 0
-		}
-		
-		def tracks = data.artisttracks.track
-		// if there's only 1 track, make it into a list
-		if (!tracks[0]?.artist) {
-			log.info "Making a list"
-			tracks = [tracks]
-		}
-		
-		// grab the earliest scrobbles
-		def paging = data.artisttracks."@attr"
-//		log.info "Got ${paging.totalPages} pages for search ${rawArtistName}"
-
-		if (paging?.totalPages?.toInteger() > 1) {		
-			GParsPool.withPool {
-				(2..paging.totalPages.toInteger()).eachParallel { i ->
-					def newquery =  [
-						method: 'user.getartisttracks',
-						user: user.username,
-						artist: rawArtistName,
-						]
-					newquery["page"] = i
-					data = queryApi(newquery, -1, priority)
-					if (!data?.artisttracks) {
-						log.error "Didn't get track data for page ${i}"
-						log.error "data: ${data}"
-						success = false
-						failMessage += "Didn't get track data for page ${i}, data: ${data}; "
-						return 	// closure, so skip this page
-					}
-					def trackList = data.artisttracks.track
-					if (!trackList[0]?.artist) {
-						log.info "Making a list"
-						trackList = [trackList]
-					}
-					trackList.each {
-						tracks.push(it)
-					}
-				}
-			}
-		}
-		
-		log.info "Found ${tracks.size()} tracks."
-//		log.info tracks
-		
-		def duration = TimeCategory.minus(new Date(), downloadTime)
-		log.warn "Download time: ${duration}"
-		cumDownloadTime += duration
-		log.warn "Cumulative download time: ${cumDownloadTime}"
-		
-		
-		def artistName = tracks[0]?.artist?."#text"
-		
-		def insertTime = new Date()
-		
-		def artistId = tracks[0]?.artist?.mbid
-		if (!artistId) {
-			log.warn "Search for ${rawArtistName} returned no artist id"
-			return 0
-		}
-		
-		def theArtist = Artist.findByLastId(artistId) ?: new Artist(name: artistName, lastId: artistId).save(flush: true, failOnError: true)
-		def userArtist = UserArtist.findByUserAndArtist(user, theArtist) ?: new UserArtist(user: user, artist: theArtist).save(flush: true, failOnError: true)
-		theArtist.addToUserArtists(userArtist)
-		
-		// example: 19 Jun 2012, 21:16
-		def dateFormat = new SimpleDateFormat("dd MMM yyyy, kk:mm")
-		
-		def existingTracks = Track.countByArtist(userArtist) > 0	// don't check for duplicate tracks if none exist
-		def albums
-		def albumMap
-		
-		
-		Album.withTransaction {
-			// do albums stuff efficiently - create them all here, then add tracks to them as needed
-			albums = userArtist.albums ?: []
-			def rawAlbums = tracks.collect { it.album } as Set
-			albumMap = [:]
-			log.info "Got ${rawAlbums.size()} albums"
-			
-			rawAlbums.each { rawAlbum ->
-				if (!rawAlbum || rawAlbum.mbid == "") {
-					albumMap[""] = null
-				}
-				else if (albums.find { it.lastId == rawAlbum.mbid } == null) {
-	//				log.info "album ${rawAlbum}"
-					// create the album
-	//				log.info "Id ${rawAlbum.mbid}, name: ${rawAlbum.'#text'}"
-					def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: theArtist).save(failOnError: true, flush: true)
-					def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true, flush: true)
-					album.addToUserAlbums(userAlbum).save(failOnError: true, flush: true)
-	//				log.info "album: ${album}, userAlbums: ${album.userAlbums}"
-					albums.add(userAlbum)
-				}
-			}
-			
-			
-			albums.each {
-				albumMap[it.lastId] = it
-			}
-		}
-
-		def count = 0	// clear the session every so often
-
-		Track.withTransaction {
-			def lastExtDate
-			def lastTrack = Track.withCriteria {
-				maxResults(1)
-				order('date', 'desc')
-				artist {
-					eq("id", userArtist.id)
-				}
-			}
-		
-			if (lastTrack.size() == 0) {
-				log.info "No previous tracks found"
-			} else {
-	//			log.info "Last track: ${lastTrack.get(0).date}"
-				lastExtDate = lastTrack.get(0).date	
-			}
-			
-			tracks.each {
-				if (!it?.date) {
-					log.warn "Invalid date!: ${it}"
-					success = false
-					failMessage += "Invalid date!: ${it}\n"
-					return	//skip this track
+		def error
+	
+		try {
+			Artist.withTransaction { status ->
+				def user = User.get(userId)
+				def existingArtist = Artist.get(artistId)
+				if (!existingArtist) {
+					log.error "Artist does not exist with id: ${artistId}"
+					throw new IllegalArgumentException("Artist does not exist with id: ${artistId}")	
 				}
 				
-				cumTracks++
+				def cutoffDate = (new Date())-7
+				def cutoffTS = cutoffDate.toTimestamp()
 				
-				def trackId = it.mbid
-				def date = dateFormat.parse(it.date."#text")
-				if (syncFromDate && date < syncFromDate) {
-	//				log.info "Ignoring track with date ${date}, before cutoff ${syncFromDate}"
-					return
+				def lastSynced = existingArtist ? UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced : null
+				
+				if (!force && (existingArtist && UserArtist.findByUserAndArtist(user, existingArtist)?.lastSynced > cutoffDate)
+					|| (user.notFoundLastSynced[existingArtist.name] && user.notFoundLastSynced[existingArtist.name].after(cutoffTS))) {
+					return 0
 				}
-				def track
+				log.info "Getting artist tracks for ${user}, ${existingArtist.name}"
+					
+				def syncFromDate = lastSynced ? lastSynced - 16 : null		// if we've synced before, sync for 15 days from the last day
+				// last.fm lets you sync back up to 2 weeks, so this should give us 2 days of margin	
 				
-				if (existingTracks || date > lastExtDate) {
-	//				log.info "Searching for existing tracks name: ${it.name}, date: ${date}"
-					track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+				def query = [
+					method: 'user.getartisttracks',
+					user: user.username,
+					artist: existingArtist.name,
+					]
+				
+				def downloadTime = new Date()
+				
+				def data = queryApi(query, -1, priority)
+				def success = true			// if we fail but can get most data, throw an exception after we commit the transaction so we save partial data
+				def failMessage = ""
+				
+				if (data?.error) {
+					log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
+					throw new LastFmException("Got error ${data.error}, message '${data?.message}' for query ${query}")
+					return 0
+				}
+				
+				if (data.artisttracks?.items && data.artisttracks?.items.toInteger() == 0) {
+					log.warn "Found no results for user ${user}, artist ${existingArtist.name}"
+					user.notFoundLastSynced[existingArtist.name] = new Date()
+					user.save(failOnError: true, flush: true)
+					return 0
+				}
+				
+				def tracks = data.artisttracks.track
+				// if there's only 1 track, make it into a list
+				if (!tracks[0]?.artist) {
+					log.info "Making a list"
+					tracks = [tracks]
+				}
+				
+				// grab the earliest scrobbles
+				def paging = data.artisttracks."@attr"
+				if (paging?.totalPages?.toInteger() > 1) {		
+					GParsPool.withPool {
+						(2..paging.totalPages.toInteger()).eachParallel { i ->
+							def newquery =  [
+								method: 'user.getartisttracks',
+								user: user.username,
+								artist: existingArtist.name,
+								]
+							newquery["page"] = i
+							data = queryApi(newquery, -1, priority)
+							if (!data?.artisttracks) {
+								log.error "Didn't get track data for page ${i}"
+								log.error "data: ${data}"
+								success = false
+								failMessage += "Didn't get track data for page ${i}, data: ${data}; "
+								return 	// closure, so skip this page
+							}
+							def trackList = data.artisttracks.track
+							if (!trackList[0]?.artist) {
+								log.info "Making a list"
+								trackList = [trackList]
+							}
+							trackList.each {
+								tracks.push(it)
+							}
+						}
+					}
+				}
+				
+				log.info "Found ${tracks.size()} tracks."
+				
+				def duration = TimeCategory.minus(new Date(), downloadTime)
+				log.warn "Download time: ${duration}"
+				cumDownloadTime += duration
+				log.warn "Cumulative download time: ${cumDownloadTime}"
+				
+				
+				def artistName = tracks[0]?.artist?."#text"
+				def insertTime = new Date()
+				
+				def artistLastId = tracks[0]?.artist?.mbid
+				if (!artistLastId) {
+					log.warn "Search for ${existingArtist.name} returned no artist id"
+					return 0
+				}
+				
+				def theArtist = Artist.get(artistId) ?: new Artist(name: artistName, lastId: artistLastId).save(flush: true, failOnError: true)
+				def userArtist = UserArtist.findByUserAndArtist(user, theArtist) ?: new UserArtist(user: user, artist: theArtist).save(flush: true, failOnError: true)
+				theArtist.addToUserArtists(userArtist)
+				
+				// example: 19 Jun 2012, 21:16
+				def dateFormat = new SimpleDateFormat("dd MMM yyyy, kk:mm")
+				
+				def existingTracks = Track.countByArtist(userArtist) > 0	// don't check for duplicate tracks if none exist
+				def albums
+				def albumMap
+				
+				
+				// do albums stuff efficiently - create them all here, then add tracks to them as needed
+				albums = userArtist.albums ?: []
+				def rawAlbums = tracks.collect { it?.album } as Set
+				albumMap = [:]
+				log.info "Got ${rawAlbums.size()} albums"
+				
+				rawAlbums.each { rawAlbum ->
+					if (!rawAlbum || rawAlbum.mbid == "") {
+						albumMap[""] = null
+					}
+					else if (albums.find { it.lastId == rawAlbum.mbid } == null) {
+						// create the album
+						def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: theArtist).save(failOnError: true, flush: true)
+						def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true, flush: true)
+						album.addToUserAlbums(userAlbum).save(failOnError: true, flush: true)
+						albums.add(userAlbum)
+					}
+				}
+				
+				
+				albums.each {
+					albumMap[it.lastId] = it
+				}
+		
+				def count = 0	// clear the session every so often
+		
+				def lastExtDate
+				def lastTrack = Track.withCriteria {
+					maxResults(1)
+					order('date', 'desc')
+					artist {
+						eq("id", userArtist.id)
+					}
+				}
+			
+				if (lastTrack.size() == 0) {
+					log.info "No previous tracks found"
 				} else {
-	//				log.info "name: ${it.name}, date: ${date}"
-					track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+					lastExtDate = lastTrack.get(0).date	
 				}
-				userArtist.addToTracks(track)
+				
+				tracks.each {
+					if (!it?.date) {
+						log.warn "Invalid date!: ${it}"
+						success = false
+						failMessage += "Invalid date!: ${it}\n"
+						return	//skip this track
+					}
+					
+					cumTracks++
+					
+					def trackId = it.mbid
+					def date = dateFormat.parse(it.date."#text")
+					if (syncFromDate && date < syncFromDate) {
+						return
+					}
+					def track
+					
+					if (existingTracks || date > lastExtDate) {
+						track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+					} else {
+						track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+					}
+				}
+				
+				userArtist.save(flush: true)
+					
+				duration = TimeCategory.minus(new Date(), insertTime)
+				log.warn "Insert time: ${duration}"
+				cumInsertTime += duration
+				log.warn "Cumulative insert time: ${cumInsertTime}"
+				cumUserArtists++
+				log.warn "Cum user artists: ${cumUserArtists}, tracks: ${cumTracks}"
+				
+				log.info "Done creating tracks"
+				
+				
+				if (!success) {
+					// we should have committed all changes we've made, so throw an exception to tell our caller something went wrong
+					// 	additionally, don't update lastSynced (for now)
+					//		at some point, we should add an errorLastSynced (or similar) since last.fm caches the replies for a little while
+					error =  new LastFmException(failMessage)
+				} else {
+					userArtist.lastSynced = new Date()
+				}
+			}
+		} finally {
+			synchronized(syncing[userId][artistId]) {
+				syncing[userId][artistId].unlock()
 			}
 		}
-			
-		duration = TimeCategory.minus(new Date(), insertTime)
-		log.warn "Insert time: ${duration}"
-		cumInsertTime += duration
-		log.warn "Cumulative insert time: ${cumInsertTime}"
-		cumUserArtists++
-		log.warn "Cum user artists: ${cumUserArtists}, tracks: ${cumTracks}"
 		
-		log.info "Done creating tracks"
-		
-		if (!success) {
-			// we should have committed all changes we've made, so throw an exception to tell our caller something went wrong
-			// 	additionally, don't update lastSynced (for now)
-			//		at some point, we should add an errorLastSynced (or similar) since last.fm caches the replies for a little while
-			throw new LastFmException(failMessage)
-		}
-
-		userArtist.lastSynced = new Date()
-		
-		// note: ALWAYS ACQUIRE LOCKS IN THIS ORDER to prevent deadlock
-		synchronized(syncing) {
-			synchronized(syncing[user.name][rawArtistName]) {
-				syncing[user.name][rawArtistName].notifyAll()
-			}
-			syncing[user.name][rawArtistName] = false	// TODO: we should delete this instead
+		if (error) {
+			throw error
 		}
 		
-		return tracks.size()
+		return 0
 	}
 	
 	def getUserAllTopArtists(user, priority) {
@@ -450,6 +453,7 @@ class LastFmService {
 		return artists
 	}
 	
+	@Transactional
 	def getUserTopArtists(userId, interval = "3month", priority = 1) {
 		def user = User.lock(userId)
 		

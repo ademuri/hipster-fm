@@ -5,8 +5,7 @@ import com.ademuri.hipster.GraphDataCache;
 import com.ademuri.hipster.Track;
 import com.ademuri.hipster.User;
 
-import org.grails.datastore.mapping.query.api.Criteria;
-import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.Criteria;
 import org.springframework.transaction.annotation.Transactional
 import com.ademuri.hipster.UserArtist
 
@@ -24,16 +23,54 @@ class GraphDataService {
 	def lastFmService
 
 	@Transactional
-    def getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize,
+    def synchronized getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize,
 			removeOutliers = false, userMaxY, by = kByUser, albumId = null, force = false) {
 		def data = []
 		def users = []
 		def theUserArtists = []
 		def globalFirst, globalLast
 		def newTickSize, newIntervalSize
+		def userArtistList = []
+		def userArtistIdList = []
 		
-		def idList = userArtistList.id.sort()
+		userIdList.each { userId ->
+			artistIdList.each { artistId ->
+				def thing = UserArtist.withCriteria {
+					createAlias 'user', '_user'
+					createAlias 'artist', '_artist'
+					eq '_user.id', userId as Long
+					eq '_artist.id', artistId as Long
+					projections {
+						property 'id'
+					}
+					resultTransformer Criteria.DISTINCT_ROOT_ENTITY
+				}
+			
+				def userArtistId
+				if (thing.size() > 0) {
+					userArtistId = thing.get(0)
+				}
+				
+				if (!userArtistId) {
+					log.trace "User ${userId} has no scrobbles for artist ${artistId}"
+				} else {
+//					log.info "id: ${userArtistId}"
+					userArtistIdList.add(userArtistId)
+				}
+			}
+		}
 		
+		userArtistIdList.each { userArtistId ->
+			def userArtist = UserArtist.get(userArtistId)
+			if (userArtist) {
+				userArtistList.push(userArtist)
+			}
+		}
+		
+		if (userArtistList.size() == 0) {
+			log.warn "No scrobbles found for user artist ids ${userArtistIdList}"
+			return null
+		}
 		
 			def allCache = GraphDataCache.all
 			
@@ -56,7 +93,7 @@ class GraphDataService {
 					compare("groupBy", by as Long)
 					compare("albumId", albumId as Long)
 					compare("removeOutliers", removeOutliers)
-					compare("userArtists", (idList as JSON).toString())
+					compare("userArtists", (userArtistIdList as JSON).toString())
 				}
 			}
 			
@@ -285,7 +322,7 @@ class GraphDataService {
 		
 		def cache = new GraphDataCache(startDate: startDate, endDate: endDate, tickSize: tickSize, intervalSize: intervalSize, 
 				userMaxY: userMaxY, groupBy: by, albumId: albumId, removeOutliers: removeOutliers, chartdataJSON: "",
-				userArtists: (idList as JSON).toString())
+				userArtists: (userArtistIdList as JSON).toString())
 		cache.chartdata = chartdata
 		cache.save(failOnError: true, flush: true)
 //		log.info "Save to cache ${cache}"
@@ -331,7 +368,7 @@ class GraphDataService {
 			try {
 				artists.each { artist ->
 					log.trace "Fetching tracks for ${user}: ${artist}"
-					lastFmService.getArtistTracks(user, artist.name, false, 0)
+					lastFmService.getArtistTracks(user.id, artist.id, false, 0)
 				}
 			} catch (Exception e) {
 				log.warn "Exception occurred while fetching artists for ${user}"

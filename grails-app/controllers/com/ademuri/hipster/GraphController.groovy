@@ -5,21 +5,25 @@ import java.text.DateFormat;
 import grails.converters.JSON
 import groovyx.gpars.GParsPool
 import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
+import org.hibernate.Criteria;
 
 import com.ademuri.hipster.Album;
 import com.ademuri.hipster.Artist;
 import com.ademuri.hipster.User;
 import com.ademuri.hipster.UserArtist;
+import org.springframework.transaction.annotation.Transactional
 
 class GraphController {
 
 	def lastFmService
 	def graphDataService
+	def propertyInstanceMap = org.codehaus.groovy.grails.plugins.DomainClassGrailsPlugin.PROPERTY_INSTANCE_MAP
 	
 	def index() {
 		redirect(action: 'setup')
 	}
 	
+	@Transactional
     def setup(String user) {
 		def friends
 		def topArtists
@@ -57,6 +61,7 @@ class GraphController {
 		return newParams
 	}
 	
+	@Transactional
 	def search(String user, String artist) {
 		def usernameList = user.tokenize()
 		Set userList = []
@@ -143,6 +148,7 @@ class GraphController {
 		redirect(action: "show", params: newParams)
 	}
 	
+	@Transactional
 	def show() {
 		if (params["_action_show"]) {
 			params.remove("_action_show")
@@ -181,14 +187,14 @@ class GraphController {
 		params
 	}
 	
+	def sessionFactory
+	
 	def ajaxGraphData = {
 		Boolean removeOutliers = params.removeOutliers == "true"
 		def userIdList = []
-		def userList = []
 		def artistUnsortedList = []	// grab key-value pairs, then sort them
 		def artistIdList = []
-		def artistList = []
-		def userArtistList = []
+		def userArtistIdList = []
 		
 		def by = params.by ? params.by as int : graphDataService.kByUser
 
@@ -200,11 +206,6 @@ class GraphController {
 		}
 		
 		userIdList = userIdList.sort()
-		
-		userIdList.each {
-			def userInstance = User.get(it)
-			userList.push(userInstance)
-		}
 		
 		// artists
 		params.each {
@@ -225,42 +226,30 @@ class GraphController {
 			artistIdList.push(it.value)
 		}
 		
-		artistIdList.each {
-			def artistInstance = Artist.get(it)
-			if (!artistInstance) {
-				log.warn "Couldn't find artist with id ${it}"
-			} else {
-				artistList.push(artistInstance)
-			}
-		}
-		
-		// if we don't have any artists, quit
-		if (artistList.size() == 0) {
-			return [error: "No artists found"]
-		} 
-		
+		def out
 		log.trace "Getting tracks..."
 		GParsPool.withPool {
-			userList.eachParallel { user ->
+			userIdList.eachParallel { userId ->
 				GParsPool.withPool {
-					artistList.eachParallel { artist ->
-						lastFmService.getArtistTracksSafe(user.id, artist.name) // TODO: probably shouldn't pass name
+					artistIdList.eachParallel { artistId ->
+						Track.withNewSession {
+							out = lastFmService.getArtistTracks(userId, artistId)
+						}
+						log.info "return from LFMS: ${out}" 
 					}
 				}
 			}
 		}
-		
-		userList.each { user ->
-			artistList.each { artist ->
-				def userArtist = UserArtist.findByUserAndArtist(user, artist)
-				if (!userArtist) {
-					log.trace "User ${user} has no scrobbles for artist ${artist}"
-				} else {
-					userArtistList.add(userArtist)
-					userArtist.lastGraphed = new Date()
-				}
-			}
+		// this is a hack, but we want the request actually fetching data to flush first (and give it time to complete)
+		if (out == 1) {
+			Thread.sleep(500)
 		}
+		
+		def session = sessionFactory.currentSession
+		session.flush()
+		session.clear()
+		propertyInstanceMap.get().clear()
+		log.info "done flushing: ${out}"
 		
 		def albumId
 		if (params["albumId"]) {
@@ -288,7 +277,10 @@ class GraphController {
 		def endDate = params.endDate ? params.date('endDate', "MM/dd/yyyy") : null
 		
 		log.trace "Getting graph data"
-		def chartdata = graphDataService.getGraphData(userArtistList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId)
+		def chartdata
+//		Track.withNewSession {
+			chartdata = graphDataService.getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId)
+//		}
 		if (!chartdata) {
 			log.error "getGraphData returned no data"
 			def error = [error: "No scrobbles found"]
@@ -301,6 +293,7 @@ class GraphController {
 		def theData = [chartdata:chartdata]
 		render theData as JSON
 	}
+	
 	
 	def fetchTopArtists() {
 		graphDataService.autoUpdateUsers()

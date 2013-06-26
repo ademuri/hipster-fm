@@ -118,7 +118,7 @@ class ArtistController {
 		
 		def users = User.findAll()
 		users.each {
-			lastFmService.getArtistTracks(it, artistInstance.name)
+			lastFmService.getArtistTracks(it, id)
 		}
 		
 		flash.message = "Synced successfully"

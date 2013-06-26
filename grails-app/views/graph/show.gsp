@@ -50,7 +50,9 @@
 					console.log("response: " + response.responseText);
 					responseObject = JSON.parse(response.responseText);
 					responseObject.date = new Date();
-					store.set(JSON.stringify(params), responseObject);
+					<g:if env="production">
+						store.set(JSON.stringify(params), responseObject);
+					</g:if>
 				}
 				
 				if (responseObject.error) {
@@ -108,14 +110,16 @@
 					$.ajax({type:'POST',data:{fullUrl: window.location.pathname + window.location.search}, url:'${createLink(controller: 'shortLink', action: 'ajaxShortenUrl')}',success:showShortened,error:errorFunc});
 				});
 			
-				var storedData = store.get(JSON.stringify(params));
-
-				// cache result for 1 day
-				if (storedData && ((new Date()) - (new Date(storedData.date))) < ONE_DAY) {
-					responseObject = storedData;
-					graph();
-					return
-				}
+				<g:if env="production">
+					var storedData = store.get(JSON.stringify(params));
+	
+					// cache result for 1 day
+					if (storedData && ((new Date()) - (new Date(storedData.date))) < ONE_DAY) {
+						responseObject = storedData;
+						graph();
+						return
+					}
+				</g:if>
 
 				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};
 			});
