@@ -301,7 +301,7 @@ class GraphController {
 				chartdata = getData()
 			}
 			catch(StaleObjectStateException f) {
-				chartData = null
+				chartdata = null
 			}
 		}
 		
