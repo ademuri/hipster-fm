@@ -6,6 +6,7 @@ import grails.converters.JSON
 import groovyx.gpars.GParsPool
 import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
 import org.hibernate.Criteria;
+import org.hibernate.StaleObjectStateException
 
 import com.ademuri.hipster.Album;
 import com.ademuri.hipster.Artist;
@@ -195,6 +196,12 @@ class GraphController {
 		def artistUnsortedList = []	// grab key-value pairs, then sort them
 		def artistIdList = []
 		def userArtistIdList = []
+		def flush = {
+			def session = sessionFactory.currentSession
+			session.flush()
+			session.clear()
+			propertyInstanceMap.get().clear()
+		}
 		
 		def by = params.by ? params.by as int : graphDataService.kByUser
 
@@ -245,10 +252,7 @@ class GraphController {
 			Thread.sleep(500)
 		}
 		
-		def session = sessionFactory.currentSession
-		session.flush()
-		session.clear()
-		propertyInstanceMap.get().clear()
+		flush()
 		log.info "done flushing: ${out}"
 		
 		def albumId
@@ -277,10 +281,30 @@ class GraphController {
 		def endDate = params.endDate ? params.date('endDate', "MM/dd/yyyy") : null
 		
 		log.trace "Getting graph data"
+		def getData = {
+			graphDataService.getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId)
+		}
+		
 		def chartdata
-//		Track.withNewSession {
-			chartdata = graphDataService.getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId)
-//		}
+		try {
+			chartdata = getData()
+		} 
+		catch(StaleObjectStateException e) {
+			log.warn "Got stale object exception, trying again"
+			flush()
+			Thread.sleep(5000)
+			flush()
+			try {
+				flush()
+				Thread.sleep(5000)
+				flush()
+				chartdata = getData()
+			}
+			catch(StaleObjectStateException f) {
+				chartData = null
+			}
+		}
+		
 		if (!chartdata) {
 			log.error "getGraphData returned no data"
 			def error = [error: "No scrobbles found"]
