@@ -300,7 +300,7 @@ class GraphController {
 					Thread.sleep(5000)
 					flush()
 				try {
-					chartData = getData()
+					chartdata = getData()
 				}
 				catch(StaleObjectStateException g) {
 					chartdata = null
