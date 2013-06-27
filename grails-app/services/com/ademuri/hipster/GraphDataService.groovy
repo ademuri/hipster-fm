@@ -23,7 +23,7 @@ class GraphDataService {
 	def lastFmService
 
 	@Transactional
-    def synchronized getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize,
+    def getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize,
 			removeOutliers = false, userMaxY, by = kByUser, albumId = null, force = false) {
 		def data = []
 		def users = []

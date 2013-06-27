@@ -188,6 +188,19 @@ class GraphController {
 		params
 	}
 	
+	@Transactional
+	def heatmap() {
+		// for now, heatmap of 1 week
+		// data in format MTWRFSS, between 0 and 1, sums to 1
+	}
+	
+	def ajaxHeatmapData() {
+		def data = [0.1, 0, 0.2, 0.4, 0.05, 0.15, 0.1]
+		def r = [data: data]
+		
+		render r as JSON
+	}
+	
 	def sessionFactory
 	
 	def ajaxGraphData = {
