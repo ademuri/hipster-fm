@@ -122,7 +122,12 @@ class ShortLinkController {
 	}
 	
 	def ajaxShortenUrl(String fullUrl) {
-		log.info "shorten: ${fullUrl}"
+		if (fullUrl.size() <= 1) {
+			log.warn "Invalid URL: ${fullUrl}"
+			def data = [url: ""] 
+			render data as JSON
+			return
+		}
 		fullUrl = fullUrl.substring(1, fullUrl.length())
 		fullUrl = fullUrl.substring(fullUrl.indexOf('/'), fullUrl.length())
 		
@@ -130,7 +135,6 @@ class ShortLinkController {
 		if (!shortLinkInstance) {
 			shortLinkInstance = new ShortLink(fullUrl: fullUrl).save(failOnError: true)
 		}
-		log.info "shortUrl: ${shortLinkInstance.shortUrl}"
 		
 		def url = grailsLinkGenerator.serverBaseURL + "/s/" + shortLinkInstance.shortUrl
 		

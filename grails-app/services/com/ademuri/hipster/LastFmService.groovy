@@ -68,7 +68,7 @@ class LastFmService {
 					data = resp.getData()
 					if (data?.error && data.error != allowError) {
 						log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
-						if (data.error.toInteger() == 8) {
+						if (data.error == '' || data.error.toInteger() == 8) {
 							Thread.sleep(5000)
 							log.warn "Trying again"
 						} else {
