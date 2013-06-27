@@ -242,18 +242,16 @@ class GraphController {
 						Track.withNewSession {
 							out = lastFmService.getArtistTracks(userId, artistId)
 						}
-						log.info "return from LFMS: ${out}" 
 					}
 				}
 			}
 		}
 		// this is a hack, but we want the request actually fetching data to flush first (and give it time to complete)
 		if (out == 1) {
-			Thread.sleep(500)
+			Thread.sleep(1000)
 		}
 		
 		flush()
-		log.info "done flushing: ${out}"
 		
 		def albumId
 		if (params["albumId"]) {
@@ -295,13 +293,18 @@ class GraphController {
 			Thread.sleep(5000)
 			flush()
 			try {
-				flush()
-				Thread.sleep(5000)
-				flush()
 				chartdata = getData()
 			}
 			catch(StaleObjectStateException f) {
-				chartdata = null
+					flush()
+					Thread.sleep(5000)
+					flush()
+				try {
+					chartData = getData()
+				}
+				catch(StaleObjectStateException g) {
+					chartdata = null
+				}
 			}
 		}
 		
