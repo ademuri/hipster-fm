@@ -10,6 +10,7 @@
 	<body>
 		<div class="nav" role="navigation">
 			<ul>
+				<li><g:link class="setup" controller="graph" action="setupHeatmap">Setup Heatmap</g:link></li>
 				<li><g:link class="find" controller="user" action="find">Find user</g:link></li>
 				<li><g:link class="setup" controller="options" action="colors">Colors</g:link></li>
 				<g:if env="development">

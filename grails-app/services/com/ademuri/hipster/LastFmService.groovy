@@ -105,6 +105,21 @@ class LastFmService {
 	}
 	
 	@Transactional
+	def User getUser(name) {
+		def user = User.findByUsername(name)
+		if (user) {
+			return user
+		}
+		
+		if (checkIfUserExists(name)) {
+			user = new User(username: name).save(flush: true, failOnError: true)
+			return user
+		} else {
+			return null
+		}
+	}
+	
+	@Transactional
 	def Artist getArtist(name) {
 		def artist = Artist.findByName(name) 
 		if (artist) {

@@ -11,12 +11,16 @@ class Track {
 	String name
 	String lastId
 	Date date
+	Integer dayOfWeek
+	Integer hourOfDay
 	
 	Date dateCreated
 	
 	static mapping = {
 		sort "date"
 		autoTimestamp true
+		dayOfWeek formula: 'DAYOFWEEK(date)'
+		hourOfDay formula: 'HOUR(date)'
 	}
 	
     static constraints = {

@@ -16,6 +16,7 @@
 		<div class="nav" role="navigation">
 			<ul>
 				<li><g:link class="setup" controller="graph" action="setup">Setup graph</g:link></li>
+				<li><g:link class="setup" controller="graph" action="setupHeatmap">Setup Heatmap</g:link></li>
 				<li><g:link class="find" action="find">Find user</g:link></li>
 			</ul>
 		</div>
