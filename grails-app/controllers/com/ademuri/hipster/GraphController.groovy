@@ -20,6 +20,8 @@ class GraphController {
 	def graphDataService
 	def propertyInstanceMap = org.codehaus.groovy.grails.plugins.DomainClassGrailsPlugin.PROPERTY_INSTANCE_MAP
 	
+	def  heatmapTypes = ['DayAndHour', 'Day', 'Hour']
+	
 	def index() {
 		redirect(action: 'setup')
 	}
@@ -189,7 +191,7 @@ class GraphController {
 	}
 	
 	def setupHeatmap() {
-		
+		[heatmapTypes: heatmapTypes]
 	}
 	
 	def heatmapSearch() {
@@ -198,6 +200,11 @@ class GraphController {
 		
 		if (!userName || !artistName) {
 			flash.message = "Please specify a user and artist"
+			redirect(action: "setupHeatmap")
+			return
+		}
+		if (!params?.type) {
+			flash.message = "Please specify a type"
 			redirect(action: "setupHeatmap")
 			return
 		}
@@ -217,7 +224,7 @@ class GraphController {
 		}
 		
 		lastFmService.getArtistTracks(user.id, artist.id)
-		redirect(action: "heatmap", params: [u: user.id, a: artist.id])
+		redirect(action: "heatmap", params: [u: user.id, a: artist.id, type: params.type])
 	}
 	
 	@Transactional
@@ -261,24 +268,65 @@ class GraphController {
 		
 		
 		def data = []
-		(1..7).each { day ->
-			def criteria = Track.createCriteria()
-			def dataList = criteria.list {
-				eq('dayOfWeek', day)
-				projections {
-					createAlias('artist', '_artist')
-					eq('artist.id', userArtist.id)
-					groupProperty('hourOfDay')
-					rowCount()
+		if (params.type == 'DayAndHour') {
+			(1..7).each { day ->
+				def criteria = Track.createCriteria()
+				def dataList = criteria.list {
+					eq('dayOfWeek', day)
+					projections {
+						createAlias('artist', '_artist')
+						eq('artist.id', userArtist.id)
+						groupProperty('hourOfDay')
+						rowCount()
+					}
+				}
+				
+				dataList.each {
+					def point = [:]
+					point.day = day
+					point.hour = it[0]
+					point.count = it[1]
+					data << point
 				}
 			}
-			
-			dataList.each {
-				def point = [:]
-				point.day = day
-				point.hour = it[0]
-				point.count = it[1]
-				data << point
+		}
+		else if (params.type == 'Day') {
+			(1..7).each { day ->
+				def criteria = Track.createCriteria()
+				def dataList = criteria.list {
+					eq('dayOfWeek', day)
+					projections {
+						createAlias('artist', '_artist')
+						eq('artist.id', userArtist.id)
+						rowCount()
+					}
+				}
+				
+				dataList.each {
+					def point = [:]
+					point.day = day
+					point.count = it
+					data << point
+				}
+			}
+		} else if (params.type == 'Hour') {
+			(0..23).each { hour ->
+				def criteria = Track.createCriteria()
+				def dataList = criteria.list {
+					eq('hourOfDay', hour)
+					projections {
+						createAlias('artist', '_artist')
+						eq('artist.id', userArtist.id)
+						rowCount()
+					}
+				}
+				
+				dataList.each {
+					def point = [:]
+					point.hour = hour
+					point.count = it
+					data << point
+				}
 			}
 		}
 		

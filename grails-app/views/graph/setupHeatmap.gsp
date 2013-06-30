@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html>
 	<head>
@@ -25,29 +26,32 @@
 			<div id="setup-heatmap-form">
 				<g:form method="post" >
 					<fieldset class="form">
-					<div class="setup-group">
-						<div class="fieldcontain ${hasErrors(field: 'user', 'error')} ">
-							<label for="user">
-								User
-							</label>
-							<g:textField name="user" value="${user}"/>
-						</div>
-						
+						<div class="setup-group">
+							<div class="fieldcontain ${hasErrors(field: 'user', 'error')} ">
+								<label for="user">
+									User
+								</label>
+								<g:textField name="user" value="${user}"/>
+							</div>
+							
 							<div class="fieldcontain ${hasErrors(field: 'artist', 'error')} ">
 								<label for="artist">
 									Artist
 								</label>
 								<g:textField name="artist" value="${artistName}" />
 							</div>
+							
+							<div class="fieldcontain" ${hasErrors(field: 'type', 'error')} ">
+								<label for="type">Type</label>
+								<g:select name='type' from='${heatmapTypes}' />
+							</div>
 						</div>
-					</div>
+					</fieldset>
 					<fieldset class="buttons">
 						<g:actionSubmit class="submit" action="heatmapSearch" value="Submit" />
 					</fieldset>
 				</g:form>
-						
 			</div>
-		
 		</div>
 	</body>
 </html>
