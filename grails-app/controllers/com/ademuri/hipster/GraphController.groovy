@@ -195,60 +195,93 @@ class GraphController {
 	}
 	
 	def heatmapSearch() {
-		def userName = params?.user
-		def artistName = params?.artist
-		
-		if (!userName || !artistName) {
-			flash.message = "Please specify a user and artist"
-			redirect(action: "setupHeatmap")
-			return
-		}
-		if (!params?.type) {
-			flash.message = "Please specify a type"
-			redirect(action: "setupHeatmap")
-			return
-		}
-		
-		def user = lastFmService.getUser(userName)
-		def artist = lastFmService.getArtist(artistName)
-		
-		if (!artist) {
-			flash.message = "Artist not found: ${artistName}"
-		}
-		if (!user) {
-			flash.message = "User not found: ${userName}"
-		}
-		if (!user || !artist) {
-			redirect(action: "setupHeatmap")
-			return
+		def graphs = []
+		params.each {
+			if (it.key.startsWith("artist")) {
+				def graph = [:]
+				def theId = it.key.substring(6, it.key.length())
+				
+				graph.artist = it.value
+				graph.user = params["user${theId}"]
+				graph.type = params["type${theId}"]
+				graph.index = theId as Long
+				
+				graphs.push(graph)
+			}
 		}
 		
-		lastFmService.getArtistTracks(user.id, artist.id)
-		redirect(action: "heatmap", params: [u: user.id, a: artist.id, type: params.type])
+		def newParams = [:]
+		for(def i=0; i<graphs.size(); i++) {
+			def graph = graphs[i]
+			def userName = graph.user
+			def artistName = graph.artist
+			
+			if (!userName || !artistName) {
+				flash.message = "Please specify a user and artist"
+				redirect(action: "setupHeatmap")
+				return
+			}
+			if (!graph.type) {
+				flash.message = "Please specify a type"
+				redirect(action: "setupHeatmap")
+				return
+			}
+			
+			def user = lastFmService.getUser(userName)
+			def artist = lastFmService.getArtist(artistName)
+			
+			if (!artist) {
+				flash.message = "Artist not found: ${artistName}"
+			}
+			if (!user) {
+				flash.message = "User not found: ${userName}"
+			}
+			if (!user || !artist) {
+				redirect(action: "setupHeatmap")
+				return
+			}
+			
+			newParams["u_${graph.index}"] = user.id
+			newParams["a_${graph.index}"] = artist.id
+			newParams["t_${graph.index}"] = graph.type
+		}
+		
+		log.info "heatmapSearch new params: ${newParams}"
+		redirect(action: "heatmap", params: newParams)
 	}
 	
 	@Transactional
 	def heatmap() {
-		if (!params?.u || !params?.a) {
-			flash.message = 'Please specify a user and artist'
-			redirect(action: 'setupHeatmap')
-			return
+		def graphs = []
+		params.each {
+			if (it.key.startsWith("a_")) {
+				def graph = [:]
+				def theId = it.key.substring(2, it.key.length())
+				
+				graph.artist = it.value as Long
+				graph.user = params["u_${theId}"] as Long
+				graph.type = params["t_${theId}"]
+				graph.index = theId as Long
+				
+				def user = User.get(graph.user)
+				def artist = Artist.get(graph.artist)
+				if (user && artist) {
+					graph.userName = user.toString()
+					graph.artistName = artist.name
+				}
+				
+				graphs.push(graph)
+			}
 		}
 		
-		def user = User.get(params.u as Long)
-		def artist = Artist.get(params.a as Long)
-		if (!user || !artist) {
-			flash.message = 'Please specify a valid user and artist'
-			redirect(action: 'setupHeatmap')
-			return
-		}
-		
-		[userName: user.toString(), artistName: artist.name]
+		[graphs: graphs]
 	}
 	
 	def ajaxHeatmapData() {
 		def userId = params?.u as Long
 		def artistId = params?.a as Long
+		
+		lastFmService.getArtistTracks(userId, artistId)
 		
 		if (!userId || !artistId) {
 			flash.message = "Please specify a user and artist"
@@ -268,7 +301,7 @@ class GraphController {
 		
 		
 		def data = []
-		if (params.type == 'DayAndHour') {
+		if (params.t == 'DayAndHour') {
 			(1..7).each { day ->
 				def criteria = Track.createCriteria()
 				def dataList = criteria.list {
@@ -290,7 +323,7 @@ class GraphController {
 				}
 			}
 		}
-		else if (params.type == 'Day') {
+		else if (params.t == 'Day') {
 			(1..7).each { day ->
 				def criteria = Track.createCriteria()
 				def dataList = criteria.list {
@@ -309,7 +342,7 @@ class GraphController {
 					data << point
 				}
 			}
-		} else if (params.type == 'Hour') {
+		} else if (params.t == 'Hour') {
 			(0..23).each { hour ->
 				def criteria = Track.createCriteria()
 				def dataList = criteria.list {

@@ -759,3 +759,8 @@ div#ui-datepicker-div {
 	margin-left: 1em;
 	max-width: 30em;
 }
+
+
+#setup-heatmap-template {
+	display: none;
+}

@@ -17,41 +17,57 @@
 			</ul>
 		</div>
 		
+		<div id="setup-heatmap-template">
+			<g:render template="setupHeatmapForm" />
+		</div>
+		
 		<div id="setup-graph" class="content" role="main">
 			<h1>Setup Heatmap</h1>
 			<g:if test="${flash.message}">
-			<div class="message" role="status">${flash.message}</div>
+				<div class="message" role="status">${flash.message}</div>
 			</g:if>
 			
 			<div id="setup-heatmap-form">
 				<g:form method="post" >
-					<fieldset class="form">
-						<div class="setup-group">
-							<div class="fieldcontain ${hasErrors(field: 'user', 'error')} ">
-								<label for="user">
-									User
-								</label>
-								<g:textField name="user" value="${user}"/>
-							</div>
-							
-							<div class="fieldcontain ${hasErrors(field: 'artist', 'error')} ">
-								<label for="artist">
-									Artist
-								</label>
-								<g:textField name="artist" value="${artistName}" />
-							</div>
-							
-							<div class="fieldcontain" ${hasErrors(field: 'type', 'error')} ">
-								<label for="type">Type</label>
-								<g:select name='type' from='${heatmapTypes}' />
-							</div>
-						</div>
-					</fieldset>
-					<fieldset class="buttons">
+					<div id="setup-heatmap-target">
+						<g:render template="setupHeatmapForm" />
+					</div>
+ 					<fieldset class="buttons">
 						<g:actionSubmit class="submit" action="heatmapSearch" value="Submit" />
 					</fieldset>
 				</g:form>
 			</div>
 		</div>
+		
+		<script>
+		function setIds(field) {
+			$("." + field).each( function(i, input) {
+				$(input).attr("id", ("" + field) + i);
+				$(input).attr("name", ("" + field) + i);
+			});
+		}
+		
+		function add() {
+			var thing = $("#setup-heatmap-template").clone(); 
+			thing.insertBefore($(this).parent().parent());
+			thing.attr("id", "");
+			$(".heatmap-remove").unbind();
+			$(".heatmap-add").unbind();
+			$(".heatmap-remove").click(remove);
+			$(".heatmap-add").click(add);
+			setIds("user");
+			setIds("artist");
+			setIds("type");
+		}
+		
+		function remove() {
+			$(this).parent().parent().remove();
+		}
+
+		$(document).ready( function() {
+			$(".heatmap-remove").click(remove);
+			$(".heatmap-add").click(add);
+		});
+		</script>
 	</body>
 </html>
