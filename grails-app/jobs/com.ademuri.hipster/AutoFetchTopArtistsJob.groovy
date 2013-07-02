@@ -19,12 +19,14 @@ class AutoFetchTopArtistsJob {
 
 
     def execute() {
-		Environment.executeForCurrentEnvironment {
-			production {
-				graphDataService.autoUpdateUsers()
-			}
-			stage {
-				graphDataService.autoUpdateUsers()
+		User.withNewSession {
+			Environment.executeForCurrentEnvironment {
+				production {
+					graphDataService.autoUpdateUsers()
+				}
+				stage {
+					graphDataService.autoUpdateUsers()
+				}
 			}
 		}
     }

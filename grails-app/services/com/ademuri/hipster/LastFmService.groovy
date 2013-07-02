@@ -477,9 +477,6 @@ class LastFmService {
 			return
 		}
 		
-		log.info "Getting top artists for user ${user}, interval ${interval}"
-		
-		
 		// if we've synced this recently, don't do it again
 		if (user?.topArtistsLastSynced[interval] && user?.topArtistsLastSynced[interval] > (new Date()-7)) {
 //			log.info "Synced top artists for ${user.username}, interval ${interval} recently, not syncing"
@@ -490,6 +487,7 @@ class LastFmService {
 				maxResults(20)
 			}
 		}
+		log.info "Getting top artists for user ${user}, interval ${interval}"
 		
 		def query = [
 			method: 'user.getTopArtists',
@@ -498,7 +496,6 @@ class LastFmService {
 			]
 		
 		def data = queryApi(query, -1, priority)
-//		log.info "data.class: ${data.@class}"
 		
 		def topArtists = []
 		

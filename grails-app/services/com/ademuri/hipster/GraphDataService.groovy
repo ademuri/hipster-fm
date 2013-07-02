@@ -72,30 +72,35 @@ class GraphDataService {
 			return null
 		}
 		
-			def allCache = GraphDataCache.all
-			
-			def prevCache = GraphDataCache.withCriteria {
-				def compare = { name, val ->
-					if (val == null) {
-						isNull(name)
-					} else {
-						eq(name, val)
-					}
-				}
-				
-				and {
-					isNotNull("chartdataJSON")
-					compare("startDate", startDate)
-					compare("endDate", endDate)
-					compare("tickSize", tickSize as Long)
-					compare("intervalSize", intervalSize as Long)
-					compare("userMaxY", userMaxY as Long)
-					compare("groupBy", by as Long)
-					compare("albumId", albumId as Long)
-					compare("removeOutliers", removeOutliers)
-					compare("userArtists", (userArtistIdList as JSON).toString())
+		userArtistList.each { userArtist ->
+			userArtist.lastGraphed = new Date()
+			userArtist.save()
+		}
+		
+		def allCache = GraphDataCache.all
+		
+		def prevCache = GraphDataCache.withCriteria {
+			def compare = { name, val ->
+				if (val == null) {
+					isNull(name)
+				} else {
+					eq(name, val)
 				}
 			}
+			
+			and {
+				isNotNull("chartdataJSON")
+				compare("startDate", startDate)
+				compare("endDate", endDate)
+				compare("tickSize", tickSize as Long)
+				compare("intervalSize", intervalSize as Long)
+				compare("userMaxY", userMaxY as Long)
+				compare("groupBy", by as Long)
+				compare("albumId", albumId as Long)
+				compare("removeOutliers", removeOutliers)
+				compare("userArtists", (userArtistIdList as JSON).toString())
+			}
+		}
 			
 		if (force) {
 			if (prevCache.size() > 0) {
@@ -319,7 +324,6 @@ class GraphDataService {
 		}
 		
 		
-		
 		def cache = new GraphDataCache(startDate: startDate, endDate: endDate, tickSize: tickSize, intervalSize: intervalSize, 
 				userMaxY: userMaxY, groupBy: by, albumId: albumId, removeOutliers: removeOutliers, chartdataJSON: "",
 				userArtists: (userArtistIdList as JSON).toString())
@@ -368,7 +372,7 @@ class GraphDataService {
 			try {
 				artists.each { artist ->
 					log.trace "Fetching tracks for ${user}: ${artist}"
-					lastFmService.getArtistTracks(user.id, artist.id, false, 0)
+					lastFmService.getArtistTracks(user.id, artist.artist.id, false, 0)
 				}
 			} catch (Exception e) {
 				log.warn "Exception occurred while fetching artists for ${user}"
@@ -377,6 +381,7 @@ class GraphDataService {
 			
 			if (success) {
 				user.allTopArtistsLastSynced = new Date()
+				user.save()
 			}
 		}
 	}
