@@ -24,8 +24,8 @@ modules = {
 	
 	def store_dir = 'js/store.js'
 	store_js {
-		dependsOn "jquery"
 		defaultBundle 'lib'
+		dependsOn "jquery"
 		resource url:"${store_dir}/store.js"
 		resource url:"${store_dir}/json.js"
 	}
@@ -34,6 +34,14 @@ modules = {
 	d3 {
 		defaultBundle 'lib'
 		resource url:"${d3_dir}/d3.v3.js"
+	}
+	
+	def irex_dir = 'js/inputosaurus-text'
+	irex {
+		defaultBundle 'lib'
+		dependsOn ['jquery', 'jquery-ui']
+		resource url:"${irex_dir}/inputosaurus.js"
+		resource url:"${irex_dir}/inputosaurus.css"
 	}
 	
 	overrides {

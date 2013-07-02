@@ -66,7 +66,7 @@ class GraphController {
 	
 	@Transactional
 	def search(String user, String artist) {
-		def usernameList = user.tokenize()
+		def usernameList = user.tokenize(',')
 		Set userList = []
 		
 		for(String username : usernameList) {

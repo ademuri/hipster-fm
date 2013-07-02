@@ -764,3 +764,18 @@ div#ui-datepicker-div {
 #setup-heatmap-template {
 	display: none;
 }
+
+
+.inputosaurus-container li[data-inputosaurus] {
+	background-color: #eee;
+	color: #111;
+	border-color: #bbb;
+}
+
+.inputosaurus-container li[data-inputosaurus] a {
+	color: #555;	
+}
+
+.inputosaurus-container li.inputosaurus-selected { 
+	background-color:#bbb !important; 
+}

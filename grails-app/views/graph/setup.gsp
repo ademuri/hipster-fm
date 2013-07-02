@@ -5,7 +5,7 @@
 	<head>
 		<meta name="layout" content="main">
 		<title>Setup Graph</title>
-		<r:require modules="jquery, jqplot" />
+		<r:require modules="jquery, irex, store_js" />
 	</head>
 	<body>
 		<div class="nav" role="navigation">
@@ -32,7 +32,7 @@
 						<label for="user">
 							Search for user
 						</label>
-						<g:textField name="user" value="${user}"/>
+						<g:textField name="user" value="${user}" id="user-search"/>
 					</span>
 					<g:actionSubmit class="submit" action="setup" value="Search" />
 					<div class="fieldcontain">
@@ -52,7 +52,7 @@
 								Users
 							</label>
 							<g:textField name="user" value="${user}"/>
-							<label>(space-seperated list)</label>
+							<label>(comma or enter to add)</label>
 						</div>
 						<div class="fieldcontain">
 							<label for="user-all-friends">Add all friends with artist</label>
@@ -109,10 +109,38 @@
 			</div>
 		
 		</div>
-		<r:script>
+		<script>
 		$("#artist-select").change(function() {
 			$("#artist").val($("#artist-select").val());
 		});
-		</r:script>
+		
+		$(document).ready( function() {
+			$.ajaxSetup({ cache: true });
+			
+			var users;
+			
+			var cache = store.get('username_cache');
+			if (cache && new Date().getDate() - new Date(cache.date).getDate() < 2) {
+				users = cache.data;
+			}
+			else {
+				$.ajax('${createLink(controller: 'user', action: 'ajaxGetUserList')}', {
+					cache: true,
+					success: function(data, textStatus, jqXHR) {
+						var cache = new Object();
+						cache.data = data;
+						cache.date = new Date();
+						store.set('username_cache', cache);
+						users = data;
+					}
+				});
+			}
+			
+			$("#user").inputosaurus({
+				width: '350px',
+				autoCompleteSource: users
+			});
+		});
+		</script>
 	</body>
 </html>

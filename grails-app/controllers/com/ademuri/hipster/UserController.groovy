@@ -119,7 +119,6 @@ class UserController {
 	}
 	
 	def find() {
-		
 		if (params.username) {
 			def user = User.findByUsername(params.username)
 			if (!user) {
@@ -138,8 +137,6 @@ class UserController {
 	}
 	
 	def ajaxGetTopArtists(Long id) {
-		log.info "get top artists, params: ${params}"
-		
 		def interval = "3month"
 		if (params?.interval) {
 			interval = UserArtist.rankNames[params.interval as int]
@@ -155,5 +152,13 @@ class UserController {
 		}
 		
 		render (template: 'updateArtists', model: ["artistList": topArtists, "user": userInstance.username])
+	}
+	
+	def ajaxGetUserList() {
+		log.info "get user list"
+		def users = User.list()
+		def names = users.username
+		
+		render names as JSON
 	}
 }
