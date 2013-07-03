@@ -176,7 +176,11 @@ class LastFmService {
 				users.add(it)
 			}
 		}
-		
+
+		if (users?.name != '') {
+			log.info "making result into list: ${users}"
+			users = [users]
+		}		
 		log.info "Found ${users.size()} friend for user ${username}"
 		
 		users.each {
