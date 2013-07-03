@@ -177,10 +177,7 @@ class LastFmService {
 			}
 		}
 
-		if (users?.name != '') {
-			log.info "making result into list: ${users}"
-			users = [users]
-		}		
+		users = [users].flatten()		// if there's only 1 user, it's not in a list - this fixes that	
 		log.info "Found ${users.size()} friend for user ${username}"
 		
 		users.each {
@@ -193,12 +190,10 @@ class LastFmService {
 			// this is a hack & may cause performance issues if there are many friends
 			if (user.friends.find { it == origUser } == null) {
 				user.addToFriends(origUser)
-//				user.save(flush: true)
 			}
 			
 			if (origUser.friends.find { it == user } == null) {
 				origUser.addToFriends(user)
-//				origUser.save(flush: true)
 			}
 		}
 	}
