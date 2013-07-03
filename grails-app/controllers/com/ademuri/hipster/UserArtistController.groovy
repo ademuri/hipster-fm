@@ -25,7 +25,7 @@ class UserArtistController {
     def save() {
         def artistInstance = new UserArtist(params)
 		if (!artistInstance.artist) {
-			artistInstance.artist = Artist.findByLastId(params.lastId)
+			artistInstance.artist = Artist.findByName(params.name)
 			
 			if (!artistInstance.artist) {
 				log.info "Creating global artist ${params.name}"

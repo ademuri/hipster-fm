@@ -344,7 +344,7 @@ class LastFmService {
 				def artistLastId = tracks[0]?.artist?.mbid
 				if (!artistLastId) {
 					log.warn "Search for ${existingArtist.name} returned no artist id"
-					return 0
+//					return 0
 				}
 				
 				def theArtist = Artist.get(artistId) ?: new Artist(name: artistName, lastId: artistLastId).save(flush: true, failOnError: true)
@@ -508,9 +508,8 @@ class LastFmService {
 					return
 				}
 				
-				def artist = Artist.findByLastId(it.mbid)
+				def artist = Artist.findByName(it.name)
 				if (!artist) {
-	//				log.info "Top artist not present: ${it.name}"
 					artist = new Artist(name: it.name, lastId: it.mbid).save()
 				}
 				
