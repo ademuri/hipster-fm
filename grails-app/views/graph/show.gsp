@@ -46,10 +46,22 @@
 			params = rawParams.split('&');
 			params.sort();
 			
+			var tries = 0;
 			function graph() {
+				tries++;
+				if (tries > 2) {
+					$("#chartdiv").text("Error getting data");
+					return;
+				}
 				if (!responseObject) {
-					console.log("response: " + response.responseText);
-					responseObject = JSON.parse(response.responseText);
+					try {
+						responseObject = JSON.parse(response.responseText);
+					}
+					catch (e) {
+						console.log("Got error getting data, trying again");
+						getData();
+						return;
+					}
 					responseObject.date = new Date();
 					<g:if env="production">
 						store.set(JSON.stringify(params), responseObject);
@@ -57,7 +69,6 @@
 				}
 				
 				if (responseObject.error) {
-					console.log("error" + responseObject.error);
 					$("#chartdiv").text(responseObject.error);
 					return;
 				}
@@ -83,10 +94,6 @@
 			
 			function showShortened(data, textStatus) {
 				$("#shorten-link-result").show();
-				console.log("data: " + data);
-				console.log(data);
-				console.log("textStatus: " + textStatus);
-				
 				$("#shorten-link-result").val(data.url);
 				$("#shorten-link-result").select();
 				$("#shorten-link-result").attr('size', $("#shorten-link-result").val().length);
@@ -99,7 +106,11 @@
 			function errorFunc(XMLHttpRequest,textStatus,errorThrown) {
 				console.log("error: " + textStatus + ", " + errorThrown);	
 			}
-
+			
+			function getData() {
+				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};
+			}
+			
 			$(window).load(function() {
 				// deal with short link
 				$("#shorten-link-result").hide();
@@ -122,12 +133,9 @@
 					}
 				</g:if>
 
-				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};
+				getData();
 			});
 		</r:script>
-		
-		
-		
 		
 		<g:form method="get" >
 			<g:render template="window"/>
