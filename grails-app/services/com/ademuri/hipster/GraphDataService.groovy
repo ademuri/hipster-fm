@@ -338,16 +338,6 @@ class GraphDataService {
 	def autoUpdateUsers() {
 		def now = new Date()
 		
-		def usersOld = User.withCriteria {
-			or {
-				lt("allTopArtistsLastSynced", now-7)
-				isNull("allTopArtistsLastSynced")
-			}
-			artists {
-				between("lastGraphed", (now-7), now)
-			}
-		}
-		
 		def users = User.createCriteria().listDistinct {
 			or {
 				lt("allTopArtistsLastSynced", now-7)
@@ -356,12 +346,9 @@ class GraphDataService {
 			artists {
 				between("lastGraphed", (now-7), now)
 			}
-//			resultTransformer CriteriaSpecification.DISTINCT_ROOT_ENTITY
-//			resultTransformer org.hibernate.Criteria.DISTINCT_ROOT_ENTITY	// only unique
 		}
 		
 		log.info "autoUpdateUser will update: ${users}"
-//		log.info "Old user list: ${usersOld}"
 		
 		def success = true
 		
@@ -381,7 +368,7 @@ class GraphDataService {
 			
 			if (success) {
 				user.allTopArtistsLastSynced = new Date()
-				user.save()
+				user.save(failOnError: true, flush: true)	// since we're not in a transaction, flush this
 			}
 		}
 	}
