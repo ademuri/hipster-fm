@@ -35,7 +35,7 @@ class GraphDataService {
 		
 		userIdList.each { userId ->
 			artistIdList.each { artistId ->
-				def thing = UserArtist.withCriteria {
+				def userArtistId = UserArtist.createCriteria().get {
 					createAlias 'user', '_user'
 					createAlias 'artist', '_artist'
 					eq '_user.id', userId as Long
@@ -43,18 +43,11 @@ class GraphDataService {
 					projections {
 						property 'id'
 					}
-					resultTransformer Criteria.DISTINCT_ROOT_ENTITY
 				}
 			
-				def userArtistId
-				if (thing.size() > 0) {
-					userArtistId = thing.get(0)
-				}
-				
 				if (!userArtistId) {
 					log.trace "User ${userId} has no scrobbles for artist ${artistId}"
 				} else {
-//					log.info "id: ${userArtistId}"
 					userArtistIdList.add(userArtistId)
 				}
 			}
