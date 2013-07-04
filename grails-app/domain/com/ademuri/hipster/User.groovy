@@ -28,6 +28,8 @@ class User implements Comparable {
 	static mapping = {
 		notFoundLastSynced type: Date
 		topArtistsLastSynced type: Date
+		version false
+		dynamicUpdate true
 	}
 	
 	public String toString() {

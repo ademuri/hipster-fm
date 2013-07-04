@@ -45,7 +45,6 @@
 				</li>
 				</g:if>
 				
-				<g:if test="${userInstance?.friends}">
 				<li class="fieldcontain">
 					<span id="friends-label" class="property-label"><g:message code="user.friends.label" default="Friends" /></span>
 					
@@ -53,7 +52,6 @@
 						<span class="property-value" aria-labelledby="friends-label"><g:link controller="user" action="show" id="${a.id}">${a?.toString()}</g:link></span>
 						</g:each>
 				</li>
-				</g:if>
 			
 				<li class="fieldcontain">
 					<span id="interval-label" class="property-label">Interval</span>
@@ -98,14 +96,13 @@
 		var requested = new Array();	// whether we've synced each interval
 		var received = new Array();
 		var interval = 2;
+		var users;		// html fragment from template
 
 		function showHide() {
-			console.log("showHide: " + interval);
 			if (!received[interval]) {
 				return;
 			}
 			
-			console.log("hiding");
 			for (var i=0; i<=5; i++) {
 				if (i != interval) {
 					$("#artists" + i).hide();
@@ -127,7 +124,6 @@
 			}
 			href += "?";
 
-			console.log("href: " + href);
 			$.each($("span.shown li"), function(i, val) {
 				href += "a_" + i + "=" + val.id + "&";
 				if (i > 8) {
@@ -141,7 +137,6 @@
 		}
 		
 		function updateArtists(newInterval) {
-			console.log("updateArtists, interval: " + newInterval);
 			interval = newInterval;
 			$("#interval").text(rankNames[interval]);
 			if (!requested[interval]) {
@@ -152,11 +147,20 @@
 			}
 		}
 		
+		function updateUsers() {
+			console.log(users)
+			if (users.responseText != '["empty"]') {
+				$("#friends-label").parent().html(users.responseText);
+			}
+		}
+		
 		$(document).ready( function() {
 			for (var i=0; i<=5; i++) {
 				requested[i] = false;
 				received[i] = false;
 			}
+			
+			users = ${remoteFunction(action: "ajaxGetFriends", onComplete: "updateUsers()", params: params)}
 			
 			$("#interval-slider").slider({
 				value:2,

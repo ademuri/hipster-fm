@@ -114,7 +114,7 @@ class UserController {
 			return
 		}
 		
-		lastFmService.getFriends(userInstance)
+		lastFmService.getFriends(userInstance.id)
 		redirect(action: "list")
 	}
 	
@@ -159,5 +159,27 @@ class UserController {
 		def names = users.username
 		
 		render names as JSON
+	}
+	
+	def ajaxGetFriends() {
+		if (!params?.id) {
+			log.warn "ajaxGetFriends called without id"
+			return
+		} 
+		
+		def user = User.get(params?.id)
+		if (!user) {
+			log.warn "ajaxGetFriends called with invalid user"
+			return
+		}
+		
+		def oldSize = user.friends.size()
+		lastFmService.getFriends(user.id)
+		if (user.friends.size() != oldSize) {
+			render (template: 'friends', model: [friends: user.friends.sort()])
+		} else {
+			def nothing = ['empty']
+			render (nothing as JSON)
+		}
 	}
 }

@@ -6,6 +6,8 @@ import com.ademuri.hipster.Artist
 import com.ademuri.hipster.UserArtist
 import com.ademuri.hipster.Track
 import com.ademuri.hipster.User
+import com.mysql.jdbc.log.Log;
+
 import java.text.SimpleDateFormat
 import java.util.concurrent.locks.ReentrantLock
 
@@ -145,7 +147,8 @@ class LastFmService {
 	}
 	
 	@Transactional
-	def getFriends(User origUser) {
+	def getFriends(Long id) {
+		def origUser = User.lock(id)
 		def today = new Date()
 		if (origUser.friendsLastSynced && origUser.friendsLastSynced > (today-7)) {
 			log.info "Not syncing friends for ${origUser}, synced recently"
@@ -165,22 +168,27 @@ class LastFmService {
 //		log.info "Last fm returned ${data}"
 		
 //		log.info "data: ${data}"
-		def users = data.friends.user
+		def users = [data.friends.user].flatten()	// the two calls to flatten are for if there is only 1 user on a page
 		
 		def paging = data.friends."@attr"
 		for (int i=2; i<=paging.totalPages.toInteger(); i++) {	// pages start at 1
 			log.info "Fetching page ${i} of users"
 			query.page = i
 			data = queryApi(query)
-			data.friends.user.each {
+			def newData = [data.friends.user].flatten()
+			newData.each {
 				users.add(it)
 			}
 		}
 
-		users = [users].flatten()		// if there's only 1 user, it's not in a list - this fixes that	
 		log.info "Found ${users.size()} friend for user ${username}"
 		
 		users.each {
+			if (!it.name) {
+				log.warn "Got user with null username from last.fm: ${it}"
+				return	// closure, so just skip this one	
+			}
+			
 			def user = User.findByUsername(it.name)
 			if (!user) {
 				log.info "Creating user ${it.name} (${it.realname})"
@@ -469,7 +477,7 @@ class LastFmService {
 	
 	@Transactional
 	def getUserTopArtists(userId, interval = "3month", priority = 1) {
-		def user = User.lock(userId)
+		def user = User.get(userId)
 		
 		if (!user) {
 			log.warn "getUserTopArtists called with null user"

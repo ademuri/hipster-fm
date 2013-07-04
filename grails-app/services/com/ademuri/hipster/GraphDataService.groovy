@@ -353,7 +353,7 @@ class GraphDataService {
 		def success = true
 		
 		users.each { user ->
-			lastFmService.getFriends(user)
+			lastFmService.getFriends(user.id)
 			def artists = lastFmService.getUserAllTopArtists(user, 0)
 			
 			try {
@@ -367,8 +367,11 @@ class GraphDataService {
 			}
 			
 			if (success) {
-				user.allTopArtistsLastSynced = new Date()
-				user.save(failOnError: true, flush: true)	// since we're not in a transaction, flush this
+				User.withTransaction {
+					def newUser = User.get(user.id)
+					newUser.allTopArtistsLastSynced = new Date()
+					newUser.save(failOnError: true, flush: true)
+				}
 			}
 		}
 	}

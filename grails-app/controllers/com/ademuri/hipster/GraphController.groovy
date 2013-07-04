@@ -38,7 +38,7 @@ class GraphController {
 			
 			if (userInstance) {
 //				log.info "Found user ${user}"
-				lastFmService.getFriends(userInstance)
+				lastFmService.getFriends(userInstance.id)
 				friends = userInstance.friends
 				
 				lastFmService.getUserTopArtists(userInstance.id, interval)
@@ -98,7 +98,7 @@ class GraphController {
 		if (userList.size() == 1 && params.addAllFriends) {
 			def userInstance = userList.toList()[0]
 			log.info "Adding all friends of user ${userInstance}"
-			lastFmService.getFriends(userInstance)
+			lastFmService.getFriends(userInstance.id)
 			userList.addAll(userInstance.friends)
 		}
 		
