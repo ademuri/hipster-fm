@@ -7,6 +7,7 @@ import groovyx.gpars.GParsPool
 import org.codehaus.groovy.grails.web.servlet.mvc.GrailsParameterMap
 import org.hibernate.Criteria;
 import org.hibernate.StaleObjectStateException
+import org.javasimon.SimonManager;
 
 import com.ademuri.hipster.Album;
 import com.ademuri.hipster.Artist;
@@ -382,6 +383,10 @@ class GraphController {
 			propertyInstanceMap.get().clear()
 		}
 		
+		def stopwatch = SimonManager.getStopwatch("getArtistTracks")
+		def stopDownload = SimonManager.getStopwatch("download")
+		def insertDownload = SimonManager.getStopwatch("insert")
+		
 		def by = params.by ? params.by as int : graphDataService.kByUser
 
 		// users		
@@ -494,6 +499,9 @@ class GraphController {
 			return
 		}
 		
+		log.info stopwatch
+		log.info stopDownload
+		log.info insertDownload
 		log.trace "rendering page"
 		
 		def theData = [chartdata:chartdata]

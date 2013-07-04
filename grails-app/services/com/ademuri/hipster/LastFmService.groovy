@@ -1,6 +1,7 @@
 package com.ademuri.hipster
 
 import com.ademuri.hipster.Album
+
 import com.ademuri.hipster.UserAlbum
 import com.ademuri.hipster.Artist
 import com.ademuri.hipster.UserArtist
@@ -15,6 +16,9 @@ import groovy.time.TimeCategory;
 import groovy.time.TimeDuration;
 import groovyx.gpars.GParsPool
 import org.springframework.transaction.annotation.Transactional
+
+import org.javasimon.SimonManager;
+import org.javasimon.Stopwatch;
 
 class LastFmService {
 	
@@ -257,10 +261,15 @@ class LastFmService {
 			syncLock.unlock()
 		}
 		
+		def split = SimonManager.getStopwatch("getArtistTracks").start()
+
+		
 		def error
 	
 		try {
 			Artist.withTransaction { status ->
+				def splitDownload = SimonManager.getStopwatch("download").start()
+				
 				def user = User.get(userId)
 				def existingArtist = Artist.get(artistId)
 				if (!existingArtist) {
@@ -288,7 +297,7 @@ class LastFmService {
 					artist: existingArtist.name,
 					]
 				
-				def downloadTime = new Date()
+//				def downloadTime = new Date()
 				
 				def data = queryApi(query, -1, priority)
 				def success = true			// if we fail but can get most data, throw an exception after we commit the transaction so we save partial data
@@ -317,7 +326,7 @@ class LastFmService {
 				// grab the earliest scrobbles
 				def paging = data.artisttracks."@attr"
 				if (paging?.totalPages?.toInteger() > 1) {		
-					GParsPool.withPool {
+					GParsPool.withPool(2) {
 						(2..paging.totalPages.toInteger()).eachParallel { i ->
 							def newquery =  [
 								method: 'user.getartisttracks',
@@ -344,14 +353,11 @@ class LastFmService {
 					}
 				}
 				
+				splitDownload.stop()
 				log.info "Found ${tracks.size()} tracks."
 				
-				def duration = TimeCategory.minus(new Date(), downloadTime)
-				log.info "Download time: ${duration}"
-				cumDownloadTime += duration
-				log.info "Cumulative download time: ${cumDownloadTime}"
 				
-				
+				def splitInsert = SimonManager.getStopwatch("insert").start()
 				def artistName = tracks[0]?.artist?."#text"
 				def insertTime = new Date()
 				
@@ -361,9 +367,9 @@ class LastFmService {
 //					return 0
 				}
 				
-				def theArtist = Artist.get(artistId) ?: new Artist(name: artistName, lastId: artistLastId).save(flush: true, failOnError: true)
-				def userArtist = UserArtist.findByUserAndArtist(user, theArtist) ?: new UserArtist(user: user, artist: theArtist).save(flush: true, failOnError: true)
-				theArtist.addToUserArtists(userArtist)
+				def theArtist = Artist.get(artistId) ?: new Artist(name: artistName, lastId: artistLastId).save(failOnError: true)
+				def userArtist = UserArtist.findByUserAndArtist(user, theArtist) ?: new UserArtist(user: user, artist: theArtist).save(failOnError: true)
+//				theArtist.addToUserArtists(userArtist)
 				
 				// example: 19 Jun 2012, 21:16
 				def dateFormat = new SimpleDateFormat("dd MMM yyyy, kk:mm")
@@ -385,9 +391,8 @@ class LastFmService {
 					}
 					else if (albums.find { it.lastId == rawAlbum.mbid } == null) {
 						// create the album
-						def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: theArtist).save(failOnError: true, flush: true)
-						def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true, flush: true)
-						album.addToUserAlbums(userAlbum).save(failOnError: true, flush: true)
+						def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: theArtist).save(failOnError: true)
+						def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true)
 						albums.add(userAlbum)
 					}
 				}
@@ -436,17 +441,13 @@ class LastFmService {
 					} else {
 						track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 					}
+					// this may be helpful: http://burtbeckwith.com/blog/?p=73
+					//track.errors = null
 				}
 				
-				userArtist.save(flush: true)
+				userArtist.save()
+				splitInsert.stop()
 					
-				duration = TimeCategory.minus(new Date(), insertTime)
-				log.info "Insert time: ${duration}"
-				cumInsertTime += duration
-				log.info "Cumulative insert time: ${cumInsertTime}"
-				cumUserArtists++
-				log.info "Cum user artists: ${cumUserArtists}, tracks: ${cumTracks}"
-				
 				log.info "Done creating tracks"
 				
 				
@@ -460,6 +461,7 @@ class LastFmService {
 				}
 			}
 		} finally {
+			split.stop()
 			synchronized(syncing[userId][artistId]) {
 				syncing[userId][artistId].unlock()
 			}

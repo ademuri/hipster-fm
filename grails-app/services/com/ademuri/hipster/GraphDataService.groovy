@@ -120,20 +120,15 @@ class GraphDataService {
 				} else {
 					cachedEntry.hitsSinceSync++
 					cachedEntry.save()
-				
-	//			log.info "data: ${prevCache.get(0).chartdata}"
-	//			log.info "user artist size: ${prevCache.get(0).userArtists.size()}"
 					return cachedEntry.chartdata
 				}
 			}
 		}
 		
-		
 		if (startDate && endDate) {
 			globalFirst = startDate
 			globalLast = endDate
 		}
-		
 		
 		userArtistList.each { userArtist ->
 			users.add(userArtist.user.toString())
