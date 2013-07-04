@@ -301,7 +301,7 @@ class LastFmService {
 				}
 				
 				if (data.artisttracks?.items && data.artisttracks?.items.toInteger() == 0) {
-					log.warn "Found no results for user ${user}, artist ${existingArtist.name}"
+					log.info "Found no results for user ${user}, artist ${existingArtist.name}"
 					user.notFoundLastSynced[existingArtist.name] = new Date()
 					user.save(failOnError: true, flush: true)
 					return 0
@@ -335,7 +335,6 @@ class LastFmService {
 							}
 							def trackList = data.artisttracks.track
 							if (!trackList[0]?.artist) {
-								log.info "Making a list"
 								trackList = [trackList]
 							}
 							trackList.each {
@@ -348,9 +347,9 @@ class LastFmService {
 				log.info "Found ${tracks.size()} tracks."
 				
 				def duration = TimeCategory.minus(new Date(), downloadTime)
-				log.warn "Download time: ${duration}"
+				log.info "Download time: ${duration}"
 				cumDownloadTime += duration
-				log.warn "Cumulative download time: ${cumDownloadTime}"
+				log.info "Cumulative download time: ${cumDownloadTime}"
 				
 				
 				def artistName = tracks[0]?.artist?."#text"
@@ -410,7 +409,7 @@ class LastFmService {
 				}
 			
 				if (lastTrack.size() == 0) {
-					log.info "No previous tracks found"
+//					log.info "No previous tracks found"
 				} else {
 					lastExtDate = lastTrack.get(0).date	
 				}
@@ -442,11 +441,11 @@ class LastFmService {
 				userArtist.save(flush: true)
 					
 				duration = TimeCategory.minus(new Date(), insertTime)
-				log.warn "Insert time: ${duration}"
+				log.info "Insert time: ${duration}"
 				cumInsertTime += duration
-				log.warn "Cumulative insert time: ${cumInsertTime}"
+				log.info "Cumulative insert time: ${cumInsertTime}"
 				cumUserArtists++
-				log.warn "Cum user artists: ${cumUserArtists}, tracks: ${cumTracks}"
+				log.info "Cum user artists: ${cumUserArtists}, tracks: ${cumTracks}"
 				
 				log.info "Done creating tracks"
 				
@@ -487,7 +486,7 @@ class LastFmService {
 		def user = User.get(userId)
 		
 		if (!user) {
-			log.warn "getUserTopArtists called with null user"
+			log.error "getUserTopArtists called with null user"
 			return
 		}
 		

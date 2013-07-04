@@ -111,9 +111,9 @@ class GraphDataService {
 		} 
 		else {
 			if (prevCache.size() > 0) {
-				log.info "Found previous cache!"
+//				log.info "Found previous cache!"
 				if (prevCache.size() > 1) {
-					log.info "cache: "
+					log.warn "cache: "
 					prevCache.each {
 						log.info it.dump()
 					}
@@ -122,7 +122,7 @@ class GraphDataService {
 				def cachedEntry = prevCache.get(0)
 				
 				if ((new Date() - cachedEntry.lastUpdated) > 2) {
-					log.info "Cache too old - deleting"
+//					log.info "Cache too old - deleting"
 					cachedEntry.delete()
 				} else {
 					cachedEntry.hitsSinceSync++
@@ -220,7 +220,6 @@ class GraphDataService {
 		def outliers = new PriorityQueue<Integer>()
 		
 		userArtistList.each { userArtist ->
-//			log.info "getting for user artist: ${userArtist.user}"
 			def counts = []
 			def userAlbumId
 			
@@ -270,7 +269,7 @@ class GraphDataService {
 		if (removeOutliers && !userMaxY) {
 			def outlierList = outliers as List
 			outlierList.sort()
-			log.info "Outliers: ${outlierList}"
+//			log.info "Outliers: ${outlierList}"
 			def outlierMin = outlierList.first()
 			def outlierMax = outlierList.last()
 			
@@ -292,12 +291,12 @@ class GraphDataService {
 			}
 			
 			if (maxY) {
-				log.info "Selected maxY as ${maxY}"
+//				log.info "Selected maxY as ${maxY}"
 			}
 		}
 		
 		if(userMaxY) {
-			log.info "Setting userMaxY to ${userMaxY}"
+//			log.info "Setting userMaxY to ${userMaxY}"
 			maxY = userMaxY
 		} else if (!removeOutliers) {
 			maxY = 0
@@ -404,10 +403,10 @@ class GraphDataService {
 				}
 			}
 			if (!dirty) {
-				log.info "Graph not dirty, updating lastUpdated"
+//				log.info "Graph not dirty, updating lastUpdated"
 				graph.lastUpdated = now
 			} else {
-				log.info "Regenerating graph"
+//				log.info "Regenerating graph"
 				getGraphData(userArtists, graph.startDate, graph.endDate, graph.tickSize, graph.intervalSize,
 					graph.removeOutliers, graph.userMaxY, graph.groupBy, graph.albumId, true)
 			}
