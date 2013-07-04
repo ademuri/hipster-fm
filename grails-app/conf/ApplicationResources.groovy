@@ -48,5 +48,9 @@ modules = {
 		jquery {
 			defaultBundle 'core'
 		}
+		
+		'jquery-ui' {
+			resource id:'theme', url:'/css/jquery-ui.css'	
+		}
 	}
 }
