@@ -22,7 +22,7 @@
 		<div id="setup-graph" class="content" role="main">
 			<h1>Setup Graph</h1>
 			<g:if test="${flash.message}">
-			<div class="message" role="status">${flash.message}</div>
+				<div class="message" role="status">${flash.message}</div>
 			</g:if>
 			
 			<div id="user-form">
@@ -76,7 +76,7 @@
 								<label for="artist">
 									Artist
 								</label>
-								<g:textField name="artist" value="${artistName}" />
+								<g:textField name="artist" value="${artistName}" class="inputosaurus-autocomplete" />
 							</div>
 						
 							<g:if test="${topArtists?.size() > 0}">
@@ -117,28 +117,20 @@
 		$(document).ready( function() {
 			$.ajaxSetup({ cache: true });
 			
-			var users;
-			
-			var cache = store.get('username_cache');
-			if (cache && new Date().getDate() - new Date(cache.date).getDate() < 2) {
-				users = cache.data;
-			}
-			else {
-				$.ajax('${createLink(controller: 'user', action: 'ajaxGetUserList')}', {
-					cache: true,
-					success: function(data, textStatus, jqXHR) {
-						var cache = new Object();
-						cache.data = data;
-						cache.date = new Date();
-						store.set('username_cache', cache);
-						users = data;
-					}
+			getCache('username_cache', '${createLink(controller: 'user', action: 'ajaxGetUserList')}', 
+					function(data) {
+				$("#user").inputosaurus({
+					width: '350px',
+					autoCompleteSource: data
 				});
-			}
-			
-			$("#user").inputosaurus({
-				width: '350px',
-				autoCompleteSource: users
+			});
+
+			// TODO: pluginize this
+			getCache('artist_cache', '${createLink(controller: 'artist', action: 'ajaxGetArtistList')}', 
+					function(data) {
+				$("#artist").autocomplete({
+					source: data
+				});
 			});
 		});
 		</script>

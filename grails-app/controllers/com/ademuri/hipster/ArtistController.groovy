@@ -4,6 +4,7 @@ import com.ademuri.hipster.Artist;
 import com.ademuri.hipster.Track;
 import com.ademuri.hipster.User;
 import com.eaio.util.text.HumanTime
+import grails.converters.JSON
 import org.springframework.dao.DataIntegrityViolationException
 
 
@@ -106,4 +107,11 @@ class ArtistController {
             redirect(action: "show", id: id)
         }
     }
+	
+	def ajaxGetArtistList() {
+		def artists = Artist.list()
+		def names = artists.name
+		
+		render names as JSON
+	}
 }

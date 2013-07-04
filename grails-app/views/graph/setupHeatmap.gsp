@@ -4,7 +4,7 @@
 	<head>
 		<meta name="layout" content="main">
 		<title>Setup Heatmap</title>
-		<r:require modules="jquery, jqplot" />
+		<r:require modules="jquery, irex, store_js" />
 	</head>
 	<body>
 		<div class="nav" role="navigation">
@@ -40,6 +40,11 @@
 		</div>
 		
 		<script>
+
+		var usernames = [];
+		var artists = [];
+		var maxIndex = 1;
+		
 		function setIds(field) {
 			$("." + field).each( function(i, input) {
 				$(input).attr("id", ("" + field) + i);
@@ -50,7 +55,7 @@
 		function add() {
 			var thing = $("#setup-heatmap-template").clone(); 
 			thing.insertBefore($(this).parent().parent());
-			thing.attr("id", "");
+			thing.attr("id", "setup-heatmap" + maxIndex++);
 			$(".heatmap-remove").unbind();
 			$(".heatmap-add").unbind();
 			$(".heatmap-remove").click(remove);
@@ -58,6 +63,12 @@
 			setIds("user");
 			setIds("artist");
 			setIds("type");
+			$("#" + thing.attr("id") + " .artist").autocomplete({
+				source: artists
+			});
+			$("#" + thing.attr("id") + " .user").autocomplete({
+				source: usernames
+			});
 		}
 		
 		function remove() {
@@ -67,6 +78,22 @@
 		$(document).ready( function() {
 			$(".heatmap-remove").click(remove);
 			$(".heatmap-add").click(add);
+
+			getCache('artist_cache', '${createLink(controller: 'artist', action: 'ajaxGetArtistList')}', 
+					function(data) {
+				$(".artist").autocomplete({
+					source: data
+				});
+				artists = data;
+			});
+
+			getCache('username_cache', '${createLink(controller: 'artist', action: 'ajaxGetArtistList')}', 
+					function(data) {
+				$(".user").autocomplete({
+					source: data
+				});
+				usernames = data;
+			});
 		});
 		</script>
 	</body>

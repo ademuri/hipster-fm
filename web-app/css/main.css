@@ -764,6 +764,11 @@ div#ui-datepicker-div {
 #setup-heatmap-template {
 	display: none;
 }
+.heatmap-button {
+	margin: .2em;
+	font-size: 1.5em;
+	cursor: pointer;
+}
 
 
 .inputosaurus-container li[data-inputosaurus] {
@@ -778,4 +783,8 @@ div#ui-datepicker-div {
 
 .inputosaurus-container li.inputosaurus-selected { 
 	background-color:#bbb !important; 
+}
+
+.inputosaurus-autocomplete input {
+	color: #333;		
 }

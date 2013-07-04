@@ -155,7 +155,6 @@ class UserController {
 	}
 	
 	def ajaxGetUserList() {
-		log.info "get user list"
 		def users = User.list()
 		def names = users.username
 		

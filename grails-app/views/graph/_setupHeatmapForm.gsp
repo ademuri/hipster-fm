@@ -1,7 +1,7 @@
 <fieldset class="form">
 	<div class="setup-group">
 		<div class="heatmap-button heatmap-add">+</div>
-		<div class="heatmap-button heatmap-delete">-</div>
+		<div class="heatmap-button heatmap-remove">-</div>
 		<div class="fieldcontain ${hasErrors(field: 'user', 'error')} ">
 			<label for="user">
 				User

@@ -5,6 +5,7 @@
 	<head>
 		<meta name="layout" content="main">
 		<title>Find User</title>
+		<r:require modules="jquery, irex, store_js" />
 	</head>
 	<body>
 		<div class="nav" role="navigation">
@@ -34,5 +35,15 @@
 				</g:form>
 			</div>
 		</div>
+		<script>
+		$(document).ready( function() {
+			getCache('username_cache', '${createLink(controller: 'user', action: 'ajaxGetUserList')}', 
+					function(data) {
+				$("#username").autocomplete({
+					source: data
+				});
+			});
+		});	
+		</script>
 	</body>
 </html>

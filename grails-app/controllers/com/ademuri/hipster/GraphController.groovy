@@ -246,7 +246,6 @@ class GraphController {
 			newParams["t_${graph.index}"] = graph.type
 		}
 		
-		log.info "heatmapSearch new params: ${newParams}"
 		redirect(action: "heatmap", params: newParams)
 	}
 	
@@ -368,6 +367,7 @@ class GraphController {
 	}
 	
 	def sessionFactory
+	
 	
 	def ajaxGraphData = {
 		Boolean removeOutliers = params.removeOutliers == "true"
