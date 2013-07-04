@@ -157,22 +157,29 @@ class LastFmService {
 		
 		log.info "Getting friends for ${origUser}"
 		
+		// also update the user's information (for now, just realname)
+		def query = [:]
+		query.user = origUser.username
+		query.method = "user.getinfo"
+		def data = queryApi(query)
+		def realname = data.user.realname
+		if (origUser.name != realname) {
+			origUser.name = realname
+		}
+		
 		origUser.friendsLastSynced = new Date()
 		def username = origUser.username
 		
-		def query = [:]
+		query = [:]
 		query.user = username
 		query.method = "user.getfriends"
-		def data = queryApi(query)
+		data = queryApi(query)
 		
-//		log.info "Last fm returned ${data}"
-		
-//		log.info "data: ${data}"
 		def users = [data.friends.user].flatten()	// the two calls to flatten are for if there is only 1 user on a page
 		
 		def paging = data.friends."@attr"
 		for (int i=2; i<=paging.totalPages.toInteger(); i++) {	// pages start at 1
-			log.info "Fetching page ${i} of users"
+			log.trace "Fetching page ${i} of users"
 			query.page = i
 			data = queryApi(query)
 			def newData = [data.friends.user].flatten()
@@ -191,7 +198,7 @@ class LastFmService {
 			
 			def user = User.findByUsername(it.name)
 			if (!user) {
-				log.info "Creating user ${it.name} (${it.realname})"
+//				log.info "Creating user ${it.name} (${it.realname})"
 				user = new User(username: it.name, name: it.realname).save(failOnError: true)
 			}
 			// note: grails docs suggest this should be a set (ie no duplicates), but I'm still seeing duplicates in the DB

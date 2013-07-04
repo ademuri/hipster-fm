@@ -15,6 +15,12 @@ class Album {
 	
 	static belongsTo = [artist: Artist]
 	static hasMany = [userAlbums: UserAlbum]
+	
+	static mapping = {
+		// once created, an album should never change
+		version: false
+		dynamicUpdate: true
+	}
 
     static constraints = {
 		lastId(nullable: false)

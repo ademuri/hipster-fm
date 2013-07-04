@@ -36,15 +36,6 @@
 				</li>
 				</g:if>
 			
-				<g:if test="${userInstance?.email}">
-				<li class="fieldcontain">
-					<span id="email-label" class="property-label"><g:message code="user.email.label" default="Email" /></span>
-					
-						<span class="property-value" aria-labelledby="email-label"><g:fieldValue bean="${userInstance}" field="email"/></span>
-					
-				</li>
-				</g:if>
-				
 				<li class="fieldcontain">
 					<span id="friends-label" class="property-label"><g:message code="user.friends.label" default="Friends" /></span>
 					

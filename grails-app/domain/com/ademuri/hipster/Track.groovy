@@ -21,6 +21,10 @@ class Track {
 		autoTimestamp true
 		dayOfWeek formula: 'DAYOFWEEK(date)'
 		hourOfDay formula: 'HOUR(date)'
+		
+		// once created, a track should never change
+		version: false
+		dynamicUpdate: true
 	}
 	
     static constraints = {
