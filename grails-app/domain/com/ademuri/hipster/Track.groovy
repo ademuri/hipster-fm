@@ -25,6 +25,9 @@ class Track {
 		// once created, a track should never change
 		version: false
 		dynamicUpdate: true
+		
+		// avoid concurrency issues
+		id generator: 'hilo', params: [table: 'hilo', column: 'next_value', max_lo: 100]
 	}
 	
     static constraints = {

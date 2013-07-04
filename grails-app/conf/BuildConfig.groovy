@@ -42,7 +42,6 @@ grails.project.dependency.resolution = {
 
         runtime 'mysql:mysql-connector-java:5.1.20'
 		compile "org.codehaus.gpars:gpars:1.0.0"
-		
 		compile 'org.javasimon:javasimon-core:3.3.0'
     }
 
@@ -65,6 +64,7 @@ grails.project.dependency.resolution = {
 		compile ':webxml:1.4.1'
 		compile ':yui-minify-resources:0.1.5'
 		compile ':zipped-resources:1.0'
+		compile ':executor:0.3'
 		
 		// publicly available
 		compile ':jquery:1.7.2'

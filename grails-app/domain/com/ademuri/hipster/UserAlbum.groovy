@@ -23,6 +23,10 @@ class UserAlbum {
 	static belongsTo = [artist: UserArtist, album: Album]
 	static hasMany = [tracks: Track]
 	static transients = ["name", "lastId"]
+	
+	static mapping = {
+		id generator: 'hilo', params: [table: 'hilo', column: 'next_value', max_lo: 10]
+	}
 
     static constraints = {
 		lastId(nullable: false, blank: false)

@@ -38,6 +38,15 @@
 				</li>
 				</g:if>
 				
+				<g:if test="${artistInstance?.lastSynced}">
+				<li class="fieldcontain">
+					<span id="user-label" class="property-label">Last synced</span>
+					
+						<span class="property-value" aria-labelledby="user-label">${artistInstance?.lastSynced}</span>
+					
+				</li>
+				</g:if>
+				
 				<g:if test="${artistInstance?.albums}">
 				<li class="fieldcontain">
 					<span id="albums-label" class="property-label"><g:message code="artist.albums.label" default="Albums" /></span>

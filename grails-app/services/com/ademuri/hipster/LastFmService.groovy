@@ -267,6 +267,18 @@ class LastFmService {
 		def error
 	
 		try {
+			def tracks
+			def userArtist
+			def albumMap
+			def dateFormat = new SimpleDateFormat("dd MMM yyyy, kk:mm")
+			def syncFromDate
+			def lastExtDate
+			def existingTracks
+			def splitInsert
+			
+			def success = true			// if we fail but can get most data, throw an exception after we commit the transaction so we save partial data
+			def failMessage = ""
+			
 			Artist.withTransaction { status ->
 				def splitDownload = SimonManager.getStopwatch("download").start()
 				
@@ -288,7 +300,7 @@ class LastFmService {
 				}
 				log.info "Getting artist tracks for ${user}, ${existingArtist.name}"
 					
-				def syncFromDate = lastSynced ? lastSynced - 16 : null		// if we've synced before, sync for 15 days from the last day
+				syncFromDate = lastSynced ? lastSynced - 16 : null		// if we've synced before, sync for 15 days from the last day
 				// last.fm lets you sync back up to 2 weeks, so this should give us 2 days of margin	
 				
 				def query = [
@@ -300,8 +312,6 @@ class LastFmService {
 //				def downloadTime = new Date()
 				
 				def data = queryApi(query, -1, priority)
-				def success = true			// if we fail but can get most data, throw an exception after we commit the transaction so we save partial data
-				def failMessage = ""
 				
 				if (data?.error) {
 					log.warn "Got error ${data.error}, message '${data?.message}' for query ${query}"
@@ -316,7 +326,7 @@ class LastFmService {
 					return 0
 				}
 				
-				def tracks = data.artisttracks.track
+				tracks = data.artisttracks.track
 				// if there's only 1 track, make it into a list
 				if (!tracks[0]?.artist) {
 					log.info "Making a list"
@@ -357,7 +367,7 @@ class LastFmService {
 				log.info "Found ${tracks.size()} tracks."
 				
 				
-				def splitInsert = SimonManager.getStopwatch("insert").start()
+				splitInsert = SimonManager.getStopwatch("insert").start()
 				def artistName = tracks[0]?.artist?."#text"
 				def insertTime = new Date()
 				
@@ -368,15 +378,15 @@ class LastFmService {
 				}
 				
 				def theArtist = Artist.get(artistId) ?: new Artist(name: artistName, lastId: artistLastId).save(failOnError: true)
-				def userArtist = UserArtist.findByUserAndArtist(user, theArtist) ?: new UserArtist(user: user, artist: theArtist).save(failOnError: true)
+				userArtist = UserArtist.findByUserAndArtist(user, theArtist) ?: new UserArtist(user: user, artist: theArtist).save(failOnError: true)
 //				theArtist.addToUserArtists(userArtist)
 				
 				// example: 19 Jun 2012, 21:16
-				def dateFormat = new SimpleDateFormat("dd MMM yyyy, kk:mm")
 				
-				def existingTracks = Track.countByArtist(userArtist) > 0	// don't check for duplicate tracks if none exist
+				
+				existingTracks = Track.countByArtist(userArtist) > 0	// don't check for duplicate tracks if none exist
 				def albums
-				def albumMap
+				
 				
 				
 				// do albums stuff efficiently - create them all here, then add tracks to them as needed
@@ -391,20 +401,20 @@ class LastFmService {
 					}
 					else if (albums.find { it.lastId == rawAlbum.mbid } == null) {
 						// create the album
-						def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: theArtist).save(failOnError: true)
-						def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(failOnError: true)
+						def album = Album.findByLastId(rawAlbum.mbid) ?: new Album(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: theArtist).save(flush: true, failOnError: true)
+						def userAlbum = new UserAlbum(lastId: rawAlbum.mbid, name: rawAlbum."#text", artist: userArtist, album: album).save(flush: true, failOnError: true)
 						albums.add(userAlbum)
 					}
 				}
 				
 				
 				albums.each {
-					albumMap[it.lastId] = it
+					albumMap[it.lastId] = it.id
 				}
+				log.info "album map: ${albumMap}"
 		
 				def count = 0	// clear the session every so often
 		
-				def lastExtDate
 				def lastTrack = Track.withCriteria {
 					maxResults(1)
 					order('date', 'desc')
@@ -418,34 +428,75 @@ class LastFmService {
 				} else {
 					lastExtDate = lastTrack.get(0).date	
 				}
+			}// end Artist.withTransaction
+			
+			if (!tracks) {
+				return 0
+			}
+			
+			def size = tracks.size()
+			def half = Math.floor(size / 2)
+			def firstTracks = tracks[0..half]
+			def lastTracks = tracks[half+1..size-1]
 				
-				tracks.each {
-					if (!it?.date) {
-						log.warn "Invalid date!: ${it}"
-						success = false
-						failMessage += "Invalid date!: ${it}\n"
-						return	//skip this track
-					}
-					
-					cumTracks++
-					
-					def trackId = it.mbid
-					def date = dateFormat.parse(it.date."#text")
-					if (syncFromDate && date < syncFromDate) {
-						return
-					}
-					def track
-					
-					if (existingTracks || date > lastExtDate) {
-						track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
-					} else {
-						track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
-					}
-					// this may be helpful: http://burtbeckwith.com/blog/?p=73
-					//track.errors = null
+				def add = { tracksToAdd ->
+					log.info "Starting add process"
+//					userArtist.refresh()
+//					albumMap.each { key, val ->
+//						if (val != null) {
+//							val.refresh()
+//						}
+//					}
+					def dateFormatter = new SimpleDateFormat("dd MMM yyyy, kk:mm")
+					log.info 'Refreshed'
+						tracksToAdd.each {
+							if (!it?.date) {
+								log.warn "Invalid date!: ${it}"
+								success = false
+								failMessage += "Invalid date!: ${it}\n"
+								return	//skip this track
+							}
+							
+//							log.info "Adding track ${it}"
+							
+							def trackId = it.mbid
+//							log.info "date: ${it.date."#text"}"
+							def date = dateFormatter.parse(it.date."#text")
+							if (syncFromDate && date < syncFromDate) {
+								return
+							}
+							def track
+							
+							if (existingTracks || date > lastExtDate) {
+								//track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, "album.id": albumMap[it.album.mbid]).save(failOnError: true)
+								track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)
+							} else {
+								//track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, "album.id": albumMap[it.album.mbid]).save(failOnError: true)
+								track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)
+							}
+//							log.info "saved"
+							// this may be helpful: http://burtbeckwith.com/blog/?p=73
+							//track.errors = null
+						}
 				}
+				def task1 = add.curry(firstTracks)
+				def task2 = add.curry(lastTracks)
 				
-				userArtist.save()
+				def first = callAsync(task1)
+				def last = callAsync(task2)
+//				task1.call()
+				
+				
+				log.info "Started tasks, waiting for finish"
+				
+				first.get()
+				log.info "First finished"
+				
+//				task2.call()
+				last.get()
+				log.info "Last finished"
+				
+//				userArtist.merge()
 				splitInsert.stop()
 					
 				log.info "Done creating tracks"
@@ -457,9 +508,12 @@ class LastFmService {
 					//		at some point, we should add an errorLastSynced (or similar) since last.fm caches the replies for a little while
 					error =  new LastFmException(failMessage)
 				} else {
+//					userArtist.refresh()
 					userArtist.lastSynced = new Date()
+					userArtist.merge()
+					userArtist.save(flush: true)
 				}
-			}
+//			}
 		} finally {
 			split.stop()
 			synchronized(syncing[userId][artistId]) {
