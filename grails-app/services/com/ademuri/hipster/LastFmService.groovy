@@ -453,7 +453,6 @@ class LastFmService {
 								failMessage += "Invalid date!: ${it}\n"
 								return	//skip this track
 							}
-							log.info "Adding track: ${it.name} for ${userId}"
 							
 							def trackId = it.mbid
 							def date = dateFormatter.parse(it.date."#text")
@@ -463,12 +462,10 @@ class LastFmService {
 							def track
 							
 							if (existingTracks || (date && date < lastExtDate)) {
-								log.info "Checking existing tracks"
 								track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 							} else {
 								track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 							}
-							log.info "Saved ${it.name}"
 							// this may be helpful: http://burtbeckwith.com/blog/?p=73
 							//track.errors = null
 						}

@@ -262,18 +262,14 @@ class GraphDataService {
 			work.push(doWork.curry(it))
 		}
 		
-		work.each {
-			it.call()
-		}
-		
-		/*def actors = []
+		def actors = []
 		work.each {
 			actors.push(callAsync(it))
 		}
 		
 		actors.each {
 			it.get()
-		}*/
+		}
 		
 		log.info "Done getting counts"
 		
