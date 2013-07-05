@@ -25,6 +25,8 @@ class UserAlbum {
 	static transients = ["name", "lastId"]
 	
 	static mapping = {
+		version false
+		dynamicUpdate true
 		id generator: 'hilo', params: [table: 'hilo', column: 'next_value', max_lo: 10]
 	}
 

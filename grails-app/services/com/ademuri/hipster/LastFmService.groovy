@@ -387,13 +387,11 @@ class LastFmService {
 				existingTracks = Track.countByArtist(userArtist) > 0	// don't check for duplicate tracks if none exist
 				def albums
 				
-				
-				
 				// do albums stuff efficiently - create them all here, then add tracks to them as needed
 				albums = userArtist.albums ?: []
 				def rawAlbums = tracks.collect { it?.album } as Set
 				albumMap = [:]
-				log.info "Got ${rawAlbums.size()} albums"
+//				log.info "Got ${rawAlbums.size()} albums"
 				
 				rawAlbums.each { rawAlbum ->
 					if (!rawAlbum || rawAlbum.mbid == "") {
@@ -409,9 +407,8 @@ class LastFmService {
 				
 				
 				albums.each {
-					albumMap[it.lastId] = it.id
+					albumMap[it.lastId] = it
 				}
-				log.info "album map: ${albumMap}"
 		
 				def count = 0	// clear the session every so often
 		
@@ -436,19 +433,19 @@ class LastFmService {
 			
 			def size = tracks.size()
 			def half = Math.floor(size / 2)
-			def firstTracks = tracks[0..half]
-			def lastTracks = tracks[half+1..size-1]
+			def firstTracks
+			def lastTracks
+			
+			if (tracks.size() > 10) {
+				firstTracks = tracks[0..half-1]
+				lastTracks = tracks[half..size-1]
+			} else {
+				firstTracks = tracks
+				lastTracks = []
+			} 
 				
 				def add = { tracksToAdd ->
-					log.info "Starting add process"
-//					userArtist.refresh()
-//					albumMap.each { key, val ->
-//						if (val != null) {
-//							val.refresh()
-//						}
-//					}
 					def dateFormatter = new SimpleDateFormat("dd MMM yyyy, kk:mm")
-					log.info 'Refreshed'
 						tracksToAdd.each {
 							if (!it?.date) {
 								log.warn "Invalid date!: ${it}"
@@ -456,11 +453,9 @@ class LastFmService {
 								failMessage += "Invalid date!: ${it}\n"
 								return	//skip this track
 							}
-							
-//							log.info "Adding track ${it}"
+							log.info "Adding track: ${it.name}"
 							
 							def trackId = it.mbid
-//							log.info "date: ${it.date."#text"}"
 							def date = dateFormatter.parse(it.date."#text")
 							if (syncFromDate && date < syncFromDate) {
 								return
@@ -468,13 +463,11 @@ class LastFmService {
 							def track
 							
 							if (existingTracks || date > lastExtDate) {
-								//track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, "album.id": albumMap[it.album.mbid]).save(failOnError: true)
-								track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)
+								track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 							} else {
-								//track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, "album.id": albumMap[it.album.mbid]).save(failOnError: true)
-								track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId).save(failOnError: true)
+								track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 							}
-//							log.info "saved"
+							log.info "Saved ${it.name}"
 							// this may be helpful: http://burtbeckwith.com/blog/?p=73
 							//track.errors = null
 						}
@@ -484,19 +477,10 @@ class LastFmService {
 				
 				def first = callAsync(task1)
 				def last = callAsync(task2)
-//				task1.call()
-				
-				
-				log.info "Started tasks, waiting for finish"
 				
 				first.get()
-				log.info "First finished"
-				
-//				task2.call()
 				last.get()
-				log.info "Last finished"
 				
-//				userArtist.merge()
 				splitInsert.stop()
 					
 				log.info "Done creating tracks"
@@ -508,7 +492,6 @@ class LastFmService {
 					//		at some point, we should add an errorLastSynced (or similar) since last.fm caches the replies for a little while
 					error =  new LastFmException(failMessage)
 				} else {
-//					userArtist.refresh()
 					userArtist.lastSynced = new Date()
 					userArtist.merge()
 					userArtist.save(flush: true)
@@ -588,7 +571,7 @@ class LastFmService {
 				if (!userArtist) {
 	//				log.info "Top user artist not present: ${artist.name}"
 					userArtist = new UserArtist(artist: artist, user: user).save()
-					artist.addToUserArtists(userArtist)
+//					artist.addToUserArtists(userArtist)
 				} else {
 	//				log.info "Found top user artist: ${artist.name}"
 				}

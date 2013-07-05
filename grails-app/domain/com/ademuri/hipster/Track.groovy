@@ -23,8 +23,8 @@ class Track {
 		hourOfDay formula: 'HOUR(date)'
 		
 		// once created, a track should never change
-		version: false
-		dynamicUpdate: true
+		version false
+		dynamicUpdate true
 		
 		// avoid concurrency issues
 		id generator: 'hilo', params: [table: 'hilo', column: 'next_value', max_lo: 100]
@@ -36,5 +36,7 @@ class Track {
 		artist nullable: false
 		name nullable: false
 		album nullable: true
+		dayOfWeek nullable: true
+		hourOfDay nullable: true
     }
 }

@@ -52,6 +52,13 @@ class UserArtist {
 	
 	static belongsTo = [user: User, artist: Artist]
 	static hasMany = [tracks: Track, albums: UserAlbum]
+	
+	static mapping = {
+		version false
+		dynamicUpdate true
+		
+		id generator: 'hilo', params: [table: 'hilo', column: 'next_value', max_lo: 100]
+	}
 
     static constraints = {
 		lastSynced nullable: true

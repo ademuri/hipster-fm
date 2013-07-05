@@ -18,8 +18,8 @@ class Album {
 	
 	static mapping = {
 		// once created, an album should never change
-		version: false
-		dynamicUpdate: true
+		version false
+		dynamicUpdate true
 	}
 
     static constraints = {
