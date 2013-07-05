@@ -419,9 +419,9 @@ class GraphController {
 		
 		def out
 		log.trace "Getting tracks..."
-		GParsPool.withPool {
+		GParsPool.withPool(3) {
 			userIdList.eachParallel { userId ->
-				GParsPool.withPool {
+				GParsPool.withPool(3) {
 					artistIdList.eachParallel { artistId ->
 						Track.withNewSession {
 							out = lastFmService.getArtistTracks(userId, artistId)
@@ -502,7 +502,9 @@ class GraphController {
 		log.info stopwatch
 		log.info stopDownload
 		log.info insertDownload
-		log.trace "rendering page"
+		stopwatch.reset()
+		stopDownload.reset()
+		insertDownload.reset()
 		
 		def theData = [chartdata:chartdata]
 		render theData as JSON

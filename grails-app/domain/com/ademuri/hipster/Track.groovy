@@ -27,7 +27,7 @@ class Track {
 		dynamicUpdate true
 		
 		// avoid concurrency issues
-		id generator: 'hilo', params: [table: 'hilo', column: 'next_value', max_lo: 100]
+		id generator: 'hilo', params: [sequence: 'hi_value', max_lo: 1000]
 	}
 	
     static constraints = {

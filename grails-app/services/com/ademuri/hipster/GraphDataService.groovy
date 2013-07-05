@@ -6,6 +6,7 @@ import com.ademuri.hipster.Track;
 import com.ademuri.hipster.User;
 
 import org.hibernate.Criteria;
+import org.javasimon.SimonManager;
 import org.springframework.transaction.annotation.Transactional
 import com.ademuri.hipster.UserArtist
 
@@ -32,6 +33,11 @@ class GraphDataService {
 		def newTickSize, newIntervalSize
 		def userArtistList = []
 		def userArtistIdList = []
+		
+		def stopwatch = SimonManager.getStopwatch("graphData")
+		stopwatch.reset()
+		
+		def split = stopwatch.start()
 		
 		userIdList.each { userId ->
 			artistIdList.each { artistId ->
@@ -207,7 +213,8 @@ class GraphDataService {
 		
 		def outliers = new PriorityQueue<Integer>()
 		
-		userArtistList.each { userArtist ->
+		//userArtistList.each { userArtist ->
+		def doWork = { userArtist ->
 			def counts = []
 			def userAlbumId
 			
@@ -249,6 +256,24 @@ class GraphDataService {
 			}
 			data.add(counts)
 		}
+		
+		def work = []
+		userArtistList.each {
+			work.push(doWork.curry(it))
+		}
+		
+		work.each {
+			it.call()
+		}
+		
+		/*def actors = []
+		work.each {
+			actors.push(callAsync(it))
+		}
+		
+		actors.each {
+			it.get()
+		}*/
 		
 		log.info "Done getting counts"
 		
@@ -318,6 +343,9 @@ class GraphDataService {
 		cache.save(failOnError: true, flush: true)
 //		log.info "Save to cache ${cache}"
 //		log.info "user artist size: ${cache.userArtists.size()}"
+		
+		split.stop()
+		log.info stopwatch
 		
 		return chartdata
 	}

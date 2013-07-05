@@ -453,7 +453,7 @@ class LastFmService {
 								failMessage += "Invalid date!: ${it}\n"
 								return	//skip this track
 							}
-							log.info "Adding track: ${it.name}"
+							log.info "Adding track: ${it.name} for ${userId}"
 							
 							def trackId = it.mbid
 							def date = dateFormatter.parse(it.date."#text")
@@ -462,7 +462,8 @@ class LastFmService {
 							}
 							def track
 							
-							if (existingTracks || date > lastExtDate) {
+							if (existingTracks || (date && date < lastExtDate)) {
+								log.info "Checking existing tracks"
 								track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 							} else {
 								track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
@@ -476,9 +477,8 @@ class LastFmService {
 				def task2 = add.curry(lastTracks)
 				
 				def first = callAsync(task1)
-				def last = callAsync(task2)
-				
 				first.get()
+				def last = callAsync(task2)
 				last.get()
 				
 				splitInsert.stop()
