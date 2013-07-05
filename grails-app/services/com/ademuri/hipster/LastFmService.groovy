@@ -431,69 +431,86 @@ class LastFmService {
 				return 0
 			}
 			
-			def size = tracks.size()
-			def half = Math.floor(size / 2)
-			def firstTracks
-			def lastTracks
+			int numWorkUnits = 2
+			int trackSize = tracks.size()
+			int workSize = Math.floor(trackSize / numWorkUnits)
+			def workUnits = []
+			def work = []
+			def actors = []
 			
-			if (tracks.size() > 10) {
-				firstTracks = tracks[0..half-1]
-				lastTracks = tracks[half..size-1]
+			if (tracks.size() < 100) {
+				workUnits = [tracks]
 			} else {
-				firstTracks = tracks
-				lastTracks = []
-			} 
-				
-				def add = { tracksToAdd ->
-					def dateFormatter = new SimpleDateFormat("dd MMM yyyy, kk:mm")
-						tracksToAdd.each {
-							if (!it?.date) {
-								log.warn "Invalid date!: ${it}"
-								success = false
-								failMessage += "Invalid date!: ${it}\n"
-								return	//skip this track
-							}
-							
-							def trackId = it.mbid
-							def date = dateFormatter.parse(it.date."#text")
-							if (syncFromDate && date < syncFromDate) {
-								return
-							}
-							def track
-							
-							if (existingTracks || (date && date < lastExtDate)) {
-								track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
-							} else {
-								track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
-							}
-							// this may be helpful: http://burtbeckwith.com/blog/?p=73
-							//track.errors = null
-						}
+				for (int i=0; i<numWorkUnits; i++) {
+					def end
+					if (i < numWorkUnits-1) {
+						end = ((i+1)*workSize)-1
+					} else {
+						end = trackSize-1
+					}
+//					log.info "from ${i*workSize} to ${end}"
+					workUnits.push tracks[i*workSize .. end]
 				}
-				def task1 = add.curry(firstTracks)
-				def task2 = add.curry(lastTracks)
-				
-				def first = callAsync(task1)
-				first.get()
-				def last = callAsync(task2)
-				last.get()
-				
-				splitInsert.stop()
-					
-				log.info "Done creating tracks"
-				
-				
-				if (!success) {
-					// we should have committed all changes we've made, so throw an exception to tell our caller something went wrong
-					// 	additionally, don't update lastSynced (for now)
-					//		at some point, we should add an errorLastSynced (or similar) since last.fm caches the replies for a little while
-					error =  new LastFmException(failMessage)
-				} else {
-					userArtist.lastSynced = new Date()
-					userArtist.merge()
-					userArtist.save(flush: true)
-				}
+			}
+//			log.info "workunits: ${workUnits.size()}"
+//			workUnits.each {
+//				log.info "   size: ${it.size()}"
 //			}
+			
+			def add = { tracksToAdd ->
+				def dateFormatter = new SimpleDateFormat("dd MMM yyyy, kk:mm")
+				tracksToAdd.each {
+					if (!it?.date) {
+						log.warn "Invalid date!: ${it}"
+						success = false
+						failMessage += "Invalid date!: ${it}\n"
+						return	//skip this track
+					}
+					
+					def trackId = it.mbid
+					def date = dateFormatter.parse(it.date."#text")
+					if (syncFromDate && date < syncFromDate) {
+						return
+					}
+					def track
+					
+					if (existingTracks || (date && date < lastExtDate)) {
+						track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+					} else {
+						track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
+					}
+					// this may be helpful: http://burtbeckwith.com/blog/?p=73
+					//track.errors = null
+				}
+			}
+			
+			workUnits.each {
+				work.push add.curry(it)	
+			}
+				
+			work.each {
+				actors.push callAsync(it)
+			}
+			
+			actors.each {
+				it.get()
+			}
+				
+			splitInsert.stop()
+				
+			log.info "Done creating tracks"
+			
+			
+			if (!success) {
+				// we should have committed all changes we've made, so throw an exception to tell our caller something went wrong
+				// 	additionally, don't update lastSynced (for now)
+				//		at some point, we should add an errorLastSynced (or similar) since last.fm caches the replies for a little while
+				error =  new LastFmException(failMessage)
+			} else {
+				userArtist.lastSynced = new Date()
+				userArtist.merge()
+				userArtist.save(flush: true)
+			}
 		} finally {
 			split.stop()
 			synchronized(syncing[userId][artistId]) {
