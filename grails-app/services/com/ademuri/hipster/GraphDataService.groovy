@@ -66,6 +66,8 @@ class GraphDataService {
 			}
 		}
 		
+		log.info "User artist list: ${userArtistList}"
+		
 		if (userArtistList.size() == 0) {
 			log.warn "No scrobbles found for user artist ids ${userArtistIdList}"
 			return null
@@ -214,7 +216,7 @@ class GraphDataService {
 		def outliers = new PriorityQueue<Integer>()
 		
 		//userArtistList.each { userArtist ->
-		def doWork = { userArtist ->
+		def doWork = { userArtist, index ->
 			def counts = []
 			def userAlbumId
 			
@@ -254,12 +256,14 @@ class GraphDataService {
 					counts.add([String.format('%tY-%<tm-%<td', globalFirst+i), count])
 				}
 			}
-			data.add(counts)
+			
+			def datum = [counts: counts, index: index]
+			data.push datum
 		}
 		
 		def work = []
-		userArtistList.each {
-			work.push(doWork.curry(it))
+		userArtistList.eachWithIndex { it, index ->
+			work.push(doWork.curry(it, index))
 		}
 		
 		def actors = []
@@ -310,8 +314,9 @@ class GraphDataService {
 		} else if (!removeOutliers) {
 			maxY = 0
 		}
-		
-//		log.info "maxY: ${maxY}"
+
+		data.sort { it.index }
+		data = data.collect { it.counts }		
 		
 		def chartdata = [:]
 		chartdata.data = data

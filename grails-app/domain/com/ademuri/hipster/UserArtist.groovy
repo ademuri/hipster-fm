@@ -3,7 +3,7 @@ package com.ademuri.hipster
 class UserArtist {
 	
 	public String toString() {
-		return artist.name
+		return "${artist.name} (${user.username})"
 	}
 	
 	public String encodeAsHTML = {

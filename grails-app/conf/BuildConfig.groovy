@@ -27,9 +27,6 @@ grails.project.dependency.resolution = {
 
         mavenLocal()
         mavenCentral()
-		
-		// my maven server - right now has jquery-2.0.0
-		mavenRepo "http://ademuri.com:8080/nexus/content/repositories/releases/"
 
         // uncomment these (or add new ones) to enable remote dependency resolution from public Maven repositories
         mavenRepo "http://snapshots.repository.codehaus.org"
