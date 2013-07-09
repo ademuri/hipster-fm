@@ -66,8 +66,6 @@ class GraphDataService {
 			}
 		}
 		
-		log.info "User artist list: ${userArtistList}"
-		
 		if (userArtistList.size() == 0) {
 			log.warn "No scrobbles found for user artist ids ${userArtistIdList}"
 			return null

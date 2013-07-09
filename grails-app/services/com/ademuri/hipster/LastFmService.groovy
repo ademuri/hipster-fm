@@ -203,7 +203,7 @@ class LastFmService {
 			def user = User.findByUsername(it.name)
 			if (!user) {
 //				log.info "Creating user ${it.name} (${it.realname})"
-				user = new User(username: it.name, name: it.realname).save(failOnError: true)
+				user = new User(username: it.name, name: it.realname).save(flush: true, failOnError: true)
 			}
 			// note: grails docs suggest this should be a set (ie no duplicates), but I'm still seeing duplicates in the DB
 			// this is a hack & may cause performance issues if there are many friends
@@ -468,7 +468,8 @@ class LastFmService {
 					}
 					
 					def trackId = it.mbid
-					def date = dateFormatter.parse(it.date."#text")
+//					def date = dateFormatter.parse(it.date."#text")
+					def date = new Date(Long.parseLong(it.date."uts") * 1000)
 					if (syncFromDate && date < syncFromDate) {
 						return
 					}
@@ -513,6 +514,7 @@ class LastFmService {
 			}
 		} finally {
 			split.stop()
+			log.info "Unlocking for ${userId}, ${artistId}"
 			synchronized(syncing[userId][artistId]) {
 				syncing[userId][artistId].unlock()
 			}

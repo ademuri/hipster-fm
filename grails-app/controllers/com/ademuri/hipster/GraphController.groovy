@@ -73,7 +73,7 @@ class GraphController {
 		for(String username : usernameList) {
 			def userInstance = User.findByUsername(username)
 			if (!userInstance) {
-				log.info "Didn't find user with username ${user}"
+				log.info "Didn't find user with username ${username}"
 				userInstance = new User(username: username).save(flush: true, failOnError: true)
 			}
 			userList.add(userInstance)
