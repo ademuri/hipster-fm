@@ -1,9 +1,11 @@
 package com.ademuri.hipster
 
+import java.text.SimpleDateFormat;
+
 class Track {
 	
 	public String toString() {
-		return "${artist.name} - ${name} (${date})"
+		return "${artist.name} - ${name} (${getDateString()})"
 	}
 	
 	static belongsTo = [artist: UserArtist, album: UserAlbum]
@@ -15,6 +17,14 @@ class Track {
 	Integer hourOfDay
 	
 	Date dateCreated
+	
+	
+	def tz = TimeZone.getTimeZone("GMT")
+//	def tz = TimeZone.getDefault()
+	
+	String getDateString() {
+		return date.format("dd MMM yyyy, kk:mm", tz)
+	}
 	
 	static mapping = {
 		sort "date"

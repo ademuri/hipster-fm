@@ -27,7 +27,7 @@
 				<li class="fieldcontain">
 					<span id="date-label" class="property-label"><g:message code="track.date.label" default="Date" /></span>
 					
-						<span class="property-value" aria-labelledby="date-label"><g:formatDate date="${trackInstance?.date}" /></span>
+						<span class="property-value" aria-labelledby="date-label">${trackInstance.getDateString()}</span>
 					
 				</li>
 				</g:if>

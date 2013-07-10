@@ -458,7 +458,11 @@ class LastFmService {
 //			}
 			
 			def add = { tracksToAdd ->
-				def dateFormatter = new SimpleDateFormat("dd MMM yyyy, kk:mm")
+//				def dateFormatter = new SimpleDateFormat("dd MMM yyyy, kk:mm")		// not *actually* in GMT, but we don't want it to be adjusted
+//				dateFormatter.setTimeZone(TimeZone.getTimeZone("GMT"))
+				def timeOffset = TimeZone.getDefault().getRawOffset() + TimeZone.getDefault().getDSTSavings()
+//				def timeOffset = 60 * 60 * 1000		// one hour
+//				def timeOffset = 0	
 				tracksToAdd.each {
 					if (!it?.date) {
 						log.warn "Invalid date!: ${it}"
@@ -469,7 +473,8 @@ class LastFmService {
 					
 					def trackId = it.mbid
 //					def date = dateFormatter.parse(it.date."#text")
-					def date = new Date(Long.parseLong(it.date."uts") * 1000)
+					def date = new Date(Long.parseLong(it.date."uts") * 1000 + timeOffset)
+//					log.info "${it.name}, date: ${date.toGMTString()}, raw date: ${it.date.'#text'}"
 					if (syncFromDate && date < syncFromDate) {
 						return
 					}
@@ -480,6 +485,9 @@ class LastFmService {
 					} else {
 						track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(failOnError: true)
 					}
+//					log.info "date after save: ${track.getDateString()}"
+//					track.save(flush: true)
+//					log.info "date after flushing: ${track.getDateString()}"
 					// this may be helpful: http://burtbeckwith.com/blog/?p=73
 					//track.errors = null
 				}
@@ -490,7 +498,9 @@ class LastFmService {
 			}
 				
 			work.each {
-				actors.push callAsync(it)
+				def thing = callAsync(it)
+				actors.push thing
+//				thing.get()
 			}
 			
 			actors.each {
@@ -514,7 +524,7 @@ class LastFmService {
 			}
 		} finally {
 			split.stop()
-			log.info "Unlocking for ${userId}, ${artistId}"
+//			log.info "Unlocking for ${userId}, ${artistId}"
 			synchronized(syncing[userId][artistId]) {
 				syncing[userId][artistId].unlock()
 			}
