@@ -578,7 +578,7 @@ class LastFmService {
 		def topArtists = []
 		
 		if ((data?.topartists?."@attr"?.total) && (data.topartists."@attr".total as int) > 0) {
-			def artists = data.topartists.artist
+			def artists = [data.topartists.artist].flatten()
 			
 			artists.each {
 				if (!it.has("mbid")) {
