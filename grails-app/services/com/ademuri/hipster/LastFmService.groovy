@@ -589,14 +589,14 @@ class LastFmService {
 				
 				def artist = Artist.findByName(it.name)
 				if (!artist) {
-					artist = new Artist(name: it.name, lastId: it.mbid).save()
+					artist = new Artist(name: it.name, lastId: it.mbid).save(flush: true, failOnError: true)
 				}
 				
-				def userArtist = artist.userArtists.find { it.user == user}
+				def userArtist = UserArtist.findByUserAndArtist(user, artist)
 				
 				if (!userArtist) {
 	//				log.info "Top user artist not present: ${artist.name}"
-					userArtist = new UserArtist(artist: artist, user: user).save()
+					userArtist = new UserArtist(artist: artist, user: user).save(flush: true, failOnError: true)
 //					artist.addToUserArtists(userArtist)
 				} else {
 	//				log.info "Found top user artist: ${artist.name}"
