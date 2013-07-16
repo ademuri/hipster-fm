@@ -87,11 +87,17 @@
 		var friends = [];
 		
 		function showFriends(name) {
-			console.log("showing friend " + name);
 			var url = '${createLink(controller: 'user', action: 'ajaxGetFriendsByName')}';
 			url += "?username=" + name;
 			getCache('friend_cache_' + name, url, function(data) {
 				$("div.checkbox").html(data);
+
+				$("div.checkbox div.single-friend input").unbind("click");
+				$("div.checkbox div.single-friend input").click( function() {
+					var name = $(this).parent().find('input.username').attr("name");
+					$("li.inputosaurus-input input").val(name + " ");
+					$("li.inputosaurus-input input").trigger("change");
+				});
 			});
 		}
 		
@@ -101,7 +107,7 @@
 			getCache('username_cache', '${createLink(controller: 'user', action: 'ajaxGetUserList')}', 
 					function(data) {
 				$("#user").inputosaurus({
-					width: '350px',
+					width: '500px',
 					autoCompleteSource: data,
 					parseOnBlur: true,
 					submitOnEmptyTag: "#setup-submit",
@@ -122,7 +128,6 @@
 			$("li[data-inputosaurus]").click( function() {
 				var span = $($(this)[0].firstChild);
 				var name = span.text();
-				console.log("Fetching for " + name);
 			});
 		});
 		</script>
