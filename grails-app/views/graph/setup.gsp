@@ -8,41 +8,11 @@
 		<r:require modules="jquery, irex, store_js" />
 	</head>
 	<body>
-		<div class="nav" role="navigation">
-			<ul>
-				<li><g:link class="setup" controller="graph" action="setupHeatmap">Setup Heatmap</g:link></li>
-				<li><g:link class="find" controller="user" action="find">Find user</g:link></li>
-				<li><g:link class="setup" controller="options" action="colors">Colors</g:link></li>
-				<g:if env="development">
-				<li><g:link class="fetchTopArtists" controller="graph" action="fetchTopArtists">Fetch top artists</g:link></li>
-				</g:if>
-			</ul>
-		</div>
-		
 		<div id="setup-graph" class="content" role="main">
 			<h1>Setup Graph</h1>
 			<g:if test="${flash.message}">
 				<div class="message" role="status">${flash.message}</div>
 			</g:if>
-			
-			<div id="user-form">
-				<g:form method="post" >
-				<fieldset class="form">
-					<span class="fieldcontain ${hasErrors(field: 'user', 'error')} ">
-						<label for="user">
-							Search for user
-						</label>
-						<g:textField name="user" value="${user}" id="user-search"/>
-					</span>
-					<g:actionSubmit class="submit" action="setup" value="Search" />
-					<div class="fieldcontain">
-						<label for="interval">Interval</label>
-						<g:select id="interval" name="interval" from="${UserArtist.rankNames}" value="${interval ?: '3month'}" />
-					</div>
-				</fieldset>
-				</g:form>
-			</div>
-			
 			<div id="setup-graph-form" >
 				<g:form method="post">
 					<fieldset class="form">
@@ -52,7 +22,6 @@
 								Users
 							</label>
 							<g:textField name="user" value="${user}"/>
-							<label>(comma or enter to add)</label>
 						</div>
 						<div class="fieldcontain">
 							<label for="addAllFriends">Add all friends with artist</label>
@@ -113,6 +82,10 @@
 		$("#artist-select").change(function() {
 			$("#artist").val($("#artist-select").val());
 		});
+
+		function showFriends(name) {
+			console.log("showing friend " + name);
+		}
 		
 		$(document).ready( function() {
 			$.ajaxSetup({ cache: true });
@@ -124,7 +97,8 @@
 					autoCompleteSource: data,
 					parseOnBlur: true,
 					submitOnEmptyTag: "#setup-submit",
-					inputDelimiters: [',', ' ']
+					inputDelimiters: [',', ' '],
+					tagFocusHook: showFriends
 				});
 			});
 
@@ -134,6 +108,13 @@
 				$("#artist").autocomplete({
 					source: data
 				});
+			});
+
+			// clicking on tagged user will show that users' friends, which can also be added
+			$("li[data-inputosaurus]").click( function() {
+				var span = $($(this)[0].firstChild);
+				var name = span.text();
+				console.log("Fetching for " + name);
 			});
 		});
 		</script>
