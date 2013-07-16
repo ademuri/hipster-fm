@@ -44,7 +44,7 @@ class Track {
 		dateCreated(nullable: true)
 		date nullable: false
 		artist nullable: false
-		name nullable: false
+		name nullable: false, maxSize: 1000
 		album nullable: true
 		dayOfWeek nullable: true
 		hourOfDay nullable: true
