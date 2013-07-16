@@ -22,6 +22,7 @@
 								Users
 							</label>
 							<g:textField name="user" value="${user}"/>
+							<label>(click to show friends)</label>
 						</div>
 						<div class="fieldcontain">
 							<label for="addAllFriends">Add all friends with artist</label>
@@ -83,8 +84,15 @@
 			$("#artist").val($("#artist-select").val());
 		});
 
+		var friends = [];
+		
 		function showFriends(name) {
 			console.log("showing friend " + name);
+			var url = '${createLink(controller: 'user', action: 'ajaxGetFriendsByName')}';
+			url += "?username=" + name;
+			getCache('friend_cache_' + name, url, function(data) {
+				$("div.checkbox").html(data);
+			});
 		}
 		
 		$(document).ready( function() {
