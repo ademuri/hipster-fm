@@ -55,7 +55,10 @@
 			parseHook : null,
 			
 			// if enter is pressed and there is no text entered since the previous tag, submit the form
-			submitOnEmptyTag : null
+			submitOnEmptyTag : null,
+			
+			// Call this function with the text of the tag when a tag is selected
+			tagFocusHook : null
 		},
 
 		_create: function() {
@@ -406,12 +409,20 @@
 			$(ev.currentTarget).closest('li').remove();
 			widget.elements.input.focus();
 		},
-
+		
 		_focus : function(ev) {
 			var widget = (ev && ev.data.widget) || this;
 
 			if(!ev || !$(ev.target).closest('li').data('inputosaurus')){
 				widget.elements.input.focus();
+			}
+			
+			if (ev && $(ev.target).closest('li').data('inputosaurus') && !$(ev.target).is('a.ficon')) {
+				var tag = $(ev.target).closest('li') 
+				tag.find('a').focus();
+				if (widget.options.tagFocusHook) {
+					widget.options.tagFocusHook(tag.find("span").text())
+				}
 			}
 		},
 
@@ -454,6 +465,7 @@
 			this.elements.ul.on('focus.inputosaurus', 'a', {widget : widget}, this._tagFocus);
 			this.elements.ul.on('blur.inputosaurus', 'a', {widget : widget}, this._tagFocus);
 			this.elements.ul.on('keydown.inputosaurus', 'a', {widget : widget}, this._tagKeypress);
+			this.elements.ul.on('')
 		},
 
 		_destroy: function() {
