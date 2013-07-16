@@ -43,8 +43,8 @@
 				</g:form>
 			</div>
 			
-			<div id="setup-graph-form">
-				<g:form method="post" >
+			<div id="setup-graph-form" >
+				<g:form method="post">
 					<fieldset class="form">
 					<div class="setup-group">
 						<div class="fieldcontain ${hasErrors(field: 'user', 'error')} ">
@@ -55,7 +55,7 @@
 							<label>(comma or enter to add)</label>
 						</div>
 						<div class="fieldcontain">
-							<label for="user-all-friends">Add all friends with artist</label>
+							<label for="addAllFriends">Add all friends with artist</label>
 							<g:checkBox name="addAllFriends" />
 						</div>
 						
@@ -102,7 +102,7 @@
 						<g:render template="window"/>
 					</div>
 					<fieldset class="buttons">
-						<g:actionSubmit class="submit" action="search" value="Submit" />
+						<g:actionSubmit class="submit" action="search" value="Submit" id="setup-submit" />
 					</fieldset>
 				</g:form>
 						
@@ -121,7 +121,10 @@
 					function(data) {
 				$("#user").inputosaurus({
 					width: '350px',
-					autoCompleteSource: data
+					autoCompleteSource: data,
+					parseOnBlur: true,
+					submitOnEmptyTag: "#setup-submit",
+					inputDelimiters: [',', ' ']
 				});
 			});
 

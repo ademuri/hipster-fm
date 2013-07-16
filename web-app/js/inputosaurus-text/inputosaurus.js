@@ -52,7 +52,10 @@
 
 			// manipulate and return the input value after parseInput() parsing
 			// the array of tag names is passed and expected to be returned as an array after manipulation
-			parseHook : null
+			parseHook : null,
+			
+			// if enter is pressed and there is no text entered since the previous tag, submit the form
+			submitOnEmptyTag : null
 		},
 
 		_create: function() {
@@ -139,15 +142,19 @@
 				values = [];
 
 			val = widget.elements.input.val();
+			
 
 			val && (delimiterFound = widget._containsDelimiter(val));
+			
+			if (widget.options.submitOnEmptyTag && ev && val === '' && ev.which === $.ui.keyCode.ENTER && ev.type === 'keydown') {
+				$(widget.options.submitOnEmptyTag).click();
+			}
 
 			if(delimiterFound !== false){
 				values = val.split(delimiterFound);
 			} else if(!ev || ev.which === $.ui.keyCode.ENTER){
 				values.push(val);
 				ev && ev.preventDefault();
-
 			// prevent autoComplete menu click from causing a false 'blur'
 			} else if(ev.type === 'blur' && !$('#ui-active-menuitem').size()){
 				values.push(val);
