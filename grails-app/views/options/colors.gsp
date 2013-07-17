@@ -3,9 +3,19 @@
 	<head>
 		<meta name="layout" content="main">
 		<title>Options - Colors</title>
-		<r:require modules="jquery, jqplot, spectrum, store_js" />
+		<r:require modules="jquery, jquery-ui, spectrum, store_js" />
 	</head>
 	<body>
+		<div id="tabs">
+			<ul>
+				<li><a href="#tabs-graph">Graph</a>
+				<li><a href="#tabs-heatmap">Heatmap</a>
+			</ul>
+			
+			<div id="tabs-graph"></div>
+			<div id="tabs-heatmap"></div>
+		</div>
+		
 		<div id="options-colors" class="content" role="main">
 			<div id="options-color-pickers">
 				<g:form onsubmit="return false">
@@ -28,13 +38,11 @@
 					</ul>
 				</g:form>
 			</div>
-			
-			
 		</div>
 		
 		
 		
-		<r:script>
+		<script>
 			var options = {
 					showInput: true,
 					showPalette: true,
@@ -63,10 +71,16 @@
 
  			var protanomaly = ["#03F", "#C3F", "#F06", "#F60", "#FC0", "#3F0", "#090", "#900", "#09F" ];
 
-			var colorSchemes = [{name: "Default", colors: defaultColors}, {name: "Greyscale", colors: greyScale},
+			var defaultColorSchemes = [{name: "Default", colors: defaultColors}, {name: "Greyscale", colors: greyScale},
 			        			{name: "Deutanomaly", colors: deut}, {name: "Deutanamoly II", colors: deut2},
 			        			{name: "Protanopy", colors: prot}, {name: "Deutanopy", colors: deutanopia},
 			        			{name: "Protanomaly", colors: protanomaly}];
+			        			
+			var colorSchemes;
+			        			
+			var colorsFor = "graph";
+			var colorsName = "colors-graph";
+			var colorSchemesName = "color-schemes-graph";
 			
 			function remove() {
 				$(this).parent().remove();
@@ -98,20 +112,14 @@
 
 				$("#options-color-palettes ul").append(items.join(''));
 				$("#options-color-palettes .color-click").click( function() {
-					console.log("id: " + $(this).attr("id"));
-					store.set('colors', colorSchemes[$(this).attr("id")].colors);
-
-					var toRemove = $("#options-color-pickers .color-picker");
-					toRemove.splice(0, 1);
-					toRemove.remove();
+					store.set(colorsName, colorSchemes[$(this).attr("id")].colors);
 					displayScheme(colorSchemes[$(this).attr("id")].colors);
 				});
 				
 				$("#options-color-palettes .color-scheme-delete").unbind();
 				$("#options-color-palettes .color-scheme-delete").click( function() {
-					console.log("id: " + $(this).attr("id"));
 					colorSchemes.splice([$(this).attr("id")], 1);
-					store.set('color-schemes', colorSchemes);
+					store.set(colorSchemesName, colorSchemes);
 					$("#options-color-palettes li").remove();
 					displaySchemes(colorSchemes);
 				});
@@ -119,6 +127,11 @@
 			}
 
 			function displayScheme(colors) {
+				// remove all but 1 color picker first
+				var toRemove = $("#options-color-pickers .color-picker");
+				toRemove.splice(0, 1);
+				toRemove.remove();
+			
 				var picker = $("#options-colors .spectrum-input");
 
 				if (!colors) {
@@ -140,27 +153,46 @@
 				});
 			}
 			
-			$(document).ready( function() {
-				var colors = store.get('colors');
+			function tabClicked() {
+				var colors = store.get(colorsName);
 				displayScheme(colors);
+				
+				// remove old schemes first
+				$("ul.color-palette-list li").remove();
 
 				// display color schemes
-				if (store.get('color-schemes')) {
-					colorSchemes = store.get('color-schemes');
+				if (store.get(colorSchemesName)) {
+					colorSchemes = store.get(colorSchemesName);
+				} else {
+					colorSchemes = defaultColorSchemes.slice(0);
 				}
-
-				$(".reset").click(reset);
-				$(".apply").click(setcolors);
-				$(".save").click(save);
-
-				// 
+				
 				$("#schemeName").keyup(function(event){
 				    if(event.keyCode == 13){
 				        $(".save").click();
 				    }
 				});
+				displaySchemes(colorSchemes);
+			}
+			
+			$(document).ready( function() {
+				$("#tabs").tabs();
+				$("a[href=#tabs-graph]").click( function() {
+					colorsName = "colors-graph";
+					colorSchemesName = "color-schemes-graph";
+					tabClicked();
+				});
+				$("a[href=#tabs-heatmap]").click( function() {
+					colorsName = "colors-heatmap";
+					colorSchemesName = "color-schemes-heatmap";
+					tabClicked();
+				});
+				$("a[href=#tabs-graph]").click();
 				
-				displaySchemes(colorSchemes);				
+				
+				$(".reset").click(reset);
+				$(".apply").click(setcolors);
+				$(".save").click(save);
 			});
 
 			function flashApply() {
@@ -168,18 +200,18 @@
 			}
 			
 			function setcolors() {
-				store.remove('colors');
+				store.remove(colorsName);
 				var colors = [];
 				$("#options-colors .spectrum-input").each (function(i, val) {
 					colors.push($(val).spectrum("get").toHexString());
 				});
-				store.set('colors', colors);
+				store.set(colorsName, colors);
 				flashApply();
 				return false;
 			}
 
 			function reset() {
-				store.set('colors', defaultColors);
+				store.set(colorsName, defaultColors);
 				location.reload();
 			}
 
@@ -191,11 +223,11 @@
 
 				var scheme = {name: $("#schemeName").val(), colors: colors};
 				colorSchemes.push(scheme);
-				store.set('color-schemes', colorSchemes);
+				store.set(colorSchemesName, colorSchemes);
 				displaySchemes([scheme]);
 				flashApply();
 			}
-		</r:script>
+		</script>
 	<div id="color-picker-template">
 		<g:render template="colorpicker" />
 	</div>	
