@@ -8,13 +8,6 @@
 		<r:require modules="jquery, irex, store_js" />
 	</head>
 	<body>
-		<div class="nav" role="navigation">
-			<ul>
-				<li><g:link class="setup" controller="graph" action="setup">Setup graph</g:link></li>
-				<li><g:link class="setup" controller="graph" action="setupHeatmap">Setup Heatmap</g:link></li>
-			</ul>
-		</div>
-		
 		<div id="find-user" class="content" role="main">
 			<h1>Find User</h1>
 			<g:if test="${flash.message}">

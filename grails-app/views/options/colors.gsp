@@ -6,12 +6,6 @@
 		<r:require modules="jquery, jqplot, spectrum, store_js" />
 	</head>
 	<body>
-		<div class="nav" role="navigation">
-			<ul>
-				<li><a class="home" href="${createLink(uri: '/')}"><g:message code="default.home.label"/></a></li>
-			</ul>
-		</div>
-		
 		<div id="options-colors" class="content" role="main">
 			<div id="options-color-pickers">
 				<g:form onsubmit="return false">

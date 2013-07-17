@@ -9,16 +9,6 @@
 	<r:require modules="jquery, d3" />
 </head>
 <body>
-	<div class="nav" role="navigation">
-			<ul>
-				<li><g:link class="setup" action="setup">Setup graph</g:link></li>
-				<li><g:link class="setup" controller="graph" action="setupHeatmap">Setup Heatmap</g:link></li>
-				<li><g:link class="find" controller="user" action="find">Find user</g:link></li>
-				<li><g:link class="setup" action="setup" params="${params}">Filter graph</g:link></li>
-				<li><g:link class="setup" controller="options" action="colors">Colors</g:link></li>
-			</ul>
-		</div>
-
 	<script type="text/javascript">
 	var running = 0;
 	$(document).ready(function() {

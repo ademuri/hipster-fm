@@ -37,7 +37,7 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
-        runtime 'mysql:mysql-connector-java:5.1.20'
+        runtime 'mysql:mysql-connector-java:5.1.25'
 		compile "org.codehaus.gpars:gpars:1.0.0"
 		compile 'org.javasimon:javasimon-core:3.3.0'
     }
@@ -46,17 +46,16 @@ grails.project.dependency.resolution = {
         runtime ":hibernate:$grailsVersion"
 
         build ":tomcat:$grailsVersion"
-		compile ":rest:0.7"
 		
-		compile ':cache:1.0.1'
+		compile ':cache:1.1.1'
 		compile ':cache-headers:1.1.5'
 		compile ':cached-resources:1.0'
 		compile ':form-helper:0.2.8'
 		compile ':hibernate-stats:1.1'
 		compile ':pretty-time:2.1.3.Final-1.0.1'
-		compile ':quartz:1.0-RC7'
-		compile ':quartz-monitor:0.3-RC1'
-		compile ':resources:1.2.RC2'
+		compile ':quartz:1.0-RC9'
+		compile ':quartz-monitor:0.3-RC2'
+		compile ':resources:1.2'
 		compile ':rest:0.7'
 		compile ':webxml:1.4.1'
 		compile ':yui-minify-resources:0.1.5'

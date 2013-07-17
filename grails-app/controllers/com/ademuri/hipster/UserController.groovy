@@ -182,4 +182,20 @@ class UserController {
 			render (nothing as JSON)
 		}
 	}
+	
+	def ajaxGetFriendsByName() {
+		if (!params?.username) {
+			log.warn "ajaxGetFriendsByName called without name"
+			return
+		}
+		
+		def user = lastFmService.getUser(params.username)
+		if (!user) {
+			log.warn "user does not exist: ${params?.username}"
+			return
+		}
+		lastFmService.getFriends(user.id)
+		
+		render template: 'friendList', model: [friends: user.friends.sort()]
+	}
 }

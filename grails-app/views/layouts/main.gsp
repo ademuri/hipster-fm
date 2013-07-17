@@ -36,6 +36,18 @@
 			
 		
 		<div id="header" role="banner">Hipster</div>
+		<div class="nav" role="navigation">
+			<ul>
+				<li><g:link class="setup" controller="graph" action="setup">Graph</g:link></li>
+				<li><g:link class="setup" controller="graph" action="setupHeatmap">Heatmap</g:link></li>
+				<li><g:link class="find" controller="user" action="find">Find user</g:link></li>
+				<li><g:link class="setup" controller="options" action="colors">Colors</g:link></li>
+				<g:if env="development">
+				<li><g:link class="fetchTopArtists" controller="graph" action="fetchTopArtists">Fetch top artists</g:link></li>
+				</g:if>
+			</ul>
+		</div>
+		
 		<g:layoutBody/>
 		<div class="footer" role="contentinfo">
 			<span class="footer-links">

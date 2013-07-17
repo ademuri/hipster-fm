@@ -7,16 +7,6 @@
 		<r:require modules="jquery, irex, store_js" />
 	</head>
 	<body>
-		<div class="nav" role="navigation">
-			<ul>
-				<li><g:link class="find" controller="user" action="find">Find user</g:link></li>
-				<li><g:link class="setup" controller="options" action="colors">Colors</g:link></li>
-				<g:if env="development">
-				<li><g:link class="fetchTopArtists" controller="graph" action="fetchTopArtists">Fetch top artists</g:link></li>
-				</g:if>
-			</ul>
-		</div>
-		
 		<div id="setup-heatmap-template">
 			<g:render template="setupHeatmapForm" />
 		</div>

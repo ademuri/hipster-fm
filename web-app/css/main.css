@@ -605,9 +605,13 @@ a.skip {
 }
 
 .single-friend {
-	border: 1px solid #DDDDDD;
+	border: none;
 	width: 90%;
 	padding: .1em;
+}
+
+div.checkbox input {
+	cursor: pointer;
 }
 
 .friend-select label {
