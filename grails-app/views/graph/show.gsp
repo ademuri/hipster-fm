@@ -78,6 +78,8 @@
 					jqplotOptions.axes.yaxis.max = maxY;
 				}
 
+				var numUsers = data.length;
+				$("#chartdiv").css("height", "" + (numUsers * 25 + 520) + "px");
 				$.jqplot('chartdiv', data, jqplotOptions);
 			}
 			
