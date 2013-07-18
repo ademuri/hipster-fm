@@ -1,6 +1,10 @@
 <script>
 function doMap${it.index}(error, data) {
-	var colors = ['#EEE', '#DDD', '#CCC', '#BBB', '#AAA', '#999', '#888', '#777', '#666', '#555', '#444', '#333', '#222', '#111', '#000'];
+	var colors = store.get('colors-heatmap');
+	if (!colors) {
+		colors = ['#EEE', '#DDD', '#CCC', '#BBB', '#AAA', '#999', '#888', '#777', '#666', '#555', '#444', '#333', '#222', '#111', '#000'];
+	}
+	
 	var margin = { top: 50, right: 0, bottom: 100, left: 30 },
 		squareHeight = 30,
 		squareMargin = 2,
@@ -8,6 +12,11 @@ function doMap${it.index}(error, data) {
 		gridWidth = 7 * squareHeight + 6 * squareMargin;
 		
 	var days = ['S', 'M', 'T', 'W', 'R', 'F', 'S'];
+
+	var colorWidth = (squareHeight + squareMargin) * 2 * colors.length + margin.left + margin.right;
+	var heatmapWidth = (squareHeight + squareMargin) * days.length + margin.left + margin.right;
+	var width = Math.max(colorWidth, heatmapWidth);
+	
 	
 	var colorScale = d3.scale.quantile()
 		.domain([0, d3.max(data, function(d) { return d.count; })])
@@ -15,7 +24,7 @@ function doMap${it.index}(error, data) {
 	
 	var svg = d3.select(".body${it.index}")
   		.append("svg")
-  		.attr("width", (squareHeight + squareMargin) * 2 * colors.length + margin.left + margin.right)
+  		.attr("width", width)
   		.attr("height", gridHeight + margin.top + margin.bottom)
   		.append("g")
   		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
