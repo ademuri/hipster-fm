@@ -24,6 +24,7 @@
 						<span class="color-button color-add last-add">+</span>
 					</div>
 					
+					<br>
 					<g:actionSubmit value="Apply" class="apply" />
 					<g:actionSubmit value="Reset" class="reset" />
 					<g:textField name="schemeName"/>
@@ -59,6 +60,8 @@
 
 			var greyScale = ["#BBB", "#999", "#777", "#555", "#333", "#000"];
 
+			var greyScaleLong = ['#EEE', '#DDD', '#CCC', '#BBB', '#AAA', '#999', '#888', '#777', '#666', '#555', '#444', '#333', '#222', '#111', '#000'];
+
 			var deut = ["#30F", "#F0C", "#F90", "#3F0", "#0CF", "#F03", "#930", "#060"
 						];
 
@@ -72,6 +75,7 @@
  			var protanomaly = ["#03F", "#C3F", "#F06", "#F60", "#FC0", "#3F0", "#090", "#900", "#09F" ];
 
 			var defaultColorSchemes = [{name: "Default", colors: defaultColors}, {name: "Greyscale", colors: greyScale},
+			                    {name: "Greyscale long", colors: greyScaleLong},
 			        			{name: "Deutanomaly", colors: deut}, {name: "Deutanamoly II", colors: deut2},
 			        			{name: "Protanopy", colors: prot}, {name: "Deutanopy", colors: deutanopia},
 			        			{name: "Protanomaly", colors: protanomaly}];
@@ -195,8 +199,8 @@
 				$(".save").click(save);
 			});
 
-			function flashApply() {
-				$(".apply").effect("highlight", {}, 1000);
+			function flash(el) {
+				$("." + el).effect("highlight", {}, 1000);
 			}
 			
 			function setcolors() {
@@ -206,13 +210,19 @@
 					colors.push($(val).spectrum("get").toHexString());
 				});
 				store.set(colorsName, colors);
-				flashApply();
+				flash("apply");
 				return false;
 			}
 
 			function reset() {
+				$("ul.color-palette-list li").remove();
+				store.set(colorSchemesName, defaultColorSchemes);
+				displaySchemes(defaultColorSchemes);
+				
 				store.set(colorsName, defaultColors);
-				location.reload();
+				displayScheme(defaultColors);
+				flash("reset");
+				return false;
 			}
 
 			function save() {
@@ -225,7 +235,7 @@
 				colorSchemes.push(scheme);
 				store.set(colorSchemesName, colorSchemes);
 				displaySchemes([scheme]);
-				flashApply();
+				flash("save");
 			}
 		</script>
 	<div id="color-picker-template">
