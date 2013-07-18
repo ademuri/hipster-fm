@@ -314,13 +314,21 @@ class GraphController {
 					}
 				}
 				
+				def toAdd = []
 				dataList.each {
 					def point = [:]
 					point.day = day
 					point.hour = it[0]
 					point.count = it[1]
-					data << point
+					toAdd << point
 				}
+				(0..23).each { hour ->
+					if (!toAdd.find { it.hour == hour }) {
+						toAdd << [day: day, hour: hour, count: 0]
+					}
+				}
+				data.addAll(toAdd)
+				
 			}
 		}
 		else if (params.t == 'Day') {
@@ -342,6 +350,11 @@ class GraphController {
 					data << point
 				}
 			}
+			(1..7).each { day ->
+				if (!data.find { it.day == day }) {
+					data << [day: day, count: 0]
+				}
+			}
 		} else if (params.t == 'Hour') {
 			(0..23).each { hour ->
 				def criteria = Track.createCriteria()
@@ -361,9 +374,13 @@ class GraphController {
 					data << point
 				}
 			}
+			(0..23).each { hour ->
+				if (!data.find { it.hour == hour }) {
+					data << [hour: hour, count: 0]
+				}
+			}
 		}
 		
-		def r = [data: data]
 		render data as JSON
 	}
 	
