@@ -581,7 +581,7 @@ class LastFmService {
 			def artists = [data.topartists.artist].flatten()
 			
 			artists.each {
-				if (!it.has("mbid")) {
+				if (!it.containsKey("mbid")) {
 					log.warn "Invalid artist: ${it}"
 					log.info "raw data: ${data}"
 					return
