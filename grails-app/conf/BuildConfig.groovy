@@ -49,14 +49,14 @@ grails.project.dependency.resolution = {
 		
 		compile ':cache:1.1.1'
 		compile ':cache-headers:1.1.5'
-		compile ':cached-resources:1.0'
+		compile ':cached-resources:1.1'
 		compile ':form-helper:0.2.8'
 		compile ':hibernate-stats:1.1'
 		compile ':pretty-time:2.1.3.Final-1.0.1'
 		compile ':quartz:1.0-RC9'
 		compile ':quartz-monitor:0.3-RC2'
 		compile ':resources:1.2'
-		compile ':rest:0.7'
+		compile ':rest:0.8'
 		compile ':webxml:1.4.1'
 		compile ':yui-minify-resources:0.1.5'
 		compile ':zipped-resources:1.0'
@@ -65,12 +65,5 @@ grails.project.dependency.resolution = {
 		// publicly available
 		compile ':jquery:1.7.2'
 		compile ':jquery-ui:1.8.7'
-		
-		
-		
-		// mine
-//		compile ':jquery:2.0.0'
-//		compile ':jquery-ui:1.10.2'
-		
     }
 }
