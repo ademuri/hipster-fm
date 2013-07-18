@@ -156,6 +156,7 @@
 			}
 
 			attachSessionStorage($("div#setup-heatmap-target fieldset"));
+			$("form").submit(updateSessionStorage);
 
 			animate = true;
 
