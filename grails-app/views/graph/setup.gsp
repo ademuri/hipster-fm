@@ -22,6 +22,7 @@
 								Users
 							</label>
 							<g:textField name="user" value="${user}"/>
+							<r:img dir="images" file="spinner.gif" width="16" height="16" id="user-spinner" />
 							<label>(click to show friends)</label>
 						</div>
 						<div class="fieldcontain">
@@ -47,6 +48,7 @@
 									Artist
 								</label>
 								<g:textField name="artist" value="${artistName}" class="inputosaurus-autocomplete" />
+								<r:img dir="images" file="spinner.gif" width="16" height="16" id="artist-spinner" />
 							</div>
 						
 							<g:if test="${topArtists?.size() > 0}">
@@ -103,12 +105,14 @@
 		
 		$(document).ready( function() {
 			$.ajaxSetup({ cache: true });
+			$("#spinner").offset({top: -100, left: -100});
 			
-			getCache('username_cache', '${createLink(controller: 'user', action: 'ajaxGetUserList')}', 
+			getCache('username_cache', '#user-spinner', '${createLink(controller: 'user', action: 'ajaxGetUserList')}', 
 					function(data) {
 				$("#user").inputosaurus({
-					width: '500px',
+					width: '450px',
 					autoCompleteSource: data,
+					autoCompleteDelay: 0,
 					parseOnBlur: true,
 					submitOnEmptyTag: "#setup-submit",
 					inputDelimiters: [',', ' '],
@@ -116,13 +120,15 @@
 				});
 			});
 
-			// TODO: pluginize this
-			getCache('artist_cache', '${createLink(controller: 'artist', action: 'ajaxGetArtistList')}', 
-					function(data) {
-				$("#artist").autocomplete({
-					source: data
-				});
+			$("#artist").autocomplete({
+				source: [],
+				delay: 0
 			});
+			getCache('artist_cache', '#artist-spinner', '${createLink(controller: 'artist', action: 'ajaxGetArtistList')}', 
+					function(data) {
+						$("#artist").autocomplete("option", "source", data);				
+					}
+			);
 
 			// clicking on tagged user will show that users' friends, which can also be added
 			$("li[data-inputosaurus]").click( function() {

@@ -49,6 +49,7 @@
 
 			// simply passing an autoComplete source (array, string or function) will instantiate autocomplete functionality
 			autoCompleteSource : '',
+			autoCompleteDelay: null,
 
 			// manipulate and return the input value after parseInput() parsing
 			// the array of tag names is passed and expected to be returned as an array after manipulation
@@ -116,6 +117,9 @@
 						$(this).autocomplete('widget').width(widget.elements.ul.outerWidth());
 					}
 				});
+				if (this.options.autoCompleteDelay) {
+					this.elements.input.autocomplete("option", "delay", this.options.autoCompleteDelay);
+				}
 			}
 		},
 

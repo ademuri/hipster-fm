@@ -9,13 +9,14 @@ if (typeof jQuery !== 'undefined') {
 }
 
 
-function getCache(cacheName, link, callback) {
+function getCache(cacheName, spinner, link, callback) {
 	var cache = store.get(cacheName);
-	
-	if (cache && new Date().getDate() - new Date(cache.date).getDate() < 2) {
+	if (cache) {
 		callback(cache.data);
 	}
-	else {
+	
+	// get a new list every 60 minutes, may need to bump this up
+	if (!cache || (new Date() - new Date(cache.date) > 3600000)) {
 		$.ajax(link, {
 			cache: true,
 			success: function(data, textStatus, jqXHR) {
@@ -24,7 +25,13 @@ function getCache(cacheName, link, callback) {
 				cache.date = new Date();
 				store.set(cacheName, cache);
 				callback(data);
+				
+				if (spinner) {
+					$(spinner).hide();
+				}
 			}
 		});
+	} else if (spinner) {
+		$(spinner).hide();
 	}
 }

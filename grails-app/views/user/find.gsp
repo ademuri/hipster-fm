@@ -24,18 +24,23 @@
 						<g:textField name="username"/>
 					</span>
 					<g:actionSubmit class="submit" action="find" value="Search" />
+					<r:img dir="images" file="spinner.gif" width="16" height="16" id="user-spinner" />
 				</fieldset>
 				</g:form>
 			</div>
 		</div>
 		<script>
 		$(document).ready( function() {
-			getCache('username_cache', '${createLink(controller: 'user', action: 'ajaxGetUserList')}', 
-					function(data) {
-				$("#username").autocomplete({
-					source: data
-				});
+			$("#spinner").offset({top: -100, left: -100});
+			$("#username").autocomplete({
+				source: [],
+				delay: 0,
+				length: 2
 			});
+			getCache('username_cache', '#user-spinner', '${createLink(controller: 'user', action: 'ajaxGetUserList')}', 
+				function(data) {
+					$("#username").autocomplete("option", "source", data);
+				});
 		});	
 		</script>
 	</body>

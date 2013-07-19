@@ -122,6 +122,7 @@
 		}
 
 		$(document).ready( function() {
+			$("#spinner").offset({top: -100, left: -100});
 			$(".heatmap-remove").click(remove);
 			$(".heatmap-add").click(add);
 			$("#reset").click(reset);
@@ -160,22 +161,24 @@
 
 			animate = true;
 
-			getCache('artist_cache', '${createLink(controller: 'artist', action: 'ajaxGetArtistList')}', 
+			$(".artist").autocomplete({
+				source: [],
+				delay: 0
+			});
+			getCache('artist_cache', '.artist-spinner', '${createLink(controller: 'artist', action: 'ajaxGetArtistList')}', 
 					function(data) {
-				$(".artist").autocomplete({
-					source: data,
-					delay: 0
-				});
-				artists = data;
+						$(".artist").autocomplete("option", "source", data);	
+						artists = data;
 			});
 
-			getCache('username_cache', '${createLink(controller: 'artist', action: 'ajaxGetArtistList')}', 
+			$(".user").autocomplete({
+				source: [],
+				delay: 0
+			});
+			getCache('username_cache', '.user-spinner', '${createLink(controller: 'user', action: 'ajaxGetUserList')}', 
 					function(data) {
-				$(".user").autocomplete({
-					source: data,
-					delay: 0
-				});
-				usernames = data;
+						$(".user").autocomplete("option", "source", data);	
+						usernames = data;
 			});
 		});
 		</script>
