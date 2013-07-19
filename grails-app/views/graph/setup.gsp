@@ -41,6 +41,7 @@
 								</span>
 							</g:each>
 						</div>
+						<r:img dir="images" file="spinner.gif" width="16" height="16" id="friend-spinner"/>
 					</div>
 						<div class="setup-group">
 							<div class="fieldcontain ${hasErrors(field: 'artist', 'error')} ">
@@ -89,9 +90,10 @@
 		var friends = [];
 		
 		function showFriends(name) {
+			$("#friend-spinner").show();
 			var url = '${createLink(controller: 'user', action: 'ajaxGetFriendsByName')}';
 			url += "?username=" + name;
-			getCache('friend_cache_' + name, url, function(data) {
+			getCache('friend_cache_' + name, '#friend-spinner', url, function(data) {
 				$("div.checkbox").html(data);
 
 				$("div.checkbox div.single-friend input").unbind("click");
@@ -106,6 +108,7 @@
 		$(document).ready( function() {
 			$.ajaxSetup({ cache: true });
 			$("#spinner").offset({top: -100, left: -100});
+			$("#friend-spinner").hide();
 			
 			getCache('username_cache', '#user-spinner', '${createLink(controller: 'user', action: 'ajaxGetUserList')}', 
 					function(data) {
