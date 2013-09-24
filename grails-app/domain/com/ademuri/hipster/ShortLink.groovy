@@ -11,7 +11,7 @@ class ShortLink {
 
     static constraints = {
 		shortUrl(nullable: false, blank: false)
-		fullUrl(nullable: false, blank: false)
+		fullUrl(nullable: false, blank: false, maxSize: 5000)
     }
 	
 	/*static mapping = {
