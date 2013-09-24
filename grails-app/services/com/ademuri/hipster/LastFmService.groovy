@@ -557,7 +557,7 @@ class LastFmService {
 		
 		// if we've synced this recently, don't do it again
 		if (user?.topArtistsLastSynced[interval] && user?.topArtistsLastSynced[interval] > (new Date()-7)) {
-//			log.info "Synced top artists for ${user.username}, interval ${interval} recently, not syncing"
+			log.info "Synced top artists for ${user.username}, interval ${interval} recently (${user?.topArtistsLastSynced[interval]}), not syncing"
 			return UserArtist.withCriteria {
 				eq('user', user)
 				eq("isTop${interval}", true)
@@ -578,6 +578,16 @@ class LastFmService {
 		def topArtists = []
 		
 		if ((data?.topartists?."@attr"?.total) && (data.topartists."@attr".total as int) > 0) {
+			// First, clear out old top data
+			def oldTop = UserArtist.withCriteria {
+				eq('user', user)
+				eq("isTop${interval}", true)
+			}
+			
+			oldTop.each {
+				it["isTop${interval}"] = false
+			}
+			
 			def artists = [data.topartists.artist].flatten()
 			
 			artists.each {
@@ -605,6 +615,9 @@ class LastFmService {
 				userArtist."isTop${interval}" = true
 				topArtists.push(userArtist)
 			}
+		}
+		else {
+			throw new LastFmException(data?.error)
 		}
 		
 		user.topArtistsLastSynced[interval] = new Date()
