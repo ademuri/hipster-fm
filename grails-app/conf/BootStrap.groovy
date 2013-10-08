@@ -29,7 +29,7 @@ class BootStrap {
 				chartdataJSON: '{"series":[{"label":"Adamsmasher"}],"data":[[["2010-10-30",67],["2010-12-14",59],["2011-01-28",5],["2011-03-14",0],["2011-04-28",23],["2011-06-12",0],["2011-07-27",0],["2011-09-10",5],["2011-10-25",0],["2011-12-09",7],["2012-01-23",6],["2012-03-08",10],["2012-04-22",39]]],"maxY":0}',
 				hitsSinceSync: 5, dateCreated: new Date()-7, lastUpdated: new Date()-7).save(failOnError: true)
 				
-			['1month', '3month'].each { interval ->
+			['7day', '1month', '3month'].each { interval ->
 				(0..10).each {
 					def a = new Artist(name: it, lastId: it).save(failOnError:true)
 					def ua = new UserArtist(artist: a, user: adam, lastSynced: new Date()-20).save(failOnError: true)
@@ -37,6 +37,9 @@ class BootStrap {
 					ua."isTop${interval}" = true
 				}
 			}
+			adam.topArtistsLastSynced['7day'] = new Date()-1
+			adam.topArtistsLastSynced['1month'] = new Date()-8
+			adam.save()
 			
 //			def em = new Artist(name: "Emancipator", lastId: "aa1d4315-5246-42b2-b62b-f997d046d8b2").save(flush: true, failOnError: true)
 //			def rand = new Random()
