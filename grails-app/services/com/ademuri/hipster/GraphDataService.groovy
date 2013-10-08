@@ -27,6 +27,7 @@ class GraphDataService {
     def getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize,
 			removeOutliers = false, userMaxY, by = kByUser, albumId = null, force = false) {
 		def data = []
+		def time = []
 		def users = []
 		def theUserArtists = []
 		def globalFirst, globalLast
@@ -249,14 +250,16 @@ class GraphDataService {
 					}
 				}
 				
-				if (found || count > 0) {
-					found = true
-					counts.add([String.format('%tY-%<tm-%<td', globalFirst+i), count])
-				}
+				counts.add(count)
 			}
 			
 			def datum = [counts: counts, index: index]
 			data.push datum
+		}
+		
+		// time labels
+		for (int i=0; i<(globalLast-globalFirst); i+=newTickSize) {
+			time.add(String.format('%tY-%<tm-%<td', globalFirst+i))
 		}
 		
 		def work = []
@@ -307,7 +310,6 @@ class GraphDataService {
 		}
 		
 		if(userMaxY) {
-//			log.info "Setting userMaxY to ${userMaxY}"
 			maxY = userMaxY
 		} else if (!removeOutliers) {
 			maxY = 0
@@ -318,6 +320,7 @@ class GraphDataService {
 		
 		def chartdata = [:]
 		chartdata.data = data
+		chartdata.time = time
 		chartdata.series = []
 		chartdata.maxY = maxY
 		

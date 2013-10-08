@@ -3,7 +3,7 @@
 	<head>
 		<meta name="layout" content="main">
 		<title>Show Graph</title>
-		<r:require modules="jquery, jqplot, store_js" />
+		<r:require modules="jquery, d3, store_js" />
 	</head>
 	<body>
 		<div id="progress">
@@ -23,7 +23,20 @@
 			
 		</div>
 		
-		<r:script>
+		<style>
+			path {
+				stroke: blue;
+				stroke-width: 2;
+				fill: none;
+			}
+			.axis path {
+				stroke: #333;
+				stroke-width: 1;
+				fill: none;
+			}
+		</style>
+		
+		<script>
 			var response;
 			var responseObject;
 			var maxY;
@@ -66,21 +79,126 @@
 				maxY = chartdata.maxY;
 				var series = chartdata.series;
 				var data = chartdata.data;
+				var rawTime = chartdata.time;
+				console.log("series");
+				console.log(series);
+				//console.log("data");
+				//console.log(data);
+				//console.log("rawTime");
+				//console.log(rawTime);
 
-				<g:if test="${params?.type == 'breakout'}">
-					<g:render template="breakout" />
-				</g:if>
-				<g:else>
-					<g:render template="compare" />
-				</g:else>
+				var allData = [];	// for determining max values
+				$.each(data, function(index, value) {
+					$.each(value, function(index2, number) {
+						allData.push(number);
+					});
+				});
+				//console.log(allData);
+				
+				var time = [];
+				var parseDate = d3.time.format("%Y-%m-%d").parse;
+				$.each(rawTime, function(index, t) {
+					time.push(parseDate(t));
+				});
 
-				if (maxY > 0) {
-					jqplotOptions.axes.yaxis.max = maxY;
+				// compose the data into format that's easy to use with D3
+				// format: list of (date, [user1 point], [user2 point], ...)
+				var coolData = [];
+
+				// add time
+				for (var i=0; i<time.length; i++) {
+					var tmp = new Object();
+					tmp.date = time[i];
+					coolData.push(tmp);
+				}
+				// add users
+				for (var i=0; i<series.length; i++) {
+					for (var j=0; j<time.length; j++) {
+						coolData[j][series[i].label] = data[i][j];
+					}
 				}
 
+				console.log("coolData");
+				console.log(coolData);
+				
+				// margin convention http://bl.ocks.org/mbostock/3019563
+				var m = {top: 50, right: 120, bottom: 50, left: 50};
+				
+				var w = 960 - m.left - m.right,
+					h = 600 - m.top - m.bottom;
+
+				var x = d3.time.scale().range([0, w]);
+				x.domain(d3.extent(coolData, function(d) { return d.date; }));
+				var y = d3.scale.linear().domain([0, d3.max(allData)]).range([h, 0]);
+
+				//x.domain(d3.extent(time, function(t) { return t }));
+
+				var chart = d3.select("#chartdiv")
+					.append("svg")
+					.attr("width", w + m.left + m.right)
+					.attr("height", h + m.top + m.bottom)
+					.append("g")
+					.attr("transform", "translate(" + m.left + "," + m.top + ")");
+
+				var line = d3.svg.line()
+					.x(function(d) {
+						return x(d.date); 
+					})
+					.y(function(d) { 
+						return y(d.count); 
+					})
+					.interpolate("monotone");
+
+				var xAxis = d3.svg.axis().scale(x).orient("bottom");
+				chart.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + h + ")") 
+					.call(xAxis);
+
+				var yAxis = d3.svg.axis().scale(y).ticks(5).orient("left");
+				chart.append("g")
+					.attr("class", "y axis")
+					//.attr("transform", "translate(-50,0)")
+					.call(yAxis);
+
+				var color = d3.scale.category10()
+					.domain(d3.keys(coolData[0]).filter(function(key) { return key !== "date"; }));
+
+				var users = color.domain().map(function(name) {
+					return {
+						name: name,
+						values: coolData.map(function(d) {
+							return {date: d.date, count: +d[name]};
+						})
+					};
+				});
+			
+
+				var user = chart.selectAll(".user")
+					.data(users)
+					.enter().append("g")
+					.attr("class", "user");
+
+				user.append("path")
+					.attr("class", "line")
+					.attr("d", function(d) { return line(d.values); })
+					.style("stroke", function(d) { return color(d.name); });
+
+				user.append("text")
+					.datum(function(d) { return {name: d.name, value: d.values[d.values.length-1]}; })
+					.attr("transform", function(d) { return "translate(" + x(d.value.date) + "," + y(d.value.count) + ")"; })
+					.attr("x", 3)
+					.attr("dy", ".35em")
+					.text(function(d) { return d.name; });
+					//.style("stroke", function(d) {
+					//	console.log("d: " + d.name + ", color: " + color(d.name)); 
+					//	return color(d.name);});
+					
+				
+				
+				//chart.append("path").attr("d", line(data[0]));
+									
 				var numUsers = data.length;
-				$("#chartdiv").css("height", "" + (numUsers * 25 + 520) + "px");
-				$.jqplot('chartdiv', data, jqplotOptions);
 			}
 			
 			function showShortened(data, textStatus) {
@@ -126,7 +244,7 @@
 
 				getData();
 			});
-		</r:script>
+		</script>
 		
 		<g:form method="get" >
 			<g:render template="window"/>
