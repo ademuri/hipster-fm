@@ -136,7 +136,7 @@
 				// margin convention http://bl.ocks.org/mbostock/3019563
 				var m = {top: 50, right: 200, bottom: 50, left: 50};
 				
-				var w = Math.max($(window).width()-50, 640) - m.left - m.right,
+				var w = Math.max($(window).width()-100, 640) - m.left - m.right,
 					h = Math.max($(window).height()-50, 480) - m.top - m.bottom;
 
 				// make our container the actual size, for spacing
@@ -254,7 +254,7 @@
 
 		        // center the chart
 		        $('html, body').animate({
-			        scrollTop: $("#chartdiv").offset().top
+			        scrollTop: $("#show-graph").offset().top
 		        }, 1000);
 			}
 
