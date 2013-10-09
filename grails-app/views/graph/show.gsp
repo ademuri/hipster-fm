@@ -19,7 +19,7 @@
 			<input id="shorten-link-result" type="text" readonly="" />
 			</div>
 		
-			<div id="chartdiv" style="height:800px;width:95%;"></div>
+			<div id="chartdiv"></div>
 			
 		</div>
 		
@@ -136,8 +136,11 @@
 				// margin convention http://bl.ocks.org/mbostock/3019563
 				var m = {top: 50, right: 200, bottom: 50, left: 50};
 				
-				var w = 960 - m.left - m.right,
-					h = 600 - m.top - m.bottom;
+				var w = Math.max($(window).width()-50, 640) - m.left - m.right,
+					h = Math.max($(window).height()-50, 480) - m.top - m.bottom;
+
+				// make our container the actual size, for spacing
+				$("#chartdiv").attr("width", w + m.left + m.right).attr("height", h + m.top + m.bottom);
 
 				var x = d3.time.scale().range([0, w]);
 				x.domain(d3.extent(coolData, function(d) { return d.date; }));
@@ -248,6 +251,11 @@
 			        .on("mouseover", legendover)
 			        .on("mouseout", legendout)
 			        .on("click", legendclick);
+
+		        // center the chart
+		        $('html, body').animate({
+			        scrollTop: $("#chartdiv").offset().top
+		        }, 1000);
 			}
 
 			function userHover(parent) {
