@@ -34,8 +34,20 @@
 				stroke-width: 1;
 				fill: none;
 			}
+			g.legend {
+				fill: none;
+			}
+			g.legend text {
+				fill: #000;	
+			}
+			.hover path,.click path {
+				stroke-width: 5;
+			}
+			.hover text,.click text {
+				font-weight: bold;
+			}
 		</style>
-		
+
 		<script>
 			var response;
 			var responseObject;
@@ -74,18 +86,22 @@
 					$("#chartdiv").text(responseObject.error);
 					return;
 				}
+
+				var colors = store.get('colors-graph');
+				if (!colors) {
+					// TODO: make default colors exist somewhere instead of hardcoding it
+					colors = ["#FF0000", "#FFBA10", "#970CE8", "#0D4EFF", "#E87C15", 
+													"#1ECC21", "#00E8C2", "#E232EA", "#4F826A", "#999999",
+													"#333333", "#804000", "#FF6AD7", "#80002E", "#77AAFF"
+													];
+					//console.log("setting colors: " + colors);
+				}
 				
 				var chartdata = responseObject.chartdata;
 				maxY = chartdata.maxY;
 				var series = chartdata.series;
 				var data = chartdata.data;
 				var rawTime = chartdata.time;
-				console.log("series");
-				console.log(series);
-				//console.log("data");
-				//console.log(data);
-				//console.log("rawTime");
-				//console.log(rawTime);
 
 				var allData = [];	// for determining max values
 				$.each(data, function(index, value) {
@@ -93,7 +109,6 @@
 						allData.push(number);
 					});
 				});
-				//console.log(allData);
 				
 				var time = [];
 				var parseDate = d3.time.format("%Y-%m-%d").parse;
@@ -118,11 +133,8 @@
 					}
 				}
 
-				console.log("coolData");
-				console.log(coolData);
-				
 				// margin convention http://bl.ocks.org/mbostock/3019563
-				var m = {top: 50, right: 120, bottom: 50, left: 50};
+				var m = {top: 50, right: 200, bottom: 50, left: 50};
 				
 				var w = 960 - m.left - m.right,
 					h = 600 - m.top - m.bottom;
@@ -162,7 +174,7 @@
 					.call(yAxis);
 
 				var color = d3.scale.category10()
-					.domain(d3.keys(coolData[0]).filter(function(key) { return key !== "date"; }));
+					.domain(d3.keys(coolData[0]).filter(function(key) { return key !== "date"; })).range(colors);
 
 				var users = color.domain().map(function(name) {
 					return {
@@ -182,23 +194,118 @@
 				user.append("path")
 					.attr("class", "line")
 					.attr("d", function(d) { return line(d.values); })
-					.style("stroke", function(d) { return color(d.name); });
+					.style("stroke", function(d) { return color(d.name); })
+					.on("mouseover", lineover)
+					.on("mouseout", lineout)
+					.on("click", lineclick)
+					;
 
 				user.append("text")
 					.datum(function(d) { return {name: d.name, value: d.values[d.values.length-1]}; })
 					.attr("transform", function(d) { return "translate(" + x(d.value.date) + "," + y(d.value.count) + ")"; })
 					.attr("x", 3)
 					.attr("dy", ".35em")
-					.text(function(d) { return d.name; });
+//					.text(function(d) { return d.name; });
 					//.style("stroke", function(d) {
 					//	console.log("d: " + d.name + ", color: " + color(d.name)); 
 					//	return color(d.name);});
 					
 				
+				// space out the user labels if they overlap
+				var prevHeight = 0;
+				var prevEl;
+				$("g.user text").each(function(index, el) {
+					var top = $(el).position().top;
+					var bottom = top - $(el).height();
+					//if (prevEl && (top < prevHeight) && (bottom > prevHeight)) {
+					if (prevEl) {
+						$(el).position({'my': 'bottom', 'at': 'top', 'of': $(prevEl)}); 
+					}
+					
+					prevHeight = top;
+					prevEl = el;
+				});
+	
+				// This legend code is a bit of a hack, but it works
+				var legend = user.append('g')
+					.attr('class', 'legend');
+
+				legend.append('rect')
+					.attr('x', w - 20)
+					.attr('y', function(d, i){ return i * 22;})
+			        .attr('width', 10)
+			        .attr('height', 10)
+			        .style('fill', function(d) { 
+			          return color(d.name);
+			        })
+			        .on("mouseover", legendover)
+			        .on("mouseout", legendout);
+
+			    legend.append('text')
+			        .attr('x', w - 8)
+			        .attr('y', function(d, i){ return (i *  22) + 9;})
+			        .text(function(d){ return d.name; })
+			        .on("mouseover", legendover)
+			        .on("mouseout", legendout)
+			        .on("click", legendclick);
+			}
+
+			function userHover(parent) {
+				var oldClass = parent.attr("class");
+				parent.attr("class", oldClass + " hover");
+			}
+
+			function userUnHover(parent) {
+				var oldClass = parent.attr("class");
+				parent.attr("class", oldClass.replace("hover", ""));
+			}
+
+			function lineover(d, i) {
+				var parent = $(d3.select(this).node()).parent();
+				userHover(parent);
+			}
+
+			function lineout(d, i) {
+				var parent = $(d3.select(this).node()).parent();
+				userUnHover(parent);
+			}
+
+			function legendover(d, i) {
+				var parent = $(d3.select(this).node()).parent().parent();
+				userHover(parent);
+			}
+			
+			function legendout(d, i) {
+				var parent = $(d3.select(this).node()).parent().parent();
+				userUnHover(parent);
+			}
+
+
+			function doclick(parent) {
+				var oldClass = parent.attr("class");
 				
-				//chart.append("path").attr("d", line(data[0]));
-									
-				var numUsers = data.length;
+				var clicked = $(".click");
+				clicked.each(function(i, e) {
+					var theClass = $(e).attr("class");
+					$(e).attr("class", theClass.replace("click", ""));
+					
+				});
+
+				// If we clicked on a focused element, unfocus it
+				if (oldClass.indexOf("click") == -1) {
+					parent.attr("class", oldClass + " click");
+				}
+			}
+			
+			// code duplication is bad, kids. stay in school!
+			function legendclick(d, i) {
+				var parent = $(d3.select(this).node()).parent().parent();
+				doclick(parent);				
+			}
+
+			function lineclick(d, i) {
+				var parent = $(d3.select(this).node()).parent();
+				doclick(parent);
 			}
 			
 			function showShortened(data, textStatus) {
