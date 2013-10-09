@@ -555,9 +555,23 @@ class LastFmService {
 			return
 		}
 		
+		def isFresh = { date ->
+			def now = new Date()
+			if (date < (now-6)) {
+				return false
+			}
+			else if (interval == '7day' && date < now-2) {	// refresh the 7-day interval every 3 days
+				return false
+			}
+			else {
+				return true
+			}
+		}
+		
+		log.info "Top artists last synced: ${user?.topArtistsLastSynced[interval]}"
 		// if we've synced this recently, don't do it again
-		if (user?.topArtistsLastSynced[interval] && user?.topArtistsLastSynced[interval] > (new Date()-7)) {
-//			log.info "Synced top artists for ${user.username}, interval ${interval} recently, not syncing"
+		if (user?.topArtistsLastSynced[interval] && isFresh(user?.topArtistsLastSynced[interval])) {
+			log.info "Synced top artists for ${user.username}, interval ${interval} recently (${user?.topArtistsLastSynced[interval]}), not syncing"
 			return UserArtist.withCriteria {
 				eq('user', user)
 				eq("isTop${interval}", true)
@@ -578,6 +592,16 @@ class LastFmService {
 		def topArtists = []
 		
 		if ((data?.topartists?."@attr"?.total) && (data.topartists."@attr".total as int) > 0) {
+			// First, clear out old top data
+			def oldTop = UserArtist.withCriteria {
+				eq('user', user)
+				eq("isTop${interval}", true)
+			}
+			
+			oldTop.each {
+				it["isTop${interval}"] = false
+			}
+			
 			def artists = [data.topartists.artist].flatten()
 			
 			artists.each {
@@ -605,6 +629,9 @@ class LastFmService {
 				userArtist."isTop${interval}" = true
 				topArtists.push(userArtist)
 			}
+		}
+		else {
+			throw new LastFmException(data?.error)
 		}
 		
 		user.topArtistsLastSynced[interval] = new Date()

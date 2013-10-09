@@ -109,9 +109,9 @@ class ShortLinkController {
     }
 	
 	def shortToFull(String shortUrl) {
-		def theId = ShortLink.findId(shortUrl)
-		log.info "short to full id: ${theId}, ${shortUrl}"
-		def shortLinkInstance = ShortLink.get(theId)
+//		def theId = ShortLink.findId(shortUrl)
+//		log.info "short to full id: ${theId}, ${shortUrl}"
+		def shortLinkInstance = ShortLink.findByShortUrl(shortUrl)
 		if (!shortLinkInstance) {
 			flash.message = "Error: short URL ${shortUrl} does not exist"
 			redirect(action: "list")
