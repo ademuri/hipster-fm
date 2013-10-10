@@ -528,8 +528,6 @@ class GraphController {
 			return
 		}
 		
-		log.info "chartdata: ${chartdata}"
-		
 		log.info stopwatch
 		log.info stopDownload
 		log.info insertDownload
