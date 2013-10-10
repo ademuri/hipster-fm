@@ -200,6 +200,11 @@ class GraphDataService {
 			globalLast = endDate
 		}
 		
+		// TODO: check me
+		// our range is [globalFirst, globalLast), and we want to include the last day, so add 1 to global last
+		globalFirst--
+		globalLast++  
+		
 		log.info "Done getting date stuff"
 		
 		newTickSize = (globalLast - globalFirst) / tickSize as int
