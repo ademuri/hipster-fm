@@ -527,6 +527,7 @@ class GraphController {
 			render error as JSON
 			return
 		}
+		chartdata.version = 1
 		
 		log.info stopwatch
 		log.info stopDownload

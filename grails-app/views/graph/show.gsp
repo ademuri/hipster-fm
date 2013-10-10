@@ -390,7 +390,7 @@
 					var storedData = store.get(JSON.stringify(params));
 	
 					// cache result for 1 day
-					if (storedData && ((new Date()) - (new Date(storedData.date))) < ONE_DAY) {
+					if (storedData && storedData['version'] == 1 &&  ((new Date()) - (new Date(storedData.date))) < ONE_DAY) {
 						responseObject = storedData;
 						graph();
 						return
