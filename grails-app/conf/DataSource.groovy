@@ -16,12 +16,18 @@ environments {
         dataSource {
             dbCreate = "create-drop" // one of 'create', 'create-drop', 'update', 'validate', ''
             url = "jdbc:mysql://localhost/hipster_dev"
+			properties {
+				defaultTransactionIsolation = java.sql.Connection.TRANSACTION_READ_UNCOMMITTED
+			}
         }
     }
     test {
         dataSource {
             dbCreate = "update"
             url = "jdbc:mysql://localhost/hipster_dev"
+			properties {
+				defaultTransactionIsolation = java.sql.Connection.TRANSACTION_READ_UNCOMMITTED
+			}
         }
     }
     production {
@@ -44,6 +50,9 @@ environments {
 			   maxWait = 1800000
 			   maxIdle = 10
 			   minIdle = 0
+			   
+			   // concurrency not getting fresh data problems
+			   defaultTransactionIsolation = java.sql.Connection.TRANSACTION_READ_UNCOMMITTED
             }
         }
     }

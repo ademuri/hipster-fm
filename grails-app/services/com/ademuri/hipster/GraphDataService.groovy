@@ -25,7 +25,7 @@ class GraphDataService {
 
 	@Transactional
     def getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize,
-			removeOutliers = false, userMaxY, by = kByUser, albumId = null, force = false) {
+			removeOutliers = false, userMaxY, by = kByUser, albumId = null, force = false, doCache = true) {
 		def data = []
 		def time = []
 		def users = []
@@ -102,7 +102,7 @@ class GraphDataService {
 			}
 		}
 			
-		if (force) {
+		if (force && doCache) {
 			if (prevCache.size() > 0) {
 				prevCache.each {
 					it.delete()
@@ -123,10 +123,14 @@ class GraphDataService {
 				
 				if ((new Date() - cachedEntry.lastUpdated) > 2) {
 //					log.info "Cache too old - deleting"
-					cachedEntry.delete()
+					if (doCache) {
+						cachedEntry.delete()
+					}
 				} else {
-					cachedEntry.hitsSinceSync++
-					cachedEntry.save()
+					if (doCache) {
+						cachedEntry.hitsSinceSync++
+						cachedEntry.save()
+					}
 					return cachedEntry.chartdata
 				}
 			}
@@ -342,14 +346,16 @@ class GraphDataService {
 			chartdata.series.add(["label": it])
 		}
 		
-		
-		def cache = new GraphDataCache(startDate: startDate, endDate: endDate, tickSize: tickSize, intervalSize: intervalSize, 
-				userMaxY: userMaxY, groupBy: by, albumId: albumId, removeOutliers: removeOutliers, chartdataJSON: "",
-				userArtists: (userArtistIdList as JSON).toString())
-		cache.chartdata = chartdata
-		cache.save(failOnError: true, flush: true)
-//		log.info "Save to cache ${cache}"
-//		log.info "user artist size: ${cache.userArtists.size()}"
+		if (doCache) {
+			def cache = new GraphDataCache(startDate: startDate, endDate: endDate, tickSize: tickSize, intervalSize: intervalSize, 
+					userMaxY: userMaxY, groupBy: by, albumId: albumId, removeOutliers: removeOutliers, chartdataJSON: "",
+					userArtists: (userArtistIdList as JSON).toString())
+			cache.chartdata = chartdata
+			cache.save(failOnError: true, flush: true)
+			log.info "Save to cache ${cache}"
+			log.info "user artist size: ${cache.userArtists.size()}"
+		}
+
 		
 		split.stop()
 		log.info stopwatch

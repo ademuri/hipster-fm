@@ -386,8 +386,17 @@ class GraphController {
 	
 	def sessionFactory
 	
-	
 	def ajaxGraphData = {
+		def data = doGetGraphData(params, false)
+		render data as JSON
+	}
+	
+	def ajaxFastGraphData = {
+		def data = doGetGraphData(params, true)
+		render data as JSON
+	}
+	
+	def private doGetGraphData(params, fast = false)  {
 		Boolean removeOutliers = params.removeOutliers == "true"
 		def userIdList = []
 		def artistUnsortedList = []	// grab key-value pairs, then sort them
@@ -434,25 +443,28 @@ class GraphController {
 			artistIdList.push(it.value)
 		}
 		
-		def out
-		log.trace "Getting tracks..."
-		GParsPool.withPool(3) {
-			userIdList.eachParallel { userId ->
-				GParsPool.withPool(3) {
-					artistIdList.eachParallel { artistId ->
-						Track.withNewSession {
-							out = lastFmService.getArtistTracks(userId, artistId)
+		if (!fast) {
+			def out
+			log.info "Getting tracks..."
+			GParsPool.withPool(3) {
+				userIdList.eachParallel { userId ->
+					GParsPool.withPool(3) {
+						artistIdList.eachParallel { artistId ->
+							Track.withNewSession { session ->
+								out = lastFmService.getArtistTracks(userId, artistId)
+								session.flush()
+							}
 						}
 					}
 				}
 			}
+			// this is a hack, but we want the request actually fetching data to flush first (and give it time to complete)
+			if (out == 1) {
+				Thread.sleep(1000)
+			}
+			
+			flush()
 		}
-		// this is a hack, but we want the request actually fetching data to flush first (and give it time to complete)
-		if (out == 1) {
-			Thread.sleep(1000)
-		}
-		
-		flush()
 		
 		def albumId
 		if (params["albumId"]) {
@@ -481,7 +493,7 @@ class GraphController {
 		
 		log.trace "Getting graph data"
 		def getData = {
-			graphDataService.getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId)
+			graphDataService.getGraphData(userIdList, artistIdList, startDate, endDate, tickSize, intervalSize, removeOutliers, userMaxY, by, albumId, false, !fast)	// if fast get data, don't cache it
 		}
 		
 		def chartdata
@@ -516,6 +528,8 @@ class GraphController {
 			return
 		}
 		
+		log.info "chartdata: ${chartdata}"
+		
 		log.info stopwatch
 		log.info stopDownload
 		log.info insertDownload
@@ -524,7 +538,7 @@ class GraphController {
 		insertDownload.reset()
 		
 		def theData = [chartdata:chartdata]
-		render theData as JSON
+		return theData
 	}
 	
 	

@@ -49,44 +49,78 @@
 		</style>
 
 		<script>
-			var response;
+			var fastResponse;
+			var response = null;
 			var responseObject;
 			var maxY;
 			var params = []; 
 			var ONE_DAY = 1000 * 60 * 60 * 24;
+			var fullGraphDone = false;
 
 			var rawParams = $(location).attr('href');
 			rawParams = rawParams.substring(rawParams.indexOf('?')+1, rawParams.length);
 			params = rawParams.split('&');
 			params.sort();
-			
+
 			var tries = 0;
-			function graph() {
+			function resetAndGraph() {
+				console.log("reset and graph");
 				tries++;
 				if (tries > 2) {
 					$("#chartdiv").text("Error getting data");
 					return;
 				}
-				if (!responseObject) {
-					try {
-						responseObject = JSON.parse(response.responseText);
-					}
-					catch (e) {
-						console.log("Got error getting data, trying again");
-						getData();
-						return;
-					}
-					responseObject.date = new Date();
-					<g:if env="production">
-						store.set(JSON.stringify(params), responseObject);
-					</g:if>
+				
+				try {
+					responseObject = JSON.parse(response.responseText);
 				}
+				catch (e) {
+					console.log("Got error getting data, trying again");
+					getData();
+					return;
+				}
+				fullGraphDone = true;
+				responseObject.date = new Date();
+				<g:if env="production">
+					store.set(JSON.stringify(params), responseObject);
+				</g:if>
+				
 				
 				if (responseObject.error) {
 					$("#chartdiv").text(responseObject.error);
 					return;
 				}
 
+				var oldGraph = $("#chartdiv svg");
+				if (oldGraph) {
+					oldGraph.remove();
+				}
+
+				graph();
+			}
+			
+			function fastGraph() {
+				if (fullGraphDone) {
+					return;
+				}
+				
+				console.log("fast graph");
+				if (!responseObject) {
+					try {
+						responseObject = JSON.parse(fastResponse.responseText);
+						if (responseObject['error'] != null) {
+							return;
+						}
+					} 
+					catch (e) {
+						console.log("Got error getting fast data");
+						return;
+					}
+				}
+				graph();
+			}
+			
+			function graph() {
 				var colors = store.get('colors-graph');
 				if (!colors) {
 					// TODO: make default colors exist somewhere instead of hardcoding it
@@ -109,7 +143,8 @@
 						allData.push(number);
 					});
 				});
-				
+				console.log(chartdata);
+
 				var time = [];
 				var parseDate = d3.time.format("%Y-%m-%d").parse;
 				$.each(rawTime, function(index, t) {
@@ -145,8 +180,6 @@
 				var x = d3.time.scale().range([0, w]);
 				x.domain(d3.extent(coolData, function(d) { return d.date; }));
 				var y = d3.scale.linear().domain([0, d3.max(allData)]).range([h, 0]);
-
-				//x.domain(d3.extent(time, function(t) { return t }));
 
 				var chart = d3.select("#chartdiv")
 					.append("svg")
@@ -330,9 +363,16 @@
 			function errorFunc(XMLHttpRequest,textStatus,errorThrown) {
 				console.log("error: " + textStatus + ", " + errorThrown);	
 			}
-			
+
+			// called when page is loaded & if data is malformed
 			function getData() {
-				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "graph()", params: params)};
+				response = ${remoteFunction(action: "ajaxGraphData", onComplete: "resetAndGraph()", params: params)};
+			}
+
+			// called when the page is loaded
+			function firstGetData() {
+				fastResponse = ${remoteFunction(action: "ajaxFastGraphData", onComplete: "fastGraph()", params: params)};	// fetch stale data first & graph while waiting for full data
+				getData();
 			}
 			
 			$(window).load(function() {
@@ -357,7 +397,7 @@
 					}
 				</g:if>
 
-				getData();
+				firstGetData();
 			});
 		</script>
 		
