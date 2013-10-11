@@ -481,9 +481,9 @@ class LastFmService {
 					def track
 					
 					if (existingTracks || (date && date < lastExtDate)) {
-						track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid], validate: false).save(failOnError: true)
+						track = Track.findByLastIdAndDate(trackId, date) ?: new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(validate: false)
 					} else {
-						track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid], validate: false).save(failOnError: true)
+						track = new Track(name: it.name, date: date, artist: userArtist, lastId: trackId, album: albumMap[it.album.mbid]).save(validate: false)
 					}
 //					log.info "date after save: ${track.getDateString()}"
 //					track.save(flush: true)
